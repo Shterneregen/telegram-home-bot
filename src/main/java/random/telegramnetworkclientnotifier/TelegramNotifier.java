@@ -17,9 +17,9 @@ public class TelegramNotifier {
 
 	@Value("${telegram.api.url}")
 	private String telegramApiUrl;
-	@Value("${chat.id}")
+	@Value("${telegram.chat.id}")
 	private String chatId;
-	@Value("${token}")
+	@Value("${telegram.token}")
 	private String token;
 
 	public void sendMessage(String message) {
@@ -44,8 +44,8 @@ public class TelegramNotifier {
 		HttpResponse<String> response = null;
 		try {
 			response = client.send(request, HttpResponse.BodyHandlers.ofString());
-			log.info(String.valueOf(response.statusCode()));
-			log.info(String.valueOf(response.body()));
+			log.debug(String.valueOf(response.statusCode()));
+			log.debug(String.valueOf(response.body()));
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}

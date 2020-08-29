@@ -17,12 +17,22 @@ public class TelegramNotifier {
 
 	@Value("${telegram.api.url}")
 	private String telegramApiUrl;
-	@Value("${telegram.chat.id}")
-	private String chatId;
+	@Value("${telegram.bot.chat.id}")
+	private String botChatId;
+	@Value("${telegram.private.group.chat.id}")
+	private String privateGroupChatId;
 	@Value("${telegram.token}")
 	private String token;
 
-	public void sendMessage(String message) {
+	public void sendMessageToChatBot(String sendMessage) {
+		sendMessage(sendMessage, botChatId);
+	}
+
+	public void sendMessageToPrivateGroup(String sendMessage) {
+		sendMessage(sendMessage, privateGroupChatId);
+	}
+
+	public void sendMessage(String message, String chatId) {
 
 		HttpClient client = HttpClient.newBuilder()
 				.connectTimeout(Duration.ofSeconds(5))
@@ -41,13 +51,13 @@ public class TelegramNotifier {
 				.timeout(Duration.ofSeconds(5))
 				.build();
 
-		HttpResponse<String> response = null;
+		HttpResponse<String> response;
 		try {
 			response = client.send(request, HttpResponse.BodyHandlers.ofString());
 			log.debug(String.valueOf(response.statusCode()));
 			log.debug(String.valueOf(response.body()));
 		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
+			log.error(e.getMessage(), e);
 		}
 	}
 }

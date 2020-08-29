@@ -24,7 +24,7 @@ public class Scheduler {
 		if (!arp.equals(previousArp)) {
 			log.info("State changed!");
 			log.info(String.valueOf(arp));
-			telegramNotifier.sendMessage("State changed!");
+			telegramNotifier.sendMessageToPrivateGroup("State changed!");
 		}
 		previousArp = arp;
 	}

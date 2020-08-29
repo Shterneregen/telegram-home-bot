@@ -2,7 +2,7 @@
 
 Periodically calls "arp -a" command and in case of state changing sends a message to telegram bot
 
-### To create chat-bot
+### Create telegram chatbot
 * start a chat with __@BotFather__
 * use message __/newbot__
 * set bot name
@@ -11,3 +11,10 @@ Periodically calls "arp -a" command and in case of state changing sends a messag
 * start conversation with bot
 * retrieve __chat_id__, call https://api.telegram.org/bot$TOKEN/getUpdates 
 * set TELEGRAM_CHAT_ID and TELEGRAM_TOKEN as environment variables
+
+### Create private chat group with chatbot
+* open a session with __@BotFather__
+* enter __/setjoingroups__
+* enter the name of the bot
+* enter Disable
+* get private group __chat_id__, call https://api.telegram.org/bot$TOKEN/getUpdates

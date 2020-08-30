@@ -19,17 +19,11 @@ public class TelegramNotifier {
 	private String telegramApiUrl;
 	@Value("${telegram.bot.chat.id}")
 	private String botChatId;
-	@Value("${telegram.private.group.chat.id}")
-	private String privateGroupChatId;
 	@Value("${telegram.token}")
 	private String token;
 
 	public void sendMessageToChatBot(String sendMessage) {
 		sendMessage(sendMessage, botChatId);
-	}
-
-	public void sendMessageToPrivateGroup(String sendMessage) {
-		sendMessage(sendMessage, privateGroupChatId);
 	}
 
 	public void sendMessage(String message, String chatId) {

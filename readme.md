@@ -10,7 +10,6 @@ Periodically calls "arp -a" command and in case of state changing sends a messag
 * get __token__ from final message
 * start conversation with bot
 * retrieve __chat_id__, call https://api.telegram.org/bot$TOKEN/getUpdates 
-* set TELEGRAM_CHAT_ID and TELEGRAM_TOKEN as environment variables
 
 ### Create private chat group with chatbot
 * open a session with __@BotFather__

@@ -13,18 +13,18 @@ import java.util.List;
 public class Scheduler {
 
 	private final CommandRunner commandRunner;
-	private final TelegramNotifier telegramNotifier;
+	private final HomeBot homeBot;
 
 	private List<String> previousArp;
 
-	@Scheduled(fixedRate = 300000)
+	@Scheduled(fixedRateString = "${scheduled.time}")
 	public void scanNetwork() {
 		List<String> arp = commandRunner.runCommand("arp -a", "utf-8");
 		log.debug(String.valueOf(arp));
 		if (!arp.equals(previousArp)) {
 			log.info("State changed!");
 			log.info(String.valueOf(arp));
-			telegramNotifier.sendMessageToPrivateGroup("State changed!");
+			homeBot.sendMessage("State changed!");
 		}
 		previousArp = arp;
 	}

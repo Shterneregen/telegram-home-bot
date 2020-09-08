@@ -1,4 +1,4 @@
-package random.telegramnetworkclientnotifier;
+package random.telegramhomebot;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

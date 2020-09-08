@@ -1,4 +1,4 @@
-package random.telegramnetworkclientnotifier;
+package random.telegramhomebot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,11 +7,11 @@ import org.telegram.telegrambots.ApiContextInitializer;
 
 @SpringBootApplication
 @ImportResource("classpath:commands.xml")
-public class TelegramNetworkClientNotifierApplication {
+public class TelegramHomeBotApplication {
 
 	public static void main(String[] args) {
 		ApiContextInitializer.init();
-		SpringApplication.run(TelegramNetworkClientNotifierApplication.class, args);
+		SpringApplication.run(TelegramHomeBotApplication.class, args);
 	}
 
 }

@@ -25,3 +25,8 @@ dependencies {
 test {
 	useJUnitPlatform()
 }
+
+bootJar {
+	archiveFileName = 'thb.jar'
+	launchScript()
+}

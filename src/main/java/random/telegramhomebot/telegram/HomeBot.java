@@ -1,22 +1,25 @@
 package random.telegramhomebot.telegram;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import random.telegramhomebot.utils.UserValidator;
 import random.telegramhomebot.utils.CommandRunner;
+import random.telegramhomebot.utils.UserValidator;
 
 import javax.annotation.Resource;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 @Component
 public class HomeBot extends TelegramLongPollingBot {
+
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
 	@Value("${telegram.bot.chat.id}")
 	private Long botChatId;

@@ -1,21 +1,25 @@
 package random.telegramhomebot.utils;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.telegram.HomeBot;
 
+import javax.annotation.Resource;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
-@Slf4j
-@RequiredArgsConstructor
 @Service
 public class Scheduler {
 
-	private final CommandRunner commandRunner;
-	private final HomeBot homeBot;
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+
+	@Resource
+	private CommandRunner commandRunner;
+	@Resource
+	private HomeBot homeBot;
 
 	@Value("${state.change.command}")
 	private String stateChangeCommand;

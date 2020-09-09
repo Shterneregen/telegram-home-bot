@@ -1,19 +1,22 @@
 package random.telegramhomebot.telegram;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
-@Slf4j
 @Service
 public class TelegramNotifier {
+
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
 	@Value("${telegram.api.url}")
 	private String telegramApiUrl;

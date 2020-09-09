@@ -1,19 +1,22 @@
 package random.telegramhomebot.utils;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Slf4j
 @Service
 public class CommandRunner {
 
-	public static final String UTF_8 = "utf-8";
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+
+	private static final String UTF_8 = "utf-8";
 
 	public List<String> runCommand(String command) {
 		return runCommand(command, UTF_8);

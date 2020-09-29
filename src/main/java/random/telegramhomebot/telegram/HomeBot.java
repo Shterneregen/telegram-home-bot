@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.model.Host;
+import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.utils.CommandRunner;
 import random.telegramhomebot.utils.UserValidator;
 
@@ -18,11 +19,15 @@ import java.lang.invoke.MethodHandles;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class HomeBot extends TelegramLongPollingBot {
 
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+
+	private static final String SHOW_STORED_HOSTS_COMMAND = "hosts";
+	private static final String SHOW_ALL_COMMANDS = "commands";
 
 	@Value("${telegram.bot.chat.id}")
 	private Long botChatId;
@@ -35,6 +40,8 @@ public class HomeBot extends TelegramLongPollingBot {
 	private UserValidator userValidator;
 	@Resource
 	private CommandRunner commandRunner;
+	@Resource
+	private HostRepository hostRepository;
 	@Resource
 	private Map<String, String> telegramCommands;
 
@@ -56,11 +63,31 @@ public class HomeBot extends TelegramLongPollingBot {
 			return;
 		}
 
+		if (doControlCommand(message)) {
+			return;
+		}
+
 		if (telegramCommands.containsKey(message.toLowerCase())) {
 			List<String> commandOutput = commandRunner.runCommand(telegramCommands.get(message.toLowerCase()));
 			sendMessage(String.join("\n", commandOutput), chatId);
 			commandOutput.forEach(log::debug);
 		}
+	}
+
+	private boolean doControlCommand(String message) {
+		if (message.toLowerCase().equals(SHOW_STORED_HOSTS_COMMAND)) {
+			List<Host> hosts = hostRepository.findAll();
+			sendMessage(formHostsListTable(hosts, "Stored Hosts"));
+			return true;
+		}
+		if (message.toLowerCase().equals(SHOW_ALL_COMMANDS)) {
+			String commands = telegramCommands.entrySet().stream()
+					.map(command -> command.getKey() + "=" + command.getValue())
+					.collect(Collectors.joining("\n"));
+			sendMessage(commands);
+			return true;
+		}
+		return false;
 	}
 
 	public void sendMessage(String messageText) {

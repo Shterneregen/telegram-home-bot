@@ -1,5 +1,8 @@
 package random.telegramhomebot.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -9,13 +12,18 @@ import javax.persistence.Table;
 @Table(name = "hosts")
 public class Host {
 	@Column(name = "ip")
+	@JsonProperty("dst")
 	private String ip;
 	@Column(name = "host_interface")
+	@JsonProperty("dev")
 	private String hostInterface;
 	@Id
 	@Column(name = "mac")
+	@JsonProperty("lladdr")
 	private String mac;
 	@Column(name = "state")
+	@JsonProperty("state")
+	@JsonDeserialize(using = HostStateDeserializer.class)
 	private HostState state;
 	@Column(name = "device_name")
 	private String deviceName;

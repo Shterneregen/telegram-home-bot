@@ -44,7 +44,7 @@ public class HomeBot extends TelegramLongPollingBot {
 		String message = update.getMessage().getText();
 		long chatId = update.getMessage().getChatId();
 
-		log.info(String.valueOf(update));
+		log.debug(String.valueOf(update));
 		Integer userId = update.getMessage().getFrom().getId();
 
 		boolean allowedUser = userValidator.isAllowedUser(userId);

@@ -43,4 +43,9 @@ public class CommandRunner {
 		}
 		return result;
 	}
+
+	void ping(String ip) {
+		runCommand(String.format("ping -c 4 %s", ip));
+		log.debug("ping {}", ip);
+	}
 }

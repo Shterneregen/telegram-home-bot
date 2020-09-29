@@ -18,14 +18,14 @@ public class Host {
 	@JsonProperty("dev")
 	private String hostInterface;
 	@Id
-	@Column(name = "mac")
+	@Column(name = "mac", unique = true, nullable = false)
 	@JsonProperty("lladdr")
 	private String mac;
 	@Column(name = "state")
 	@JsonProperty("state")
 	@JsonDeserialize(using = HostStateDeserializer.class)
 	private HostState state;
-	@Column(name = "device_name")
+	@Column(name = "device_name", updatable = false)
 	private String deviceName;
 
 	public Host() {

@@ -3,7 +3,6 @@ package random.telegramhomebot.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +16,7 @@ import random.telegramhomebot.telegram.HomeBot;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +24,9 @@ import java.util.stream.Collectors;
 public class StateChangeScheduler {
 
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+
+	private static final String NEW_HOSTS = "New Hosts";
+	private static final String CHANGED_HOSTS = "Changed Hosts";
 
 	@Resource
 	private CommandRunner commandRunner;
@@ -43,18 +46,19 @@ public class StateChangeScheduler {
 		List<Host> currentHosts = getCurrentHosts();
 
 		if (!CollectionUtils.isEmpty(currentHosts) && CollectionUtils.isEmpty(storedHosts)) {
-			homeBot.sendMessage(getHostMessage(currentHosts, "New hosts"));
+			homeBot.sendMessage(homeBot.formHostsListTable(currentHosts, NEW_HOSTS));
 		}
 
 		if (!CollectionUtils.isEmpty(currentHosts) && !CollectionUtils.isEmpty(storedHosts)) {
 			List<Host> newHosts = getNewHosts(storedHosts, currentHosts);
 			List<Host> changedHosts = getChangedHosts(storedHosts, currentHosts);
 
-			String newHostMessage = getHostMessage(newHosts, "New Hosts");
-			String changedHostMessage = getHostMessage(changedHosts, "Changed Hosts");
-
-			if (!CollectionUtils.isEmpty(newHosts) || !CollectionUtils.isEmpty(changedHosts)) {
-				homeBot.sendMessage(newHostMessage + "\n\n" + changedHostMessage);
+			String message = formMessage(
+					homeBot.formHostsListTable(newHosts, NEW_HOSTS),
+					homeBot.formHostsListTable(changedHosts, CHANGED_HOSTS));
+			if (!message.isEmpty()) {
+				log.debug("Message: {}", message);
+				homeBot.sendMessage(message);
 			}
 		}
 
@@ -63,21 +67,31 @@ public class StateChangeScheduler {
 			hostRepository.flush();
 		}
 
-		currentHosts.parallelStream()
+		pingNotReachableHosts(currentHosts);
+	}
+
+	private String formMessage(String... messages) {
+		StringBuilder message = new StringBuilder();
+		for (int i = 0; i < messages.length; i++) {
+			if (i > 0 && !message.toString().isEmpty()) {
+				message.append("\n\n");
+			}
+			message.append(messages[i]);
+		}
+		return message.toString().trim();
+	}
+
+	private void pingNotReachableHosts(List<Host> hosts) {
+		hosts.parallelStream()
 				.filter(host -> !HostState.REACHABLE.equals(host.getState()))
 				.forEach(host -> commandRunner.ping(host.getIp()));
 	}
 
-	private String getHostMessage(List<Host> newHosts, final String title) {
-		return !CollectionUtils.isEmpty(newHosts)
-				? title + ": \n" + Strings.join(newHosts, '\n')
-				: "";
-	}
-
 	private List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
-		return storedHosts.stream()
-				.filter(storedHost -> currentHosts.stream()
-						.noneMatch(currentHost -> currentHost.getMac().equals(storedHost.getMac())))
+		return currentHosts.stream()
+				.filter(currentHost -> storedHosts.stream()
+						.noneMatch(storedHost -> storedHost.getMac() != null
+								&& storedHost.getMac().equals(currentHost.getMac())))
 				.collect(Collectors.toList());
 	}
 
@@ -99,8 +113,9 @@ public class StateChangeScheduler {
 			log.error(e.getMessage(), e);
 			homeBot.sendMessage(e.getMessage());
 		}
-		log.debug(getHostMessage(currentHosts, "Current Hosts"));
-		return currentHosts;
+		return currentHosts != null
+				? currentHosts.stream().filter(host -> host.getMac() != null).collect(Collectors.toList())
+				: Collections.emptyList();
 	}
 
 }

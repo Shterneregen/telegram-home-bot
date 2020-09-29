@@ -24,6 +24,7 @@ public class PingStoredHostsScheduler {
 
 	@Scheduled(fixedRateString = "${state.change.scheduled.time}")
 	public void pingStoredHosts() {
+		log.debug("Ping stored hosts...");
 		List<Host> storedHosts = hostRepository.findAll();
 		log.debug("Stored hosts: \n{}", storedHosts);
 		if (!CollectionUtils.isEmpty(storedHosts)) {

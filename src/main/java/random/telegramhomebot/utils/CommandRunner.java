@@ -3,6 +3,7 @@ package random.telegramhomebot.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import random.telegramhomebot.model.Host;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -44,8 +45,12 @@ public class CommandRunner {
 		return result;
 	}
 
-	void ping(String ip) {
+	public void ping(String ip) {
 		runCommand(String.format("ping -c 4 %s", ip));
 		log.debug("ping {}", ip);
+	}
+
+	public void pingHosts(List<Host> hosts) {
+		hosts.forEach(host -> ping(host.getIp()));
 	}
 }

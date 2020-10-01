@@ -1,10 +1,10 @@
 package random.telegramhomebot.telegram;
 
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -12,11 +12,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.utils.CommandRunner;
+import random.telegramhomebot.utils.MessageUtil;
 import random.telegramhomebot.utils.UserValidator;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,6 +42,8 @@ public class HomeBot extends TelegramLongPollingBot {
 	private CommandRunner commandRunner;
 	@Resource
 	private HostRepository hostRepository;
+	@Resource
+	private MessageUtil messageUtil;
 	@Resource
 	private Map<String, String> telegramCommands;
 
@@ -77,7 +79,7 @@ public class HomeBot extends TelegramLongPollingBot {
 	private boolean doControlCommand(String message) {
 		if (message.toLowerCase().equals(SHOW_STORED_HOSTS_COMMAND)) {
 			List<Host> hosts = hostRepository.findAll();
-			sendMessage(formHostsListTable(hosts, "Stored Hosts"));
+			sendMessage(messageUtil.formHostsListTable(hosts, "Stored Hosts"));
 			return true;
 		}
 		if (message.toLowerCase().equals(SHOW_ALL_COMMANDS)) {
@@ -95,35 +97,19 @@ public class HomeBot extends TelegramLongPollingBot {
 	}
 
 	private void sendMessage(String messageText, long chatId) {
+		if (Strings.isBlank(messageText)) {
+			log.debug("trying to send blank message");
+			return;
+		}
 		SendMessage message = new SendMessage()
 				.setChatId(chatId)
 				.setText(messageText);
 		try {
 			execute(message);
+			log.debug("Message: {}", message);
 		} catch (TelegramApiException e) {
 			log.error(e.getMessage(), e);
 		}
-	}
-
-	public String formHostsListTable(List<Host> hosts, final String title) {
-		if (CollectionUtils.isEmpty(hosts)) {
-			return "";
-		}
-
-		Integer maxNameLength = hosts.stream()
-				.filter(host -> host.getDeviceName() != null)
-				.max(Comparator.comparing(Host::getDeviceName))
-				.map(host -> host.getDeviceName().length()).orElse(4);
-
-		String format = "|%1$-17s|%2$-15s|%3$-10s|%4$-10s|%5$-" + maxNameLength + "s|\n";
-		StringBuilder outputTable = new StringBuilder(title).append("\n\n");
-		outputTable.append(String.format(format, "MAC", "IP", "STATE", "INTERFACE", "NAME"));
-		for (Host host : hosts) {
-			outputTable.append(String.format(format,
-					host.getMac(), host.getIp(), host.getState(), host.getHostInterface(), host.getDeviceName()));
-		}
-		log.debug("{}:\n{}", title, outputTable.toString());
-		return outputTable.toString();
 	}
 
 	@Override

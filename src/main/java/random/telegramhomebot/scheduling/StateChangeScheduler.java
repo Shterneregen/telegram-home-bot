@@ -1,4 +1,4 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.scheduling;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -13,11 +13,14 @@ import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.telegram.HomeBot;
+import random.telegramhomebot.utils.CommandRunner;
+import random.telegramhomebot.utils.MessageUtil;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +30,7 @@ public class StateChangeScheduler {
 
 	private static final String NEW_HOSTS = "New Hosts";
 	private static final String CHANGED_HOSTS = "Changed Hosts";
+	private static final String UNREACHABLE_HOSTS = "Unreachable Hosts";
 
 	@Resource
 	private CommandRunner commandRunner;
@@ -36,6 +40,8 @@ public class StateChangeScheduler {
 	private ObjectMapper objectMapper;
 	@Resource
 	private HostRepository hostRepository;
+	@Resource
+	private MessageUtil messageUtil;
 
 	@Value("${state.change.command}")
 	private String stateChangeCommand;
@@ -46,19 +52,21 @@ public class StateChangeScheduler {
 		List<Host> currentHosts = getCurrentHosts();
 
 		if (!CollectionUtils.isEmpty(currentHosts) && CollectionUtils.isEmpty(storedHosts)) {
-			homeBot.sendMessage(homeBot.formHostsListTable(currentHosts, NEW_HOSTS));
+			homeBot.sendMessage(messageUtil.formHostsListTable(currentHosts, NEW_HOSTS));
 		}
 
 		if (!CollectionUtils.isEmpty(currentHosts) && !CollectionUtils.isEmpty(storedHosts)) {
 			List<Host> newHosts = getNewHosts(storedHosts, currentHosts);
 			List<Host> changedHosts = getChangedHosts(storedHosts, currentHosts);
+			List<Host> storedNotReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
 
-			String message = formMessage(
-					homeBot.formHostsListTable(newHosts, NEW_HOSTS),
-					homeBot.formHostsListTable(changedHosts, CHANGED_HOSTS));
-			if (!message.isEmpty()) {
-				log.debug("Message: {}", message);
-				homeBot.sendMessage(message);
+			homeBot.sendMessage(messageUtil.formHostsListTable(Map.of(
+					NEW_HOSTS, newHosts,
+					CHANGED_HOSTS, changedHosts,
+					UNREACHABLE_HOSTS, storedNotReachableHosts)));
+
+			if (!CollectionUtils.isEmpty(storedNotReachableHosts)) {
+				hostRepository.saveAll(storedNotReachableHosts);
 			}
 		}
 
@@ -66,39 +74,18 @@ public class StateChangeScheduler {
 			hostRepository.saveAll(currentHosts);
 			hostRepository.flush();
 		}
-
-		pingNotReachableHosts(currentHosts);
-	}
-
-	private String formMessage(String... messages) {
-		StringBuilder message = new StringBuilder();
-		for (int i = 0; i < messages.length; i++) {
-			if (i > 0 && !message.toString().isEmpty()) {
-				message.append("\n\n");
-			}
-			message.append(messages[i]);
-		}
-		return message.toString().trim();
-	}
-
-	private void pingNotReachableHosts(List<Host> hosts) {
-		hosts.parallelStream()
-				.filter(host -> !HostState.REACHABLE.equals(host.getState()))
-				.forEach(host -> commandRunner.ping(host.getIp()));
 	}
 
 	private List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
 		return currentHosts.stream()
-				.filter(currentHost -> storedHosts.stream()
-						.noneMatch(storedHost -> storedHost.getMac() != null
-								&& storedHost.getMac().equals(currentHost.getMac())))
+				.filter(currentHost -> storedHosts.stream().noneMatch(currentHost::equals))
 				.collect(Collectors.toList());
 	}
 
 	private List<Host> getChangedHosts(List<Host> storedHosts, List<Host> currentHosts) {
 		return storedHosts.stream()
 				.filter(storedHost -> currentHosts.stream()
-						.anyMatch(currentHost -> currentHost.getMac().equals(storedHost.getMac())
+						.anyMatch(currentHost -> currentHost.equals(storedHost)
 								&& !currentHost.getState().equals(storedHost.getState())))
 				.collect(Collectors.toList());
 	}
@@ -116,6 +103,14 @@ public class StateChangeScheduler {
 		return currentHosts != null
 				? currentHosts.stream().filter(host -> host.getMac() != null).collect(Collectors.toList())
 				: Collections.emptyList();
+	}
+
+	private List<Host> getStoredNotReachableHosts(List<Host> storedHosts, List<Host> currentHosts) {
+		return storedHosts.stream()
+				.filter(storedHost -> !HostState.FAILED.equals(storedHost.getState())
+						&& currentHosts.stream().noneMatch(storedHost::equals))
+				.peek(host -> host.setState(HostState.FAILED))
+				.collect(Collectors.toList());
 	}
 
 }

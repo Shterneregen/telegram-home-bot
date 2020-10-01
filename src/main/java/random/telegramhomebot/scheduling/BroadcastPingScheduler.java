@@ -1,10 +1,11 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.scheduling;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import random.telegramhomebot.utils.CommandRunner;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;

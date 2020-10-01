@@ -1,12 +1,12 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.scheduling;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
+import random.telegramhomebot.utils.CommandRunner;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
@@ -27,9 +27,7 @@ public class PingStoredHostsScheduler {
 		log.debug("Ping stored hosts...");
 		List<Host> storedHosts = hostRepository.findAll();
 		log.debug("Stored hosts: \n{}", storedHosts);
-		if (!CollectionUtils.isEmpty(storedHosts)) {
-			storedHosts.parallelStream().forEach(host -> commandRunner.ping(host.getIp()));
-		}
+		commandRunner.pingHosts(storedHosts);
 	}
 
 }

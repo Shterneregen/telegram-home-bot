@@ -2,12 +2,11 @@ package random.telegramhomebot;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.telegram.HomeBot;
+import random.telegramhomebot.utils.MessageUtil;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 @Component
 public class Loader implements CommandLineRunner {
@@ -18,6 +17,8 @@ public class Loader implements CommandLineRunner {
 	private HomeBot homeBot;
 	@Resource
 	private HostRepository hostRepository;
+	@Resource
+	private MessageUtil messageUtil;
 
 	@Override
 	public void run(String... args) {
@@ -25,7 +26,6 @@ public class Loader implements CommandLineRunner {
 	}
 
 	private void sendBootstrapMessage() {
-		List<Host> hosts = hostRepository.findAll();
-		homeBot.sendMessage("Chatbot started!\n\n" + homeBot.formHostsListTable(hosts, STORED_HOSTS));
+		homeBot.sendMessage("Chatbot started!\n\n" + messageUtil.formHostsListTable(hostRepository.findAll(), STORED_HOSTS));
 	}
 }

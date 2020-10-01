@@ -81,4 +81,19 @@ public class Host {
 				", deviceName='" + deviceName + '\'' +
 				'}';
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Host host = (Host) o;
+
+		return mac != null ? mac.equals(host.mac) : host.mac == null;
+	}
+
+	@Override
+	public int hashCode() {
+		return mac != null ? mac.hashCode() : 0;
+	}
 }

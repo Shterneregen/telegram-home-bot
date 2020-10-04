@@ -29,7 +29,7 @@ public class StateChangeScheduler {
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
 	private static final String NEW_HOSTS = "New Hosts";
-	private static final String CHANGED_HOSTS = "Changed Hosts";
+	private static final String REACHABLE_HOSTS = "Reachable Hosts";
 	private static final String UNREACHABLE_HOSTS = "Unreachable Hosts";
 
 	@Resource
@@ -46,7 +46,7 @@ public class StateChangeScheduler {
 	@Value("${state.change.command}")
 	private String stateChangeCommand;
 
-	@Scheduled(fixedRateString = "${state.change.scheduled.time}")
+	@Scheduled(fixedRateString = "${state.change.scheduled.time}", initialDelay = 20000)
 	public void checkState() {
 		List<Host> storedHosts = hostRepository.findAll();
 		List<Host> currentHosts = getCurrentHosts();
@@ -57,12 +57,12 @@ public class StateChangeScheduler {
 
 		if (!CollectionUtils.isEmpty(currentHosts) && !CollectionUtils.isEmpty(storedHosts)) {
 			List<Host> newHosts = getNewHosts(storedHosts, currentHosts);
-			List<Host> changedHosts = getChangedHosts(storedHosts, currentHosts);
+			List<Host> storedReachableHosts = getStoredReachableHosts(storedHosts, currentHosts);
 			List<Host> storedNotReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
 
 			homeBot.sendMessage(messageUtil.formHostsListTable(Map.of(
 					NEW_HOSTS, newHosts,
-					CHANGED_HOSTS, changedHosts,
+					REACHABLE_HOSTS, storedReachableHosts,
 					UNREACHABLE_HOSTS, storedNotReachableHosts)));
 
 			if (!CollectionUtils.isEmpty(storedNotReachableHosts)) {
@@ -82,11 +82,11 @@ public class StateChangeScheduler {
 				.collect(Collectors.toList());
 	}
 
-	private List<Host> getChangedHosts(List<Host> storedHosts, List<Host> currentHosts) {
-		return storedHosts.stream()
-				.filter(storedHost -> currentHosts.stream()
-						.anyMatch(currentHost -> currentHost.equals(storedHost)
-								&& !currentHost.getState().equals(storedHost.getState())))
+	private List<Host> getStoredReachableHosts(List<Host> storedHosts, List<Host> currentHosts) {
+		return currentHosts.stream()
+				.filter(currentHost -> HostState.REACHABLE.equals(currentHost.getState())
+						&& storedHosts.stream().anyMatch(storedHost -> storedHost.equals(currentHost)
+						&& HostState.FAILED.equals(storedHost.getState())))
 				.collect(Collectors.toList());
 	}
 

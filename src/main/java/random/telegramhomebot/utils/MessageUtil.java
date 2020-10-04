@@ -7,7 +7,6 @@ import org.springframework.util.CollectionUtils;
 import random.telegramhomebot.model.Host;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,16 +27,10 @@ public class MessageUtil {
 			return "";
 		}
 
-		Integer maxNameLength = hosts.stream()
-				.filter(host -> host.getDeviceName() != null)
-				.max(Comparator.comparing(Host::getDeviceName))
-				.map(host -> host.getDeviceName().length()).orElse(4);
-
-		String format = "|%1$-17s|%2$-15s|%3$-10s|%4$-" + maxNameLength + "s|\n";
+		String format = "|%1$-15s|%2$-10s|%3$s|\n";
 		StringBuilder outputTable = new StringBuilder(title).append("\n\n");
-		outputTable.append(String.format(format, "MAC", "IP", "STATE", "NAME"));
 		for (Host host : hosts) {
-			outputTable.append(String.format(format, host.getMac(), host.getIp(), host.getState(), host.getDeviceName()));
+			outputTable.append(String.format(format, host.getIp(), host.getState(), host.getDeviceName()));
 		}
 		log.debug("{}:\n{}", title, outputTable.toString());
 		return outputTable.toString();

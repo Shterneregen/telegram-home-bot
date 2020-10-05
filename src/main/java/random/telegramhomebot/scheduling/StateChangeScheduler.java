@@ -84,7 +84,7 @@ public class StateChangeScheduler {
 
 	private List<Host> getStoredReachableHosts(List<Host> storedHosts, List<Host> currentHosts) {
 		return currentHosts.stream()
-				.filter(currentHost -> HostState.REACHABLE.equals(currentHost.getState())
+				.filter(currentHost -> !HostState.FAILED.equals(currentHost.getState())
 						&& storedHosts.stream().anyMatch(storedHost -> storedHost.equals(currentHost)
 						&& HostState.FAILED.equals(storedHost.getState())))
 				.collect(Collectors.toList());

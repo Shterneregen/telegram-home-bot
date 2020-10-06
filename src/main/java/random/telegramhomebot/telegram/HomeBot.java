@@ -7,7 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.TelegramCommand;
@@ -19,6 +23,7 @@ import random.telegramhomebot.utils.UserValidator;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,8 +32,8 @@ public class HomeBot extends TelegramLongPollingBot {
 
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
-	private static final String SHOW_STORED_HOSTS_COMMAND = "hosts";
-	private static final String SHOW_ALL_COMMANDS = "commands";
+	private static final String SHOW_STORED_HOSTS_COMMAND = "/hosts";
+	private static final String SHOW_ALL_COMMANDS = "/commands";
 
 	@Value("${telegram.bot.chat.id}")
 	private Long botChatId;
@@ -53,32 +58,32 @@ public class HomeBot extends TelegramLongPollingBot {
 		if (!update.hasMessage() || !update.getMessage().hasText()) {
 			return;
 		}
-
-		String message = update.getMessage().getText().toLowerCase();
-		long chatId = update.getMessage().getChatId();
-
 		log.debug(String.valueOf(update));
-		Integer userId = update.getMessage().getFrom().getId();
+
+		Message message = update.getMessage();
+		String messageStr = message.getText().toLowerCase();
+		Long chatId = message.getChatId();
+		Integer userId = message.getFrom().getId();
 
 		boolean allowedUser = userValidator.isAllowedUser(userId);
 		if (!allowedUser) {
-			sendMessage(String.format("Unauthorized access! userId: %s, message: %s", userId, message));
+			sendMessage(String.format("Unauthorized access! userId: %s, message: %s", userId, messageStr));
 			return;
 		}
 
-		if (doControlCommand(message)) {
+		if (executeControlCommand(messageStr)) {
 			return;
 		}
 
-		TelegramCommand telegramCommand = telegramCommandRepository.findByCommandAlias(message);
+		TelegramCommand telegramCommand = telegramCommandRepository.findByCommandAlias(messageStr);
 		if (telegramCommand != null) {
 			List<String> commandOutput = commandRunner.runCommand(telegramCommand.getCommand());
-			sendMessage(String.join("\n", commandOutput), chatId);
+			sendMessage(String.join("\n", commandOutput), chatId, message.getMessageId());
 			commandOutput.forEach(log::debug);
 		}
 	}
 
-	private boolean doControlCommand(String message) {
+	private boolean executeControlCommand(String message) {
 		if (message.equals(SHOW_STORED_HOSTS_COMMAND)) {
 			List<Host> hosts = hostRepository.findAll();
 			sendMessage(messageUtil.formHostsListTable(hosts, "Stored Hosts"));
@@ -95,23 +100,48 @@ public class HomeBot extends TelegramLongPollingBot {
 	}
 
 	public void sendMessage(String messageText) {
-		sendMessage(messageText, botChatId);
+		sendMessage(messageText, botChatId, null);
 	}
 
-	private void sendMessage(String messageText, long chatId) {
+	private void sendMessage(String messageText, long chatId, Integer replyToMessageId) {
 		if (Strings.isBlank(messageText)) {
 			log.debug("trying to send blank message");
 			return;
 		}
 		SendMessage message = new SendMessage()
 				.setChatId(chatId)
-				.setText(messageText);
+				.setText(messageText)
+				.setReplyToMessageId(replyToMessageId)
+				.enableMarkdown(true);
 		try {
+			setButtons(message);
 			execute(message);
 			log.debug("Message: {}", message);
 		} catch (TelegramApiException e) {
 			log.error(e.getMessage(), e);
 		}
+	}
+
+	public void setButtons(SendMessage sendMessage) {
+		ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup()
+				.setSelective(true)
+				.setResizeKeyboard(true)
+				.setOneTimeKeyboard(false);
+		sendMessage.setReplyMarkup(replyKeyboardMarkup);
+
+		List<TelegramCommand> allCommands = telegramCommandRepository.findAll();
+		List<KeyboardRow> keyboardRowList = new ArrayList<>();
+		KeyboardRow keyboardRow = new KeyboardRow();
+		for (int i = 0; i < allCommands.size(); i++) {
+			if (i % 2 == 0) {
+				keyboardRow = new KeyboardRow();
+			}
+			keyboardRow.add(new KeyboardButton(allCommands.get(i).getCommandAlias()));
+			if (i % 2 != 0) {
+				keyboardRowList.add(keyboardRow);
+			}
+		}
+		replyKeyboardMarkup.setKeyboard(keyboardRowList);
 	}
 
 	@Override

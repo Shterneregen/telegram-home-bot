@@ -24,6 +24,7 @@ public class CommandRunner {
 	}
 
 	public List<String> runCommand(String command, String encoding) {
+		log.debug("runCommand [{}]", command);
 		List<String> result = new ArrayList<>();
 		try {
 			Process process = Runtime.getRuntime().exec(command);

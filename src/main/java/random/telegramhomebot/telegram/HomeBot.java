@@ -10,7 +10,9 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.model.Host;
+import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.HostRepository;
+import random.telegramhomebot.repository.TelegramCommandRepository;
 import random.telegramhomebot.utils.CommandRunner;
 import random.telegramhomebot.utils.MessageUtil;
 import random.telegramhomebot.utils.UserValidator;
@@ -18,7 +20,6 @@ import random.telegramhomebot.utils.UserValidator;
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -45,7 +46,7 @@ public class HomeBot extends TelegramLongPollingBot {
 	@Resource
 	private MessageUtil messageUtil;
 	@Resource
-	private Map<String, String> telegramCommands;
+	private TelegramCommandRepository telegramCommandRepository;
 
 	@Override
 	public void onUpdateReceived(Update update) {
@@ -53,7 +54,7 @@ public class HomeBot extends TelegramLongPollingBot {
 			return;
 		}
 
-		String message = update.getMessage().getText();
+		String message = update.getMessage().getText().toLowerCase();
 		long chatId = update.getMessage().getChatId();
 
 		log.debug(String.valueOf(update));
@@ -69,22 +70,23 @@ public class HomeBot extends TelegramLongPollingBot {
 			return;
 		}
 
-		if (telegramCommands.containsKey(message.toLowerCase())) {
-			List<String> commandOutput = commandRunner.runCommand(telegramCommands.get(message.toLowerCase()));
+		TelegramCommand telegramCommand = telegramCommandRepository.findByCommandAlias(message);
+		if (telegramCommand != null) {
+			List<String> commandOutput = commandRunner.runCommand(telegramCommand.getCommand());
 			sendMessage(String.join("\n", commandOutput), chatId);
 			commandOutput.forEach(log::debug);
 		}
 	}
 
 	private boolean doControlCommand(String message) {
-		if (message.toLowerCase().equals(SHOW_STORED_HOSTS_COMMAND)) {
+		if (message.equals(SHOW_STORED_HOSTS_COMMAND)) {
 			List<Host> hosts = hostRepository.findAll();
 			sendMessage(messageUtil.formHostsListTable(hosts, "Stored Hosts"));
 			return true;
 		}
-		if (message.toLowerCase().equals(SHOW_ALL_COMMANDS)) {
-			String commands = telegramCommands.entrySet().stream()
-					.map(command -> command.getKey() + "=" + command.getValue())
+		if (message.equals(SHOW_ALL_COMMANDS)) {
+			String commands = telegramCommandRepository.findAll().stream()
+					.map(command -> command.getCommandAlias() + " = " + command.getCommand())
 					.collect(Collectors.joining("\n"));
 			sendMessage(commands);
 			return true;

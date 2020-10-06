@@ -137,7 +137,7 @@ public class HomeBot extends TelegramLongPollingBot {
 				keyboardRow = new KeyboardRow();
 			}
 			keyboardRow.add(new KeyboardButton(allCommands.get(i).getCommandAlias()));
-			if (i % 2 != 0) {
+			if (i % 2 != 0 || i == allCommands.size() - 1) {
 				keyboardRowList.add(keyboardRow);
 			}
 		}

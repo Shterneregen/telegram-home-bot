@@ -17,6 +17,8 @@ import java.util.UUID;
 @RequestMapping("/")
 public class CommandController {
 
+	private static final String COMMAND = "command";
+
 	@Resource
 	private TelegramCommandRepository telegramCommandRepository;
 
@@ -32,12 +34,12 @@ public class CommandController {
 		if (id.isPresent()) {
 			Optional<TelegramCommand> commandOp = telegramCommandRepository.findById(id.get());
 			if (commandOp.isPresent()) {
-				model.addAttribute("command", commandOp.get());
+				model.addAttribute(COMMAND, commandOp.get());
 			} else {
-				model.addAttribute("command", new TelegramCommand());
+				model.addAttribute(COMMAND, new TelegramCommand());
 			}
 		} else {
-			model.addAttribute("command", new TelegramCommand());
+			model.addAttribute(COMMAND, new TelegramCommand());
 		}
 		return "add-edit-command";
 	}

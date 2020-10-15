@@ -13,13 +13,14 @@ import org.springframework.util.CollectionUtils;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
 import random.telegramhomebot.repository.HostRepository;
-import random.telegramhomebot.telegram.HomeBot;
+import random.telegramhomebot.telegram.Bot;
 import random.telegramhomebot.utils.CommandRunner;
 import random.telegramhomebot.utils.MessageUtil;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,7 +38,7 @@ public class StateChangeScheduler {
 	@Resource
 	private CommandRunner commandRunner;
 	@Resource
-	private HomeBot homeBot;
+	private Bot bot;
 	@Resource
 	private ObjectMapper objectMapper;
 	@Resource
@@ -54,7 +55,7 @@ public class StateChangeScheduler {
 		List<Host> currentHosts = getCurrentHosts();
 
 		if (!CollectionUtils.isEmpty(currentHosts) && CollectionUtils.isEmpty(storedHosts)) {
-			homeBot.sendMessage(messageUtil.formHostsListTable(currentHosts, NEW_HOSTS));
+			bot.sendMessage(messageUtil.formHostsListTable(currentHosts, NEW_HOSTS));
 		}
 
 		if (!CollectionUtils.isEmpty(currentHosts) && !CollectionUtils.isEmpty(storedHosts)) {
@@ -62,7 +63,7 @@ public class StateChangeScheduler {
 			List<Host> storedReachableHosts = getStoredReachableHosts(storedHosts, currentHosts);
 			List<Host> storedNotReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
 
-			homeBot.sendMessage(messageUtil.formHostsListTable(Map.of(
+			bot.sendMessage(messageUtil.formHostsListTable(Map.of(
 					NEW_HOSTS, newHosts,
 					REACHABLE_HOSTS, storedReachableHosts,
 					UNREACHABLE_HOSTS, storedNotReachableHosts)));
@@ -81,6 +82,7 @@ public class StateChangeScheduler {
 	private List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
 		return currentHosts.stream()
 				.filter(currentHost -> storedHosts.stream().noneMatch(currentHost::equals))
+				.sorted(Comparator.comparing(Host::getIp))
 				.collect(Collectors.toList());
 	}
 
@@ -89,6 +91,7 @@ public class StateChangeScheduler {
 				.filter(currentHost -> !HostState.FAILED.equals(currentHost.getState())
 						&& storedHosts.stream().anyMatch(storedHost -> storedHost.equals(currentHost)
 						&& HostState.FAILED.equals(storedHost.getState())))
+				.sorted(Comparator.comparing(Host::getIp))
 				.collect(Collectors.toList());
 	}
 
@@ -100,10 +103,11 @@ public class StateChangeScheduler {
 			});
 		} catch (JsonProcessingException e) {
 			log.error(e.getMessage(), e);
-			homeBot.sendMessage(e.getMessage());
+			bot.sendMessage(e.getMessage());
 		}
 		return currentHosts != null
-				? currentHosts.stream().filter(host -> host.getMac() != null).collect(Collectors.toList())
+				? currentHosts.stream().filter(host -> host.getMac() != null)
+				.sorted(Comparator.comparing(Host::getIp)).collect(Collectors.toList())
 				: Collections.emptyList();
 	}
 
@@ -112,6 +116,7 @@ public class StateChangeScheduler {
 				.filter(storedHost -> !HostState.FAILED.equals(storedHost.getState())
 						&& currentHosts.stream().noneMatch(storedHost::equals))
 				.peek(host -> host.setState(HostState.FAILED))
+				.sorted(Comparator.comparing(Host::getIp))
 				.collect(Collectors.toList());
 	}
 

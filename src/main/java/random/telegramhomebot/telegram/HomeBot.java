@@ -4,6 +4,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -27,8 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Profile("!mock-bot")
 @Component
-public class HomeBot extends TelegramLongPollingBot {
+public class HomeBot extends TelegramLongPollingBot implements Bot{
 
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
@@ -99,6 +101,7 @@ public class HomeBot extends TelegramLongPollingBot {
 		return false;
 	}
 
+	@Override
 	public void sendMessage(String messageText) {
 		sendMessage(messageText, botChatId, null);
 	}

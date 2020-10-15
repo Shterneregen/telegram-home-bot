@@ -4,7 +4,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import random.telegramhomebot.repository.HostRepository;
-import random.telegramhomebot.telegram.HomeBot;
+import random.telegramhomebot.telegram.Bot;
 import random.telegramhomebot.utils.MessageUtil;
 
 import javax.annotation.Resource;
@@ -14,11 +14,11 @@ import java.util.List;
 public class Loader implements CommandLineRunner {
 
 	private static final String STORED_HOSTS = "Stored Hosts";
-	private static final String NETWORK_MONITOR = "network-monitor";
+	private static final String NETWORK_MONITOR_PROFILE = "network-monitor";
 	private static final String CHATBOT_STARTED = "Chatbot started!";
 
 	@Resource
-	private HomeBot homeBot;
+	private Bot bot;
 	@Resource
 	private HostRepository hostRepository;
 	@Resource
@@ -33,10 +33,10 @@ public class Loader implements CommandLineRunner {
 
 	private void sendBootstrapMessage() {
 		StringBuilder messageBuilder = new StringBuilder(CHATBOT_STARTED);
-		if (List.of(environment.getActiveProfiles()).contains(NETWORK_MONITOR)) {
+		if (List.of(environment.getActiveProfiles()).contains(NETWORK_MONITOR_PROFILE)) {
 			messageBuilder.append("\n\n").append(messageUtil.formHostsListTable(hostRepository.findAll(), STORED_HOSTS));
 		}
 
-		homeBot.sendMessage(messageBuilder.toString());
+		bot.sendMessage(messageBuilder.toString());
 	}
 }

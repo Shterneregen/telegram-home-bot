@@ -25,6 +25,7 @@ To use this project set environment variables for TELEGRAM_BOT_CHAT_ID, TELEGRAM
     * `sudo mkdir /var/telegram` (create a folder for jar file)
     * `sudo cp /SOME_LINUX_FOLDER/thb.jar /var/telegram/thb.jar` (copy jar to the folder)
     * `sudo ln -s /var/telegram/thb.jar /etc/init.d/thb` (create symlink the jar to init.d)
+    * `sudo chmod +x /var/telegram/thb.jar` (make thb.jar executable)
     * `sudo systemctl daemon-reload` (reload systemd manager configuration)
     * `sudo service thb start` (start bot as a service)
     * `update-rc.d thb defaults` (autostart)

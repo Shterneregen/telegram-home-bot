@@ -17,12 +17,12 @@
                     <form action="#" th:action="@{/createCommand}" th:object="${command}" method="post">
                         <div class="row">
                             <div class="form-group col-md-8">
-                                <label for="name" class="col-form-label">Command Alias</label>
+                                <label for="commandAlias" class="col-form-label">Command Alias</label>
                                 <input type="text" th:field="*{commandAlias}" class="form-control"
                                        id="commandAlias" placeholder="Command Alias"/>
                             </div>
                             <div class="form-group col-md-8">
-                                <label for="name" class="col-form-label">Command</label>
+                                <label for="command" class="col-form-label">Command</label>
                                 <input type="text" th:field="*{command}" class="form-control"
                                        id="command" placeholder="Command"/>
                             </div>

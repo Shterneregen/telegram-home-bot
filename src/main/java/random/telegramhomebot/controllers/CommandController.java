@@ -9,7 +9,6 @@ import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.TelegramCommandRepository;
 
 import javax.annotation.Resource;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,6 +16,7 @@ import java.util.UUID;
 @RequestMapping("/")
 public class CommandController {
 
+	private static final String COMMANDS = "commands";
 	private static final String COMMAND = "command";
 
 	@Resource
@@ -24,34 +24,27 @@ public class CommandController {
 
 	@RequestMapping
 	public String getAllCommands(Model model) {
-		List<TelegramCommand> commands = telegramCommandRepository.findAll();
-		model.addAttribute("commands", commands);
+		model.addAttribute(COMMANDS, telegramCommandRepository.findAll());
 		return "commands";
 	}
 
 	@RequestMapping(path = {"/edit", "/edit/{id}"})
-	public String editEmployeeById(Model model, @PathVariable("id") Optional<UUID> id) {
-		if (id.isPresent()) {
-			Optional<TelegramCommand> commandOp = telegramCommandRepository.findById(id.get());
-			if (commandOp.isPresent()) {
-				model.addAttribute(COMMAND, commandOp.get());
-			} else {
-				model.addAttribute(COMMAND, new TelegramCommand());
-			}
-		} else {
-			model.addAttribute(COMMAND, new TelegramCommand());
-		}
+	public String editCommandById(Model model, @PathVariable("id") Optional<UUID> id) {
+		model.addAttribute(COMMAND, Optional.ofNullable(id)
+				.filter(Optional::isPresent)
+				.flatMap(macOp -> telegramCommandRepository.findById(id.get()))
+				.orElseGet(TelegramCommand::new));
 		return "add-edit-command";
 	}
 
 	@RequestMapping(path = "/delete/{id}")
-	public String deleteEmployeeById(Model model, @PathVariable("id") UUID id) {
+	public String deleteCommandById(@PathVariable("id") UUID id) {
 		telegramCommandRepository.deleteById(id);
 		return "redirect:/";
 	}
 
 	@PostMapping(path = "/createCommand")
-	public String createOrUpdateEmployee(TelegramCommand command) {
+	public String createOrUpdateCommand(TelegramCommand command) {
 		telegramCommandRepository.save(command);
 		return "redirect:/";
 	}

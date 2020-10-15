@@ -2,22 +2,32 @@ package random.telegramhomebot.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.UUID;
 
 @Entity
 @Table(name = "hosts")
 public class Host {
+
+	@Id
+	@GeneratedValue(generator = "UUID")
+	@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+	@Type(type = "org.hibernate.type.UUIDCharType")
+	@Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
+	private UUID id;
 	@Column(name = "ip")
 	@JsonProperty("dst")
 	private String ip;
 	@Column(name = "host_interface")
 	@JsonProperty("dev")
 	private String hostInterface;
-	@Id
 	@Column(name = "mac", unique = true, nullable = false)
 	@JsonProperty("lladdr")
 	private String mac;
@@ -29,6 +39,14 @@ public class Host {
 	private String deviceName;
 
 	public Host() {
+	}
+
+	public UUID getId() {
+		return id;
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
 	}
 
 	public String getIp() {

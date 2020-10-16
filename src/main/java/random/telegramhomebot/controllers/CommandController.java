@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Controller
-@RequestMapping("/")
+@RequestMapping("/commands")
 public class CommandController {
 
 	private static final String COMMANDS = "commands";
@@ -25,7 +25,7 @@ public class CommandController {
 	@RequestMapping
 	public String getAllCommands(Model model) {
 		model.addAttribute(COMMANDS, telegramCommandRepository.findAll());
-		return "commands";
+		return COMMANDS;
 	}
 
 	@RequestMapping(path = {"/edit", "/edit/{id}"})
@@ -40,12 +40,12 @@ public class CommandController {
 	@RequestMapping(path = "/delete/{id}")
 	public String deleteCommandById(@PathVariable("id") UUID id) {
 		telegramCommandRepository.deleteById(id);
-		return "redirect:/";
+		return "redirect:/" + COMMANDS;
 	}
 
 	@PostMapping(path = "/createCommand")
 	public String createOrUpdateCommand(TelegramCommand command) {
 		telegramCommandRepository.save(command);
-		return "redirect:/";
+		return "redirect:/" + COMMANDS;
 	}
 }

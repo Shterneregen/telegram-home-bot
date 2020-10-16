@@ -10,9 +10,9 @@
 <body>
 <div layout:fragment="content">
     <div class="container">
-       <div id="add-command-btn">
-           <a href="/edit" class="btn btn-primary"><i class="fas fa-plus ml-2"> Add Command </i></a>
-       </div>
+        <div id="add-command-btn">
+            <a href="/commands/edit" class="btn btn-primary"><i class="fas fa-plus ml-2"> Add Command </i></a>
+        </div>
         <table class="table table-striped">
             <thead>
             <tr>
@@ -27,12 +27,12 @@
                 <td th:text="${command.commandAlias}"></td>
                 <td th:text="${command.command}"></td>
                 <td>
-                    <a th:href="@{/edit/{id}(id=${command.id})}" class="btn btn-primary">
+                    <a th:href="@{/commands/edit/{id}(id=${command.id})}" class="btn btn-primary">
                         <i class="fas fa-edit ml-2"></i>
                     </a>
                 </td>
                 <td>
-                    <a th:href="@{/delete/{id}(id=${command.id})}" class="btn btn-primary">
+                    <a th:href="@{/commands/delete/{id}(id=${command.id})}" class="btn btn-primary">
                         <i class="fas fa-times ml-2"></i>
                     </a>
                 </td>

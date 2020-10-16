@@ -43,12 +43,12 @@ public class HostController {
 	@RequestMapping(path = "/delete/{id}")
 	public String deleteHostById(@PathVariable("id") UUID id) {
 		hostRepository.deleteById(id);
-		return "redirect:/hosts";
+		return "redirect:/" + HOSTS;
 	}
 
 	@PostMapping(path = "/createHost")
 	public String createOrUpdateHost(Host host) {
 		hostRepository.save(host);
-		return "redirect:/hosts";
+		return "redirect:/" + HOSTS;
 	}
 }

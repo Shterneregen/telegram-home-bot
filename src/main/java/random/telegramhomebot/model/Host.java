@@ -35,7 +35,7 @@ public class Host {
 	@JsonProperty("state")
 	@JsonDeserialize(using = HostStateDeserializer.class)
 	private HostState state;
-	@Column(name = "device_name", updatable = false)
+	@Column(name = "device_name")
 	private String deviceName;
 
 	public Host() {

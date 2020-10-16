@@ -82,7 +82,7 @@ public class StateChangeScheduler {
 	private List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
 		return currentHosts.stream()
 				.filter(currentHost -> storedHosts.stream().noneMatch(currentHost::equals))
-				.sorted(comparingByHost())
+				.sorted(comparingByIp())
 				.collect(Collectors.toList());
 	}
 
@@ -91,7 +91,7 @@ public class StateChangeScheduler {
 				.filter(currentHost -> !HostState.FAILED.equals(currentHost.getState())
 						&& storedHosts.stream().anyMatch(storedHost -> storedHost.equals(currentHost)
 						&& HostState.FAILED.equals(storedHost.getState())))
-				.sorted(comparingByHost())
+				.sorted(comparingByIp())
 				.collect(Collectors.toList());
 	}
 
@@ -114,7 +114,7 @@ public class StateChangeScheduler {
 								currentHost.setDeviceName(host.getDeviceName());
 							}
 						}
-				).sorted(comparingByHost()).collect(Collectors.toList())
+				).sorted(comparingByIp()).collect(Collectors.toList())
 				: Collections.emptyList();
 	}
 
@@ -123,11 +123,11 @@ public class StateChangeScheduler {
 				.filter(storedHost -> !HostState.FAILED.equals(storedHost.getState())
 						&& currentHosts.stream().noneMatch(storedHost::equals))
 				.peek(host -> host.setState(HostState.FAILED))
-				.sorted(comparingByHost())
+				.sorted(comparingByIp())
 				.collect(Collectors.toList());
 	}
 
-	private Comparator<Host> comparingByHost() {
+	private Comparator<Host> comparingByIp() {
 		return Comparator.comparing(Host::getIp);
 	}
 

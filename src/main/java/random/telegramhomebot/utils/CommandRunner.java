@@ -52,6 +52,8 @@ public class CommandRunner {
 	}
 
 	public void pingHosts(List<Host> hosts) {
-		hosts.forEach(host -> ping(host.getIp()));
+		hosts.stream()
+				.filter(host -> host.getIp() != null && !host.getIp().isBlank())
+				.forEach(host -> ping(host.getIp()));
 	}
 }

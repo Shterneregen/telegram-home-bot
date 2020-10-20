@@ -4,24 +4,30 @@
       layout:decorate="~{layout}">
 
 <head>
-    <title>All Hosts</title>
+    <title th:text="#{hosts}"></title>
 </head>
 
 <body>
 <div layout:fragment="content">
     <div class="container">
         <div id="add-command-btn">
-            <a href="/hosts/edit" class="btn btn-primary"><i class="fas fa-plus ml-2"> Add Host </i></a>
+            <a href="/hosts/edit" class="btn btn-primary">
+                <i class="fas fa-plus">
+                    <span th:text="#{add.host}" class="ml-1">Resume</span>
+                </i>
+            </a>
         </div>
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>IP</th>
-                    <th>MAC</th>
-                    <th>Interface</th>
-                    <th>State</th>
-                    <th>Device</th>
+                    <th th:text="#{host.ip}"></th>
+                    <th th:text="#{host.mac}"></th>
+                    <th th:text="#{host.interface}"></th>
+                    <th th:text="#{host.state}"></th>
+                    <th th:text="#{host.device}"></th>
+                    <th th:text="#{column.edit}"></th>
+                    <th th:text="#{column.delete}"></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -33,12 +39,12 @@
                     <td th:text="${host.deviceName}"></td>
                     <td>
                         <a th:href="@{/hosts/edit/{id}(id=${host.id})}" class="btn btn-primary">
-                            <i class="fas fa-edit ml-2"></i>
+                            <i class="fas fa-edit"></i>
                         </a>
                     </td>
                     <td>
                         <a th:href="@{/hosts/delete/{id}(id=${host.id})}" class="btn btn-primary">
-                            <i class="fas fa-times ml-2"></i>
+                            <i class="fas fa-times"></i>
                         </a>
                     </td>
                 </tr>

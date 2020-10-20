@@ -1,34 +1,35 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+      layout:decorate="~{layout}"
+      th:with="title=${command.id} ? #{edit.command} : #{add.command}">
 
 <head>
-    <title>Add | Edit Command</title>
+    <title th:text="${title}"></title>
 </head>
 
 <body>
 <div layout:fragment="content">
     <div class="container">
-        <h3> Add Command</h3>
+        <h3 th:text="${title}"></h3>
         <div class="card">
             <div class="card-body">
                 <div class="col-md-10">
                     <form action="#" th:action="@{/commands/createCommand}" th:object="${command}" method="post">
                         <div class="row">
                             <div class="form-group col-md-8">
-                                <label for="commandAlias" class="col-form-label">Command Alias</label>
+                                <label for="commandAlias" class="col-form-label" th:text="#{command.alias}"></label>
                                 <input type="text" th:field="*{commandAlias}" class="form-control"
-                                       id="commandAlias" placeholder="Command Alias"/>
+                                       id="commandAlias" th:placeholder="#{command.alias}"/>
                             </div>
                             <div class="form-group col-md-8">
-                                <label for="command" class="col-form-label">Command</label>
+                                <label for="command" class="col-form-label" th:text="#{command.command}"></label>
                                 <input type="text" th:field="*{command}" class="form-control"
-                                       id="command" placeholder="Command"/>
+                                       id="command" th:placeholder="#{command.command}"/>
                             </div>
 
                             <div class="col-md-6">
-                                <input type="submit" class="btn btn-primary" value=" Submit ">
+                                <input type="submit" class="btn btn-primary" th:value="#{btn.submit}">
                             </div>
 
                             <input type="hidden" id="id" th:field="*{id}">

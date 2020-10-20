@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import random.telegramhomebot.utils.MessageConfigurer;
 import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
@@ -32,10 +33,6 @@ public class StateChangeScheduler {
 
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
-	private static final String NEW_HOSTS = "New Hosts";
-	private static final String REACHABLE_HOSTS = "Reachable Hosts";
-	private static final String UNREACHABLE_HOSTS = "Unreachable Hosts";
-
 	@Resource
 	private CommandRunner commandRunner;
 	@Resource
@@ -46,6 +43,8 @@ public class StateChangeScheduler {
 	private HostRepository hostRepository;
 	@Resource
 	private MessageUtil messageUtil;
+	@Resource
+	private MessageConfigurer messageConfigurer;
 
 	@Value("${state.change.command}")
 	private String stateChangeCommand;
@@ -56,7 +55,7 @@ public class StateChangeScheduler {
 		List<Host> currentHosts = getCurrentHosts();
 
 		if (!CollectionUtils.isEmpty(currentHosts) && CollectionUtils.isEmpty(storedHosts)) {
-			bot.sendMessage(messageUtil.formHostsListTable(currentHosts, NEW_HOSTS));
+			bot.sendMessage(messageUtil.formHostsListTable(currentHosts, messageConfigurer.getMessage("new.hosts")));
 		}
 
 		if (!CollectionUtils.isEmpty(currentHosts) && !CollectionUtils.isEmpty(storedHosts)) {
@@ -65,9 +64,9 @@ public class StateChangeScheduler {
 			List<Host> storedNotReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
 
 			bot.sendMessage(messageUtil.formHostsListTable(Map.of(
-					NEW_HOSTS, newHosts,
-					REACHABLE_HOSTS, storedReachableHosts,
-					UNREACHABLE_HOSTS, storedNotReachableHosts)));
+					messageConfigurer.getMessage("new.hosts"), newHosts,
+					messageConfigurer.getMessage("reachable.hosts"), storedReachableHosts,
+					messageConfigurer.getMessage("unreachable.hosts"), storedNotReachableHosts)));
 
 			if (!CollectionUtils.isEmpty(storedNotReachableHosts)) {
 				hostRepository.saveAll(storedNotReachableHosts);

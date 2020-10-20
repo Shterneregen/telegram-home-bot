@@ -4,23 +4,27 @@
       layout:decorate="~{layout}">
 
 <head>
-    <title>All Commands</title>
+    <title th:text="#{commands}"></title>
 </head>
 
 <body>
 <div layout:fragment="content">
     <div class="container">
         <div id="add-command-btn">
-            <a href="/commands/edit" class="btn btn-primary"><i class="fas fa-plus ml-2"> Add Command </i></a>
+            <a href="/commands/edit" class="btn btn-primary">
+                <i class="fas fa-plus">
+                    <span th:text="#{add.command}" class="ml-1">Resume</span>
+                </i>
+            </a>
         </div>
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>Command Alias</th>
-                    <th>Command</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
+                    <th th:text="#{command.alias}"></th>
+                    <th th:text="#{command.command}"></th>
+                    <th th:text="#{column.edit}"></th>
+                    <th th:text="#{column.delete}"></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -29,12 +33,12 @@
                     <td th:text="${command.command}"></td>
                     <td>
                         <a th:href="@{/commands/edit/{id}(id=${command.id})}" class="btn btn-primary">
-                            <i class="fas fa-edit ml-2"></i>
+                            <i class="fas fa-edit"></i>
                         </a>
                     </td>
                     <td>
                         <a th:href="@{/commands/delete/{id}(id=${command.id})}" class="btn btn-primary">
-                            <i class="fas fa-times ml-2"></i>
+                            <i class="fas fa-times"></i>
                         </a>
                     </td>
                 </tr>

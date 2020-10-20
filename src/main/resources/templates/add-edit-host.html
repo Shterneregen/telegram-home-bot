@@ -1,49 +1,50 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+      layout:decorate="~{layout}"
+      th:with="title=${host.id} ? #{edit.host} : #{add.host}">
 
 <head>
-    <title>Add | Edit Host</title>
+    <title th:text="${title}"></title>
 </head>
 
 <body>
 <div layout:fragment="content">
     <div class="container">
-        <h3> Add | Edit Host</h3>
+        <h3 th:text="${title}"></h3>
         <div class="card">
             <div class="card-body">
                 <div class="col-md-10">
                     <form action="#" th:action="@{/hosts/createHost}" th:object="${host}" method="post">
                         <div class="row">
                             <div class="form-group col-md-8">
-                                <label for="ip" class="col-form-label">IP</label>
+                                <label for="ip" class="col-form-label" th:text="#{host.ip}"></label>
                                 <input type="text" th:field="*{ip}" class="form-control"
-                                       id="ip" placeholder="IP"/>
+                                       id="ip" th:placeholder="#{host.ip}"/>
                             </div>
                             <div class="form-group col-md-8">
-                                <label for="mac" class="col-form-label">MAC</label>
+                                <label for="mac" class="col-form-label" th:text="#{host.mac}"></label>
                                 <input type="text" th:field="*{mac}" class="form-control"
-                                       id="mac" placeholder="MAC"/>
+                                       id="mac" th:placeholder="#{host.mac}"/>
                             </div>
                             <div class="form-group col-md-8">
-                                <label for="hostInterface" class="col-form-label">Interface</label>
+                                <label for="hostInterface" class="col-form-label" th:text="#{host.interface}"></label>
                                 <input type="text" th:field="*{hostInterface}" class="form-control"
-                                       id="hostInterface" placeholder="Interface"/>
+                                       id="hostInterface" th:placeholder="#{host.interface}"/>
                             </div>
                             <div class="form-group col-md-8">
-                                <label for="state" class="col-form-label">State</label>
+                                <label for="state" class="col-form-label" th:text="#{host.state}"></label>
                                 <input type="text" th:field="*{state}" class="form-control"
-                                       id="state" placeholder="State"/>
+                                       id="state" th:placeholder="#{host.state}"/>
                             </div>
                             <div class="form-group col-md-8">
-                                <label for="deviceName" class="col-form-label">Device Name</label>
+                                <label for="deviceName" class="col-form-label" th:text="#{host.device}"></label>
                                 <input type="text" th:field="*{deviceName}" class="form-control"
-                                       id="deviceName" placeholder="Device Name"/>
+                                       id="deviceName" th:placeholder="#{host.device}"/>
                             </div>
 
                             <div class="col-md-6">
-                                <input type="submit" class="btn btn-primary" value=" Submit ">
+                                <input type="submit" class="btn btn-primary" th:value="#{btn.submit}">
                             </div>
 
                             <input type="hidden" id="id" th:field="*{id}">

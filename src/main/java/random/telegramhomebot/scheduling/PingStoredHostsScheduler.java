@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.utils.CommandRunner;
@@ -13,7 +14,7 @@ import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
-@Profile("network-monitor")
+@Profile(Profiles.NETWORK_MONITOR)
 @Service
 public class PingStoredHostsScheduler {
 

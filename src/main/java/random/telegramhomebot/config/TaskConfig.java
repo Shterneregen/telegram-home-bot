@@ -1,4 +1,4 @@
-package random.telegramhomebot;
+package random.telegramhomebot.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

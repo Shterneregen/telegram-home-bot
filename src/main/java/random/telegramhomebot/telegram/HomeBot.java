@@ -14,6 +14,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.HostRepository;
@@ -28,9 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Profile("!mock-bot")
+@Profile("!" + Profiles.MOCK_BOT)
 @Component
-public class HomeBot extends TelegramLongPollingBot implements Bot{
+public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 

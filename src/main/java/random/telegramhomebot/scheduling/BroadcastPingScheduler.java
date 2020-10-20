@@ -6,12 +6,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.utils.CommandRunner;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
 
-@Profile("network-monitor")
+@Profile(Profiles.NETWORK_MONITOR)
 @Service
 public class BroadcastPingScheduler {
 

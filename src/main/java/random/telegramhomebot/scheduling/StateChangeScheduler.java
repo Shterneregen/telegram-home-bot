@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
 import random.telegramhomebot.repository.HostRepository;
@@ -25,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Profile("network-monitor")
+@Profile(Profiles.NETWORK_MONITOR)
 @Service
 public class StateChangeScheduler {
 

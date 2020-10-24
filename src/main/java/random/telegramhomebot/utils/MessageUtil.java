@@ -28,8 +28,8 @@ public class MessageUtil {
 			return "";
 		}
 
-		String format = "%1$-15s|%2$-10s|%3$s\n";
-		StringBuilder outputTable = new StringBuilder(title).append("\n\n");
+		String format = "%1$-15s %2$-10s %3$s\n";
+		StringBuilder outputTable = new StringBuilder(title).append("\n");
 		for (Host host : hosts) {
 			outputTable.append(String.format(format, host.getIp(), host.getState(), host.getDeviceName()));
 		}

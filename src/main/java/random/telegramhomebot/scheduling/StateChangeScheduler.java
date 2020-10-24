@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import random.telegramhomebot.utils.MessageConfigurer;
 import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.telegram.Bot;
 import random.telegramhomebot.utils.CommandRunner;
+import random.telegramhomebot.utils.MessageConfigurer;
 import random.telegramhomebot.utils.MessageUtil;
 
 import javax.annotation.Resource;
@@ -91,6 +91,7 @@ public class StateChangeScheduler {
 				.filter(currentHost -> !HostState.FAILED.equals(currentHost.getState())
 						&& storedHosts.stream().anyMatch(storedHost -> storedHost.equals(currentHost)
 						&& HostState.FAILED.equals(storedHost.getState())))
+				.distinct()
 				.sorted(comparingByIp())
 				.collect(Collectors.toList());
 	}
@@ -105,16 +106,9 @@ public class StateChangeScheduler {
 			log.error(e.getMessage(), e);
 			bot.sendMessage(e.getMessage());
 		}
-		return currentHosts != null
-				? currentHosts.stream().filter(host -> host.getMac() != null)
-				.peek(currentHost -> {
-							Host host = hostRepository.findHostByMac(currentHost.getMac());
-							if (host != null) {
-								currentHost.setId(host.getId());
-								currentHost.setDeviceName(host.getDeviceName());
-							}
-						}
-				).sorted(comparingByIp()).collect(Collectors.toList())
+		return currentHosts != null && currentHosts.size() > 0
+				? currentHosts.stream().filter(host -> host.getMac() != null).peek(this::fillHostStoredInfo)
+				.sorted(comparingByIp()).collect(Collectors.toList())
 				: Collections.emptyList();
 	}
 
@@ -129,6 +123,14 @@ public class StateChangeScheduler {
 
 	private Comparator<Host> comparingByIp() {
 		return Comparator.comparing(Host::getIp);
+	}
+
+	private void fillHostStoredInfo(Host currentHost) {
+		Host storedHost = hostRepository.findHostByMac(currentHost.getMac());
+		if (storedHost != null) {
+			currentHost.setId(storedHost.getId());
+			currentHost.setDeviceName(storedHost.getDeviceName());
+		}
 	}
 
 }

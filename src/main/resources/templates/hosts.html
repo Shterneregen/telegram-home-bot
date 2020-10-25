@@ -36,15 +36,18 @@
                     <td th:text="${host.mac}"></td>
                     <td th:text="${host.hostInterface}"></td>
                     <td th:text="${host.state}"></td>
-                    <td th:text="${host.deviceName}"></td>
+                    <td th:text="${host.deviceName}"
+                        th:style="${host.state == T(random.telegramhomebot.model.HostState).FAILED ? 'color: red;' : 'color: green;'}"></td>
                     <td>
                         <a th:href="@{/hosts/edit/{id}(id=${host.id})}" class="btn btn-primary">
                             <i class="fas fa-edit"></i>
                         </a>
                     </td>
                     <td>
-                        <a th:href="@{/hosts/delete/{id}(id=${host.id})}" class="btn btn-primary">
-                            <i class="fas fa-times"></i>
+                        <a th:href="@{/hosts/delete/{id}(id=${host.id})}" class="btn btn-danger"
+                           th:data-confirm-delete="|#{host.confirm.delete} '${host.deviceName}'?|"
+                           onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">
+                            <i class="fas fa-trash"></i>
                         </a>
                     </td>
                 </tr>

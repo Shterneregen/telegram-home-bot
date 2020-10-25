@@ -37,8 +37,10 @@
                         </a>
                     </td>
                     <td>
-                        <a th:href="@{/commands/delete/{id}(id=${command.id})}" class="btn btn-primary">
-                            <i class="fas fa-times"></i>
+                        <a th:href="@{/commands/delete/{id}(id=${command.id})}" class="btn btn-danger"
+                           th:data-confirm-delete="|#{command.confirm.delete} '${command.commandAlias}'?|"
+                           onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">
+                            <i class="fas fa-trash"></i>
                         </a>
                     </td>
                 </tr>

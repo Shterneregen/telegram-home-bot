@@ -26,6 +26,8 @@
                                 <label for="mac" class="col-form-label" th:text="#{host.mac}"></label>
                                 <input type="text" th:field="*{mac}" class="form-control"
                                        id="mac" th:placeholder="#{host.mac}"/>
+                                <span th:if="${#fields.hasErrors('mac')}" th:errors="*{mac}"
+                                      class="validation-error"></span>
                             </div>
                             <div class="form-group col-md-8">
                                 <label for="hostInterface" class="col-form-label" th:text="#{host.interface}"></label>

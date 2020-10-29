@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 import java.util.UUID;
 
 @Entity
@@ -28,6 +29,7 @@ public class Host {
 	@Column(name = "host_interface")
 	@JsonProperty("dev")
 	private String hostInterface;
+	@NotBlank(message = "{host.mac.should.be.not.empty}")
 	@Column(name = "mac", unique = true, nullable = false)
 	@JsonProperty("lladdr")
 	private String mac;

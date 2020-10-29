@@ -9,3 +9,7 @@
 #lang-switcher {
     margin-right: 50px;
 }
+
+.validation-error {
+    color: red;
+}

@@ -2,6 +2,7 @@ package random.telegramhomebot.controllers;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,7 +49,17 @@ public class HostController {
 	}
 
 	@PostMapping(path = "/createHost")
-	public String createOrUpdateHost(Host host) {
+	public String createOrUpdateHost(@Valid Host host, BindingResult bindingResult) {
+		if (bindingResult.hasErrors()) {
+			return "/add-edit-host";
+		}
+		Host storedHost = hostRepository.findHostByMac(host.getMac());
+		boolean saveNewHostWithExistingMac = storedHost != null && host.getId() == null;
+		boolean editStoredHostMacToExisting = storedHost != null && !storedHost.getId().equals(host.getId());
+		if (saveNewHostWithExistingMac || editStoredHostMacToExisting) {
+			bindingResult.rejectValue("mac", "host.mac.not.unique");
+			return "/add-edit-host";
+		}
 		hostRepository.save(host);
 		return "redirect:/" + HOSTS;
 	}

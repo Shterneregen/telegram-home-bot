@@ -18,6 +18,7 @@ dependencies {
 			"org.springframework.boot:spring-boot-starter-data-jpa",
 			"org.springframework.boot:spring-boot-starter-thymeleaf",
 			'org.springframework.boot:spring-boot-starter-security',
+			'org.springframework.boot:spring-boot-starter-validation',
 			'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect',
 			'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.0.4.RELEASE',
 			"org.telegram:telegrambots-spring-boot-starter:4.9.1"

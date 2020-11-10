@@ -2,6 +2,7 @@ package random.telegramhomebot.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.opencsv.bean.CsvBindByPosition;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -29,6 +30,7 @@ public class Host {
 	@Column(name = "host_interface")
 	@JsonProperty("dev")
 	private String hostInterface;
+	@CsvBindByPosition(position = 0)
 	@NotBlank(message = "{host.mac.should.be.not.empty}")
 	@Column(name = "mac", unique = true, nullable = false)
 	@JsonProperty("lladdr")
@@ -37,6 +39,7 @@ public class Host {
 	@JsonProperty("state")
 	@JsonDeserialize(using = HostStateDeserializer.class)
 	private HostState state;
+	@CsvBindByPosition(position = 1)
 	@Column(name = "device_name")
 	private String deviceName;
 

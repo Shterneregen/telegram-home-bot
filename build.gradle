@@ -17,14 +17,16 @@ dependencies {
 			"org.springframework.boot:spring-boot-starter-web",
 			"org.springframework.boot:spring-boot-starter-data-jpa",
 			"org.springframework.boot:spring-boot-starter-thymeleaf",
-			'org.springframework.boot:spring-boot-starter-security',
-			'org.springframework.boot:spring-boot-starter-validation',
-			'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect',
-			'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.0.4.RELEASE',
-			"org.telegram:telegrambots-spring-boot-starter:4.9.1"
+			"org.springframework.boot:spring-boot-starter-security",
+			"org.springframework.boot:spring-boot-starter-validation",
+			"nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect",
+			"org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.0.4.RELEASE",
+			"org.telegram:telegrambots-spring-boot-starter:4.9.1",
+			"com.opencsv:opencsv:5.3"
+
 	)
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.h2database:h2'
+	developmentOnly "org.springframework.boot:spring-boot-devtools"
+	runtimeOnly "com.h2database:h2"
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude group: "org.junit.vintage", module: "junit-vintage-engine"
 	}
@@ -35,6 +37,6 @@ test {
 }
 
 bootJar {
-	archiveFileName = 'thb.jar'
+	archiveFileName = "thb.jar"
 	launchScript()
 }

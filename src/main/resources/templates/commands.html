@@ -21,6 +21,7 @@
                 <tr>
                     <th th:text="#{command.alias}"></th>
                     <th th:text="#{command.command}"></th>
+                    <th th:text="#{command.enabled}"></th>
                     <th th:text="#{column.edit}"></th>
                     <th th:text="#{column.delete}"></th>
                 </tr>
@@ -29,6 +30,7 @@
                 <tr th:each="command : ${commands}">
                     <td th:text="${command.commandAlias}"></td>
                     <td th:text="${command.command}"></td>
+                    <td><input type="checkbox" th:checked="${command.enabled}" disabled/></td>
                     <td>
                         <a th:href="@{/commands/edit/{id}(id=${command.id})}" class="btn btn-primary">
                             <i class="fas fa-edit"></i>

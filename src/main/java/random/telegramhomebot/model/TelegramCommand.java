@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -24,6 +25,8 @@ public class TelegramCommand {
 	private String commandAlias;
 	@Column(name = "command")
 	private String command;
+	@Column(name = "enabled")
+	private Boolean enabled;
 
 	public TelegramCommand() {
 	}
@@ -57,19 +60,27 @@ public class TelegramCommand {
 		this.command = command;
 	}
 
+	public Boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(Boolean enabled) {
+		this.enabled = enabled;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		TelegramCommand that = (TelegramCommand) o;
+		TelegramCommand command = (TelegramCommand) o;
 
-		return id.equals(that.id);
+		return Objects.equals(commandAlias, command.commandAlias);
 	}
 
 	@Override
 	public int hashCode() {
-		return id.hashCode();
+		return commandAlias != null ? commandAlias.hashCode() : 0;
 	}
 
 	@Override
@@ -78,6 +89,7 @@ public class TelegramCommand {
 				"id=" + id +
 				", commandAlias='" + commandAlias + '\'' +
 				", command='" + command + '\'' +
+				", enabled=" + enabled +
 				'}';
 	}
 }

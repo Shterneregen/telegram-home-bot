@@ -1,5 +1,6 @@
 package random.telegramhomebot.telegram;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,13 +15,13 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import random.telegramhomebot.utils.MessageConfigurer;
 import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.repository.TelegramCommandRepository;
 import random.telegramhomebot.utils.CommandRunner;
+import random.telegramhomebot.utils.MessageConfigurer;
 import random.telegramhomebot.utils.MessageUtil;
 import random.telegramhomebot.utils.UserValidator;
 
@@ -81,7 +82,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 			return;
 		}
 
-		TelegramCommand telegramCommand = telegramCommandRepository.findByCommandAlias(messageStr);
+		TelegramCommand telegramCommand = telegramCommandRepository.findByCommandAliasAndEnabled(messageStr, Boolean.TRUE);
 		if (telegramCommand != null) {
 			List<String> commandOutput = commandRunner.runCommand(telegramCommand.getCommand());
 			sendMessage(String.join("\n", commandOutput), chatId, message.getMessageId());
@@ -96,7 +97,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 			return true;
 		}
 		if (message.equals(SHOW_ALL_COMMANDS)) {
-			String commands = telegramCommandRepository.findAll().stream()
+			String commands = telegramCommandRepository.findAllEnabled().stream()
 					.map(command -> command.getCommandAlias() + " = " + command.getCommand())
 					.collect(Collectors.joining("\n"));
 			sendMessage(commands);
@@ -130,21 +131,27 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	}
 
 	public void setButtons(SendMessage sendMessage) {
+		List<TelegramCommand> enabledCommands = telegramCommandRepository.findAllEnabled();
+		log.debug("Enabled commands: {}", enabledCommands);
+		if (CollectionUtils.isEmpty(enabledCommands)) {
+			sendMessage.setReplyMarkup(null);
+			return;
+		}
+
 		ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup()
 				.setSelective(true)
 				.setResizeKeyboard(true)
 				.setOneTimeKeyboard(false);
 		sendMessage.setReplyMarkup(replyKeyboardMarkup);
 
-		List<TelegramCommand> allCommands = telegramCommandRepository.findAll();
 		List<KeyboardRow> keyboardRowList = new ArrayList<>();
 		KeyboardRow keyboardRow = new KeyboardRow();
-		for (int i = 0; i < allCommands.size(); i++) {
+		for (int i = 0; i < enabledCommands.size(); i++) {
 			if (i % 2 == 0) {
 				keyboardRow = new KeyboardRow();
 			}
-			keyboardRow.add(new KeyboardButton(allCommands.get(i).getCommandAlias()));
-			if (i % 2 != 0 || i == allCommands.size() - 1) {
+			keyboardRow.add(new KeyboardButton(enabledCommands.get(i).getCommandAlias()));
+			if (i % 2 != 0 || i == enabledCommands.size() - 1) {
 				keyboardRowList.add(keyboardRow);
 			}
 		}

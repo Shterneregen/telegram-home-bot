@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Profile(Profiles.NETWORK_MONITOR)
 @Service
@@ -113,10 +114,15 @@ public class StateChangeScheduler {
 	}
 
 	private List<Host> getStoredNotReachableHosts(List<Host> storedHosts, List<Host> currentHosts) {
-		return storedHosts.stream()
+		Stream<Host> hostsFailedStream1 = storedHosts.stream()
 				.filter(storedHost -> !HostState.FAILED.equals(storedHost.getState())
 						&& currentHosts.stream().noneMatch(storedHost::equals))
-				.peek(host -> host.setState(HostState.FAILED))
+				.peek(host -> host.setState(HostState.FAILED));
+		Stream<Host> hostsFailedStream2 = currentHosts.stream()
+				.filter(currentHost -> HostState.FAILED.equals(currentHost.getState())
+						&& storedHosts.stream().anyMatch(storedHost -> storedHost.equals(currentHost)
+						&& !HostState.FAILED.equals(storedHost.getState())));
+		return Stream.concat(hostsFailedStream1, hostsFailedStream2)
 				.sorted(comparingByIp())
 				.collect(Collectors.toList());
 	}

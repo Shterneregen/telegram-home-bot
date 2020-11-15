@@ -1,5 +1,6 @@
 package random.telegramhomebot.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,10 +16,13 @@ import java.util.Locale;
 @Configuration
 public class Internationalization implements WebMvcConfigurer {
 
+	@Value("${default.language}")
+	private String defaultLanguage;
+
 	@Bean
 	public LocaleResolver localeResolver() {
 		CookieLocaleResolver localeResolver = new CookieLocaleResolver();
-		localeResolver.setDefaultLocale(Locale.US);
+		localeResolver.setDefaultLocale(new Locale(defaultLanguage));
 		return localeResolver;
 	}
 

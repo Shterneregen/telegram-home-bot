@@ -47,7 +47,8 @@
                 </ul>
             </div>
             <div class="navbar-nav navbar-right">
-                <div class="dropdown" id="lang-switcher">
+                <div class="dropdown" id="lang-switcher"
+                     th:if="${@environment.getProperty('internationalization.enabled')}">
                     <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Lang

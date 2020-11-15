@@ -48,7 +48,8 @@
                     <td th:text="${host.hostInterface}"></td>
                     <td th:text="${host.state}"></td>
                     <td th:text="${host.deviceName}"
-                        th:style="${host.state == T(random.telegramhomebot.model.HostState).FAILED ? 'color: red;' : 'color: green;'}"></td>
+                        th:style="${host.state == null or host.state == T(random.telegramhomebot.model.HostState).FAILED
+                        ? 'color: red;' : 'color: green;'}"></td>
                     <td>
                         <a th:href="@{/hosts/edit/{id}(id=${host.id})}" class="btn btn-primary">
                             <i class="fas fa-edit"></i>

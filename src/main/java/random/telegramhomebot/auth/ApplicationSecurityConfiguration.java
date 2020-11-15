@@ -18,7 +18,8 @@ import javax.annotation.Resource;
 @EnableWebSecurity
 public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-	private static final int BCRYPT_ROUNDS = 11;
+	@Value("${bcrypt.rounds}")
+	private int bcryptRounds;
 
 	@Value("${spring.h2.console.path}")
 	private String springH2ConsolePath;
@@ -30,7 +31,7 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
 	public DaoAuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
 		provider.setUserDetailsService(userDetailsService);
-		provider.setPasswordEncoder(new BCryptPasswordEncoder(BCRYPT_ROUNDS));
+		provider.setPasswordEncoder(new BCryptPasswordEncoder(bcryptRounds));
 		provider.setAuthoritiesMapper(authoritiesMapper());
 		return provider;
 	}

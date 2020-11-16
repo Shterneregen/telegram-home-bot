@@ -147,12 +147,13 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 		List<KeyboardRow> keyboardRowList = new ArrayList<>();
 		KeyboardRow keyboardRow = new KeyboardRow();
-		for (int i = 0; i < enabledCommands.size(); i++) {
+		for (int i = 0, j = 0; i < enabledCommands.size(); i++) {
 			if (i % buttonsInRow == 0) {
+				j++;
 				keyboardRow = new KeyboardRow();
 			}
 			keyboardRow.add(new KeyboardButton(enabledCommands.get(i).getCommandAlias()));
-			if (i % buttonsInRow - 1 == 0 || i == enabledCommands.size() - 1) {
+			if ((buttonsInRow * j) - 1 == i || i == enabledCommands.size() - 1) {
 				keyboardRowList.add(keyboardRow);
 			}
 		}

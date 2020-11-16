@@ -46,6 +46,8 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	private String botName;
 	@Value("${telegram.token}")
 	private String botToken;
+	@Value("${buttons.in.row}")
+	private int buttonsInRow;
 
 	@Resource
 	private UserValidator userValidator;
@@ -65,7 +67,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 		if (!update.hasMessage() || !update.getMessage().hasText()) {
 			return;
 		}
-		log.debug(String.valueOf(update));
+		log.debug(update.toString());
 
 		Message message = update.getMessage();
 		String messageStr = message.getText().toLowerCase();
@@ -134,7 +136,6 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 		List<TelegramCommand> enabledCommands = telegramCommandRepository.findAllEnabled();
 		log.debug("Enabled commands: {}", enabledCommands);
 		if (CollectionUtils.isEmpty(enabledCommands)) {
-			sendMessage.setReplyMarkup(null);
 			return;
 		}
 
@@ -147,11 +148,11 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 		List<KeyboardRow> keyboardRowList = new ArrayList<>();
 		KeyboardRow keyboardRow = new KeyboardRow();
 		for (int i = 0; i < enabledCommands.size(); i++) {
-			if (i % 2 == 0) {
+			if (i % buttonsInRow == 0) {
 				keyboardRow = new KeyboardRow();
 			}
 			keyboardRow.add(new KeyboardButton(enabledCommands.get(i).getCommandAlias()));
-			if (i % 2 != 0 || i == enabledCommands.size() - 1) {
+			if (i % buttonsInRow - 1 == 0 || i == enabledCommands.size() - 1) {
 				keyboardRowList.add(keyboardRow);
 			}
 		}

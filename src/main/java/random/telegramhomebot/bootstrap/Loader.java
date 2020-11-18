@@ -3,10 +3,10 @@ package random.telegramhomebot.bootstrap;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import random.telegramhomebot.utils.MessageConfigurer;
 import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.telegram.Bot;
+import random.telegramhomebot.utils.MessageConfigurer;
 import random.telegramhomebot.utils.MessageUtil;
 
 import javax.annotation.Resource;
@@ -33,9 +33,10 @@ public class Loader implements CommandLineRunner {
 
 	private void sendBootstrapMessage() {
 		StringBuilder messageBuilder = new StringBuilder(messageConfigurer.getMessage("chatbot.started"));
+
 		if (List.of(environment.getActiveProfiles()).contains(Profiles.NETWORK_MONITOR)) {
-			messageBuilder.append("\n\n").append(messageUtil.formHostsListTable(hostRepository.findAll(),
-					messageConfigurer.getMessage("stored.hosts")));
+			String hostsState = messageUtil.getHostsState(hostRepository.findAll());
+			messageBuilder.append("\n\n").append(hostsState);
 		}
 
 		bot.sendMessage(messageBuilder.toString());

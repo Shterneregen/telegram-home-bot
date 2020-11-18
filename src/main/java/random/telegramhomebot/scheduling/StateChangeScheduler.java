@@ -23,6 +23,7 @@ import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -61,16 +62,18 @@ public class StateChangeScheduler {
 
 		if (!CollectionUtils.isEmpty(currentHosts) && !CollectionUtils.isEmpty(storedHosts)) {
 			List<Host> newHosts = getNewHosts(storedHosts, currentHosts);
-			List<Host> storedReachableHosts = getStoredReachableHosts(storedHosts, currentHosts);
-			List<Host> storedNotReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
+			List<Host> reachableHosts = getStoredReachableHosts(storedHosts, currentHosts);
+			List<Host> notReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
 
-			bot.sendMessage(messageUtil.formHostsListTable(Map.of(
-					messageConfigurer.getMessage("new.hosts"), newHosts,
-					messageConfigurer.getMessage("reachable.hosts"), storedReachableHosts,
-					messageConfigurer.getMessage("unreachable.hosts"), storedNotReachableHosts)));
+			Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>(3);
+			hostsMessagesMap.put(messageConfigurer.getMessage("new.hosts"), newHosts);
+			hostsMessagesMap.put(messageConfigurer.getMessage("reachable.hosts"), reachableHosts);
+			hostsMessagesMap.put(messageConfigurer.getMessage("unreachable.hosts"), notReachableHosts);
 
-			if (!CollectionUtils.isEmpty(storedNotReachableHosts)) {
-				hostRepository.saveAll(storedNotReachableHosts);
+			bot.sendMessage(messageUtil.formHostsListTable(hostsMessagesMap));
+
+			if (!CollectionUtils.isEmpty(notReachableHosts)) {
+				hostRepository.saveAll(notReachableHosts);
 			}
 		}
 
@@ -128,7 +131,15 @@ public class StateChangeScheduler {
 	}
 
 	private Comparator<Host> comparingByIp() {
-		return Comparator.comparing(Host::getIp);
+		return Comparator.comparing(
+				Host::getIp, (s1, s2) -> {
+					if (s1 == null) {
+						return -1;
+					} else if (s2 == null) {
+						return 1;
+					}
+					return s1.compareTo(s2);
+				});
 	}
 
 	private void fillHostStoredInfo(Host currentHost) {

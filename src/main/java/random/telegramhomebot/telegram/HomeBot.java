@@ -16,7 +16,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.config.Profiles;
-import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.repository.TelegramCommandRepository;
@@ -94,8 +93,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 	private boolean executeControlCommand(String message) {
 		if (message.equals(SHOW_STORED_HOSTS_COMMAND)) {
-			List<Host> hosts = hostRepository.findAll();
-			sendMessage(messageUtil.formHostsListTable(hosts, messageConfigurer.getMessage("stored.hosts")));
+			sendMessage(messageUtil.getHostsState(hostRepository.findAll()));
 			return true;
 		}
 		if (message.equals(SHOW_ALL_COMMANDS)) {

@@ -9,9 +9,8 @@ import random.telegramhomebot.repository.TelegramCommandRepository;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class CommandsLoader implements CommandLineRunner {
@@ -30,15 +29,12 @@ public class CommandsLoader implements CommandLineRunner {
 
 	private void loadSampleCommands() {
 		long commandsCount = telegramCommandRepository.count();
-		log.info("Loading sample commands... count [{}]", commandsCount);
-
+		log.info("Stored commands count [{}]", commandsCount);
 		if (commandsCount == 0) {
-			List<TelegramCommand> telegramCommandsToSave = new ArrayList<>();
-			log.debug("Sample commands count [{}]", telegramCommands.size());
-			for (Map.Entry<String, String> entry : telegramCommands.entrySet()) {
-				telegramCommandsToSave.add(new TelegramCommand(entry.getKey(), entry.getValue()));
-			}
-			telegramCommandRepository.saveAll(telegramCommandsToSave);
+			log.info("Loading sample commands...");
+			telegramCommandRepository.saveAll(telegramCommands.entrySet().stream()
+					.map(entry -> new TelegramCommand(entry.getKey(), entry.getValue()))
+					.collect(Collectors.toList()));
 		}
 	}
 }

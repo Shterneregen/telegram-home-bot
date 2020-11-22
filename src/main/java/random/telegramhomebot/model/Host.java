@@ -8,10 +8,14 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -42,6 +46,8 @@ public class Host {
 	@CsvBindByPosition(position = 1)
 	@Column(name = "device_name")
 	private String deviceName;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
+	private List<HostTimeLog> timeLogs;
 
 	public Host() {
 	}
@@ -94,6 +100,14 @@ public class Host {
 		this.deviceName = deviceName;
 	}
 
+	public List<HostTimeLog> getTimeLogs() {
+		return timeLogs;
+	}
+
+	public void setTimeLogs(List<HostTimeLog> timeLogs) {
+		this.timeLogs = timeLogs;
+	}
+
 	@Override
 	public String toString() {
 		return "Host{" +
@@ -112,7 +126,7 @@ public class Host {
 
 		Host host = (Host) o;
 
-		return mac != null ? mac.equals(host.mac) : host.mac == null;
+		return Objects.equals(mac, host.mac);
 	}
 
 	@Override

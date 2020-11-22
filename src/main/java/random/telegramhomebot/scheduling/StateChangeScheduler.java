@@ -3,17 +3,19 @@ package random.telegramhomebot.scheduling;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
+import random.telegramhomebot.model.HostTimeLog;
 import random.telegramhomebot.repository.HostRepository;
+import random.telegramhomebot.repository.HostTimeLogRepository;
 import random.telegramhomebot.telegram.Bot;
 import random.telegramhomebot.utils.CommandRunner;
 import random.telegramhomebot.utils.MessageConfigurer;
@@ -21,6 +23,8 @@ import random.telegramhomebot.utils.MessageUtil;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -44,6 +48,8 @@ public class StateChangeScheduler {
 	@Resource
 	private HostRepository hostRepository;
 	@Resource
+	private HostTimeLogRepository hostTimeLogRepository;
+	@Resource
 	private MessageUtil messageUtil;
 	@Resource
 	private MessageConfigurer messageConfigurer;
@@ -56,11 +62,11 @@ public class StateChangeScheduler {
 		List<Host> storedHosts = hostRepository.findAll();
 		List<Host> currentHosts = getCurrentHosts();
 
-		if (!CollectionUtils.isEmpty(currentHosts) && CollectionUtils.isEmpty(storedHosts)) {
+		if (CollectionUtils.isNotEmpty(currentHosts) && CollectionUtils.isEmpty(storedHosts)) {
 			bot.sendMessage(messageUtil.formHostsListTable(currentHosts, messageConfigurer.getMessage("new.hosts")));
 		}
 
-		if (!CollectionUtils.isEmpty(currentHosts) && !CollectionUtils.isEmpty(storedHosts)) {
+		if (CollectionUtils.isNotEmpty(currentHosts) && CollectionUtils.isNotEmpty(storedHosts)) {
 			List<Host> newHosts = getNewHosts(storedHosts, currentHosts);
 			List<Host> reachableHosts = getStoredReachableHosts(storedHosts, currentHosts);
 			List<Host> notReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
@@ -72,12 +78,14 @@ public class StateChangeScheduler {
 
 			bot.sendMessage(messageUtil.formHostsListTable(hostsMessagesMap));
 
-			if (!CollectionUtils.isEmpty(notReachableHosts)) {
+			if (CollectionUtils.isNotEmpty(notReachableHosts)) {
 				hostRepository.saveAll(notReachableHosts);
 			}
+
+			saveTimeLogForHosts(joinLists(newHosts, reachableHosts, notReachableHosts));
 		}
 
-		if (!CollectionUtils.isEmpty(currentHosts)) {
+		if (CollectionUtils.isNotEmpty(currentHosts)) {
 			hostRepository.saveAll(currentHosts);
 			hostRepository.flush();
 		}
@@ -148,6 +156,17 @@ public class StateChangeScheduler {
 			currentHost.setId(storedHost.getId());
 			currentHost.setDeviceName(storedHost.getDeviceName());
 		}
+	}
+
+	private void saveTimeLogForHosts(List<Host> hosts) {
+		if (CollectionUtils.isEmpty(hosts)) {
+			return;
+		}
+		hostTimeLogRepository.saveAll(hosts.stream().map(h -> new HostTimeLog(h, h.getState())).collect(Collectors.toList()));
+	}
+
+	public static <T> List<T> joinLists(List<T>... lists) {
+		return Arrays.stream(lists).flatMap(Collection::stream).collect(Collectors.toList());
 	}
 
 }

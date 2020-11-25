@@ -1,13 +1,8 @@
 package random.telegramhomebot.controllers;
 
-import com.opencsv.CSVWriter;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,17 +14,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
+import random.telegramhomebot.utils.HostsCsvHelper;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.invoke.MethodHandles;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +39,8 @@ public class HostController {
 
 	@Resource
 	private HostRepository hostRepository;
+	@Resource
+	private HostsCsvHelper hostsCsvHelper;
 
 	@RequestMapping
 	public String getAllCommands(Model model) {
@@ -95,51 +87,21 @@ public class HostController {
 
 	@GetMapping("/export")
 	public void exportCSV(HttpServletResponse response) throws Exception {
-
-		String filename = String.format("hosts_%s.csv",
-				LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyyyy-ss")));
-
-		response.setContentType("text/csv");
-		response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
-
-		StatefulBeanToCsv<Host> writer = new StatefulBeanToCsvBuilder<Host>(response.getWriter())
-				.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-				.withSeparator(CSVWriter.DEFAULT_SEPARATOR)
-				.withOrderedResults(false)
-				.build();
-
-		writer.write(hostRepository.findAll());
+		hostsCsvHelper.exportHostsToCsvFile(response, hostRepository.findAll());
 	}
 
 	@PostMapping("/import")
-	public String uploadCSVFile(@RequestParam("file") MultipartFile file, Model model) {
+	public String parseCSVFile(@RequestParam("file") MultipartFile file, Model model) {
 
 		if (file.isEmpty()) {
 			// TODO: impl error message
+			log.error("File to import is empty!");
 //			model.addAttribute("message", "Please select a CSV file to upload.");
 		} else {
-			try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-
-				CsvToBean<Host> csvToBean = new CsvToBeanBuilder(reader)
-						.withType(Host.class)
-						.withIgnoreLeadingWhiteSpace(true)
-						.build();
-
-				List<Host> hosts = csvToBean.parse();
-				List<Host> hostsToSave = new ArrayList<>();
-				hosts.stream()
-						.filter(hostFromCsv -> hostFromCsv.getMac() != null)
-						.forEach(hostFromCsv -> {
-							Host storedHost = hostRepository.findHostByMac(hostFromCsv.getMac());
-							if (storedHost != null) {
-								storedHost.setDeviceName(hostFromCsv.getDeviceName());
-								hostsToSave.add(storedHost);
-							} else {
-								hostsToSave.add(hostFromCsv);
-							}
-						});
-				if (hostsToSave.size() > 0) {
-					hostRepository.saveAll(hostsToSave);
+			try {
+				List<Host> hostsToImport = hostsCsvHelper.parseHostsFromCsvFile(file);
+				if (CollectionUtils.isNotEmpty(hostsToImport)) {
+					hostRepository.saveAll(hostsToImport);
 				}
 			} catch (Exception e) {
 				// TODO: impl error message

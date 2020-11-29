@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,10 +67,13 @@ public class StateChangeScheduler {
 			bot.sendMessage(messageUtil.formHostsListTable(currentHosts, messageConfigurer.getMessage("new.hosts")));
 		}
 
+		List<Host> newHosts = null;
+		List<Host> reachableHosts = null;
+		List<Host> notReachableHosts = null;
 		if (CollectionUtils.isNotEmpty(currentHosts) && CollectionUtils.isNotEmpty(storedHosts)) {
-			List<Host> newHosts = getNewHosts(storedHosts, currentHosts);
-			List<Host> reachableHosts = getStoredReachableHosts(storedHosts, currentHosts);
-			List<Host> notReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
+			newHosts = getNewHosts(storedHosts, currentHosts);
+			reachableHosts = getStoredReachableHosts(storedHosts, currentHosts);
+			notReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
 
 			Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>(3);
 			hostsMessagesMap.put(messageConfigurer.getMessage("new.hosts"), newHosts);
@@ -81,14 +85,13 @@ public class StateChangeScheduler {
 			if (CollectionUtils.isNotEmpty(notReachableHosts)) {
 				hostRepository.saveAll(notReachableHosts);
 			}
-
-			saveTimeLogForHosts(joinLists(newHosts, reachableHosts, notReachableHosts));
 		}
 
 		if (CollectionUtils.isNotEmpty(currentHosts)) {
 			hostRepository.saveAll(currentHosts);
 			hostRepository.flush();
 		}
+		saveTimeLogForHosts(joinLists(newHosts, reachableHosts, notReachableHosts));
 	}
 
 	private List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
@@ -166,7 +169,10 @@ public class StateChangeScheduler {
 	}
 
 	public static <T> List<T> joinLists(List<T>... lists) {
-		return Arrays.stream(lists).flatMap(Collection::stream).collect(Collectors.toList());
+		return Arrays.stream(lists)
+				.filter(Objects::nonNull)
+				.flatMap(Collection::stream)
+				.collect(Collectors.toList());
 	}
 
 }

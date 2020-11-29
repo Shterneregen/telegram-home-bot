@@ -1,5 +1,6 @@
 package random.telegramhomebot.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.opencsv.bean.CsvBindByPosition;
@@ -46,6 +47,7 @@ public class Host {
 	@CsvBindByPosition(position = 1)
 	@Column(name = "device_name")
 	private String deviceName;
+	@JsonManagedReference
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
 	private List<HostTimeLog> timeLogs;
 

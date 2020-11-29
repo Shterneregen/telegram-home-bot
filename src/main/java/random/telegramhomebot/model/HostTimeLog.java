@@ -1,5 +1,6 @@
 package random.telegramhomebot.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -27,6 +28,7 @@ public class HostTimeLog {
 	@CreationTimestamp
 	@Column(updatable = false)
 	private Timestamp createdDate;
+	@JsonBackReference
 	@ManyToOne
 	@JoinColumn(name = "host_id")
 	private Host host;

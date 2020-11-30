@@ -1,9 +1,9 @@
 package random.telegramhomebot.utils;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
 
@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class MessageUtil {
 
+	private static final String HOST_FORMAT = "%1$-15s %2$s\n";
+
 	@Resource
 	private MessageConfigurer messageConfigurer;
 
@@ -29,22 +31,19 @@ public class MessageUtil {
 				.collect(Collectors.joining("\n"));
 	}
 
-	public String formHostsListTable(List<Host> hosts, final String title) {
+	public String formHostsListTable(List<Host> hosts, String title) {
 		if (CollectionUtils.isEmpty(hosts)) {
 			return "";
 		}
 
-		String format = "%1$-15s %2$-10s %3$s\n";
 		StringBuilder outputTable = new StringBuilder(title).append("\n");
-		for (Host host : hosts) {
-			outputTable.append(String.format(format, host.getIp(), host.getState(), host.getDeviceName()));
-		}
+		hosts.forEach(host -> outputTable.append(String.format(HOST_FORMAT, host.getIp(), host.getDeviceName())));
 		log.debug("{}:\n{}", title, outputTable.toString());
 		return outputTable.toString();
 	}
 
 	public String getHostsState(List<Host> hosts) {
-		if (org.apache.commons.collections4.CollectionUtils.isEmpty(hosts)) {
+		if (CollectionUtils.isEmpty(hosts)) {
 			return "";
 		}
 

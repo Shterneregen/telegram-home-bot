@@ -3,6 +3,7 @@ package random.telegramhomebot.controllers;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -13,24 +14,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import random.telegramhomebot.model.Host;
+import random.telegramhomebot.model.HostTimeLog;
+import random.telegramhomebot.model.TimeLogDto;
 import random.telegramhomebot.repository.HostRepository;
+import random.telegramhomebot.repository.HostTimeLogRepository;
 import random.telegramhomebot.utils.HostsCsvHelper;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.lang.invoke.MethodHandles;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Controller
 @RequestMapping("/hosts")
 public class HostController {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	private static final String HOSTS = "hosts";
 	private static final String HOST = "host";
@@ -41,6 +52,8 @@ public class HostController {
 	private HostRepository hostRepository;
 	@Resource
 	private HostsCsvHelper hostsCsvHelper;
+	@Resource
+	private HostTimeLogRepository hostTimeLogRepository;
 
 	@RequestMapping
 	public String getAllCommands(Model model) {
@@ -111,5 +124,30 @@ public class HostController {
 		}
 
 		return REDIRECT_HOSTS;
+	}
+
+	@RequestMapping("/time-log")
+	public String getTimeLog(
+			@RequestParam(value = "date", defaultValue = "#{T(java.time.LocalDateTime).now()}")
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+			Model model) {
+		LocalDateTime startOfDate = date.atTime(LocalTime.MIN);
+		LocalDateTime endOfDate = date.atTime(LocalTime.MAX);
+
+		List<HostTimeLog> logs = hostTimeLogRepository
+				.findByCreatedDateBetween(Timestamp.valueOf(startOfDate), Timestamp.valueOf(endOfDate));
+
+		Map<String, List<TimeLogDto>> logMap = logs.stream()
+				.collect(groupingBy(log -> log.getHost().getDeviceName() != null
+								? log.getHost().getDeviceName() : log.getId().toString(),
+						Collectors.mapping(log -> convert(log), Collectors.toList())));
+
+		model.addAttribute("logMap", logMap);
+		return "time-log";
+	}
+
+	private TimeLogDto convert(HostTimeLog log) {
+		return new TimeLogDto(String.valueOf(log.getCreatedDate().getHours()),
+				String.valueOf(log.getCreatedDate().getMinutes()), log.getState().toString());
 	}
 }

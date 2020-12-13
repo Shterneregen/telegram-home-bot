@@ -1,4 +1,4 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.services;
 
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.CsvToBean;
@@ -22,17 +22,17 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Service
-public class HostsCsvHelper {
+import static random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER;
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
-	private static final String DATE_PATTERN = "ddMMyyyy-mm-ss";
+@Service
+public class HostsCsvService {
+
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	private static final String CSV_FILENAME_PATTERN = "hosts_%s.csv";
 
 	@Resource
@@ -68,8 +68,7 @@ public class HostsCsvHelper {
 
 	public void exportHostsToCsvFile(HttpServletResponse response, List beans)
 			throws CsvFieldAssignmentException, IOException {
-		String filename = String.format(CSV_FILENAME_PATTERN,
-				LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_PATTERN)));
+		String filename = String.format(CSV_FILENAME_PATTERN, LocalDateTime.now().format(DATE_TIME_FORMATTER));
 
 		response.setContentType("text/csv");
 		response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");

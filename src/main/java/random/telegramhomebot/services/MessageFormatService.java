@@ -1,4 +1,4 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.services;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -14,24 +14,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static random.telegramhomebot.AppConstants.Messages.REACHABLE_HOSTS_MSG;
+import static random.telegramhomebot.AppConstants.Messages.UNREACHABLE_HOSTS_MSG;
+
 @Service
-public class MessageUtil {
+public class MessageFormatService {
 
 	private static final String HOST_FORMAT = "%1$-15s %2$s\n";
 
 	@Resource
-	private MessageConfigurer messageConfigurer;
+	private MessageService messageService;
 
 	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	public String formHostsListTable(Map<String, List<Host>> hostsMap) {
 		return hostsMap.entrySet().stream()
-				.map(entry -> formHostsListTable(entry.getValue(), entry.getKey()))
+				.map(entry -> formHostsListTable(entry.getKey(), entry.getValue()))
 				.filter(string -> !string.isEmpty())
 				.collect(Collectors.joining("\n"));
 	}
 
-	public String formHostsListTable(List<Host> hosts, String title) {
+	public String formHostsListTable(String title, List<Host> hosts) {
 		if (CollectionUtils.isEmpty(hosts)) {
 			return "";
 		}
@@ -54,9 +57,9 @@ public class MessageUtil {
 				.filter(host -> host.getState() == null || HostState.FAILED.equals(host.getState()))
 				.collect(Collectors.toList());
 
-		Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>(2);
-		hostsMessagesMap.put(messageConfigurer.getMessage("reachable.hosts"), reachableHosts);
-		hostsMessagesMap.put(messageConfigurer.getMessage("unreachable.hosts"), notReachableHosts);
+		Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>();
+		hostsMessagesMap.put(messageService.getMessage(REACHABLE_HOSTS_MSG), reachableHosts);
+		hostsMessagesMap.put(messageService.getMessage(UNREACHABLE_HOSTS_MSG), notReachableHosts);
 
 		return formHostsListTable(hostsMessagesMap);
 	}

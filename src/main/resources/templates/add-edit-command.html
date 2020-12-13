@@ -13,7 +13,7 @@
     <div class="container">
         <h3 th:text="${title}"></h3>
         <div class="card card-body">
-            <form action="#" th:action="@{/commands/createCommand}" th:object="${command}" method="post">
+            <form action="#" th:action="@{/commands/save-command}" th:object="${command}" method="post">
 
                 <div class="form-group">
                     <label for="commandAlias" th:text="#{command.alias}"></label>

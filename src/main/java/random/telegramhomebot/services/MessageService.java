@@ -1,14 +1,14 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.services;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
-@Component
-public class MessageConfigurer {
+@Service
+public class MessageService {
 
 	@Resource
 	private MessageSource messageSource;

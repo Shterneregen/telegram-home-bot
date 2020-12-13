@@ -19,16 +19,18 @@ import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.repository.TelegramCommandRepository;
-import random.telegramhomebot.utils.CommandRunner;
-import random.telegramhomebot.utils.MessageConfigurer;
-import random.telegramhomebot.utils.MessageUtil;
-import random.telegramhomebot.utils.UserValidator;
+import random.telegramhomebot.services.CommandRunnerService;
+import random.telegramhomebot.services.MessageFormatService;
+import random.telegramhomebot.services.MessageService;
+import random.telegramhomebot.services.UserValidatorService;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_MSG;
 
 @Profile("!" + Profiles.MOCK_BOT)
 @Component
@@ -49,17 +51,17 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	private int buttonsInRow;
 
 	@Resource
-	private UserValidator userValidator;
+	private UserValidatorService userValidatorService;
 	@Resource
-	private CommandRunner commandRunner;
+	private CommandRunnerService commandRunnerService;
 	@Resource
 	private HostRepository hostRepository;
 	@Resource
-	private MessageUtil messageUtil;
+	private MessageFormatService messageFormatService;
 	@Resource
 	private TelegramCommandRepository telegramCommandRepository;
 	@Resource
-	private MessageConfigurer messageConfigurer;
+	private MessageService messageService;
 
 	@Override
 	public void onUpdateReceived(Update update) {
@@ -73,9 +75,9 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 		Long chatId = message.getChatId();
 		Integer userId = message.getFrom().getId();
 
-		boolean allowedUser = userValidator.isAllowedUser(userId);
+		boolean allowedUser = userValidatorService.isAllowedUser(userId);
 		if (!allowedUser) {
-			sendMessage(messageConfigurer.getMessage("unauthorized.access", new Object[]{userId, messageStr}));
+			sendMessage(messageService.getMessage(UNAUTHORIZED_ACCESS_MSG, new Object[]{userId, messageStr}));
 			return;
 		}
 
@@ -85,7 +87,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 		TelegramCommand telegramCommand = telegramCommandRepository.findByCommandAliasAndEnabled(messageStr, Boolean.TRUE);
 		if (telegramCommand != null) {
-			List<String> commandOutput = commandRunner.runCommand(telegramCommand.getCommand());
+			List<String> commandOutput = commandRunnerService.runCommand(telegramCommand.getCommand());
 			sendMessage(String.join("\n", commandOutput), chatId, message.getMessageId());
 			commandOutput.forEach(log::debug);
 		}
@@ -93,7 +95,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 	private boolean executeControlCommand(String message) {
 		if (message.equals(SHOW_STORED_HOSTS_COMMAND)) {
-			sendMessage(messageUtil.getHostsState(hostRepository.findAll()));
+			sendMessage(messageFormatService.getHostsState(hostRepository.findAll()));
 			return true;
 		}
 		if (message.equals(SHOW_ALL_COMMANDS)) {

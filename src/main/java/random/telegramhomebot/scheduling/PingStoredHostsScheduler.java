@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
-import random.telegramhomebot.utils.CommandRunner;
+import random.telegramhomebot.services.CommandRunnerService;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
@@ -18,10 +18,10 @@ import java.util.List;
 @Service
 public class PingStoredHostsScheduler {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Resource
-	private CommandRunner commandRunner;
+	private CommandRunnerService commandRunnerService;
 	@Resource
 	private HostRepository hostRepository;
 
@@ -30,7 +30,7 @@ public class PingStoredHostsScheduler {
 		log.debug("Ping stored hosts...");
 		List<Host> storedHosts = hostRepository.findAll();
 		log.debug("Stored hosts: \n{}", storedHosts);
-		commandRunner.pingHosts(storedHosts);
+		commandRunnerService.pingHosts(storedHosts);
 	}
 
 }

@@ -15,7 +15,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="col-md-10">
-                    <form action="#" th:action="@{/hosts/createHost}" th:object="${host}" method="post">
+                    <form action="#" th:action="@{/hosts/save-host}" th:object="${host}" method="post">
                         <div class="row">
                             <div class="form-group col-md-8">
                                 <label for="ip" class="col-form-label" th:text="#{host.ip}"></label>

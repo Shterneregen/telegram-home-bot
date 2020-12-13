@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.config.Profiles;
-import random.telegramhomebot.utils.CommandRunner;
+import random.telegramhomebot.services.CommandRunnerService;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
@@ -16,12 +16,12 @@ import java.lang.invoke.MethodHandles;
 @Service
 public class BroadcastPingScheduler {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	private static final String ARP_COMMAND = "arp -a";
 
 	@Resource
-	private CommandRunner commandRunner;
+	private CommandRunnerService commandRunnerService;
 
 	@Value("${broadcast.ping.command}")
 	private String broadcastPingCommand;
@@ -29,7 +29,7 @@ public class BroadcastPingScheduler {
 	@Scheduled(fixedRateString = "${broadcast.ping.scheduled.time}")
 	public void broadcastPing() {
 		log.debug("Broadcast ping...");
-		commandRunner.runCommand(broadcastPingCommand);
-		commandRunner.runCommand(ARP_COMMAND);
+		commandRunnerService.runCommand(broadcastPingCommand);
+		commandRunnerService.runCommand(ARP_COMMAND);
 	}
 }

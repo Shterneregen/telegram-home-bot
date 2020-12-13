@@ -1,4 +1,4 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +13,9 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-public class CommandRunner {
+public class CommandRunnerService {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	private static final String UTF_8 = "utf-8";
 
@@ -24,7 +24,7 @@ public class CommandRunner {
 	}
 
 	public List<String> runCommand(String command, String encoding) {
-		log.debug("runCommand [{}]", command);
+		log.debug("Command to run: [{}]", command);
 		List<String> result = new ArrayList<>();
 		try {
 			Process process = Runtime.getRuntime().exec(command);

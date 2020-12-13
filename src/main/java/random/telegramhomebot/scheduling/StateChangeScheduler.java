@@ -16,32 +16,36 @@ import random.telegramhomebot.model.HostState;
 import random.telegramhomebot.model.HostTimeLog;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.repository.HostTimeLogRepository;
+import random.telegramhomebot.services.CommandRunnerService;
+import random.telegramhomebot.services.MessageFormatService;
+import random.telegramhomebot.services.MessageService;
 import random.telegramhomebot.telegram.Bot;
-import random.telegramhomebot.utils.CommandRunner;
-import random.telegramhomebot.utils.MessageConfigurer;
-import random.telegramhomebot.utils.MessageUtil;
 
 import javax.annotation.Resource;
 import java.lang.invoke.MethodHandles;
-import java.util.Arrays;
-import java.util.Collection;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER;
+import static random.telegramhomebot.AppConstants.Messages.NEW_HOSTS_MSG;
+import static random.telegramhomebot.AppConstants.Messages.REACHABLE_HOSTS_MSG;
+import static random.telegramhomebot.AppConstants.Messages.UNREACHABLE_HOSTS_MSG;
+import static random.telegramhomebot.utils.Utils.joinLists;
 
 @Profile(Profiles.NETWORK_MONITOR)
 @Service
 public class StateChangeScheduler {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Resource
-	private CommandRunner commandRunner;
+	private CommandRunnerService commandRunnerService;
 	@Resource
 	private Bot bot;
 	@Resource
@@ -51,9 +55,9 @@ public class StateChangeScheduler {
 	@Resource
 	private HostTimeLogRepository hostTimeLogRepository;
 	@Resource
-	private MessageUtil messageUtil;
+	private MessageFormatService messageFormatService;
 	@Resource
-	private MessageConfigurer messageConfigurer;
+	private MessageService messageService;
 
 	@Value("${state.change.command}")
 	private String stateChangeCommand;
@@ -64,7 +68,7 @@ public class StateChangeScheduler {
 		List<Host> currentHosts = getCurrentHosts();
 
 		if (CollectionUtils.isNotEmpty(currentHosts) && CollectionUtils.isEmpty(storedHosts)) {
-			bot.sendMessage(messageUtil.formHostsListTable(currentHosts, messageConfigurer.getMessage("new.hosts")));
+			bot.sendMessage(messageFormatService.formHostsListTable(messageService.getMessage(NEW_HOSTS_MSG), currentHosts));
 		}
 
 		List<Host> newHosts = null;
@@ -75,12 +79,12 @@ public class StateChangeScheduler {
 			reachableHosts = getStoredReachableHosts(storedHosts, currentHosts);
 			notReachableHosts = getStoredNotReachableHosts(storedHosts, currentHosts);
 
-			Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>(3);
-			hostsMessagesMap.put(messageConfigurer.getMessage("new.hosts"), newHosts);
-			hostsMessagesMap.put(messageConfigurer.getMessage("reachable.hosts"), reachableHosts);
-			hostsMessagesMap.put(messageConfigurer.getMessage("unreachable.hosts"), notReachableHosts);
+			Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>();
+			hostsMessagesMap.put(messageService.getMessage(NEW_HOSTS_MSG), newHosts);
+			hostsMessagesMap.put(messageService.getMessage(REACHABLE_HOSTS_MSG), reachableHosts);
+			hostsMessagesMap.put(messageService.getMessage(UNREACHABLE_HOSTS_MSG), notReachableHosts);
 
-			bot.sendMessage(messageUtil.formHostsListTable(hostsMessagesMap));
+			bot.sendMessage(messageFormatService.formHostsListTable(hostsMessagesMap));
 
 			if (CollectionUtils.isNotEmpty(notReachableHosts)) {
 				hostRepository.saveAll(notReachableHosts);
@@ -95,8 +99,10 @@ public class StateChangeScheduler {
 	}
 
 	private List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
+		String newHostNameStub = String.format("[NEW DEVICE] %s", LocalDateTime.now().format(DATE_TIME_FORMATTER));
 		return currentHosts.stream()
 				.filter(currentHost -> storedHosts.stream().noneMatch(currentHost::equals))
+				.peek(host -> host.setDeviceName(newHostNameStub))
 				.sorted(comparingByIp())
 				.collect(Collectors.toList());
 	}
@@ -112,7 +118,7 @@ public class StateChangeScheduler {
 	}
 
 	private List<Host> getCurrentHosts() {
-		List<String> hostsJson = commandRunner.runCommand(stateChangeCommand);
+		List<String> hostsJson = commandRunnerService.runCommand(stateChangeCommand);
 		List<Host> currentHosts = null;
 		try {
 			currentHosts = objectMapper.readValue(hostsJson.get(0), new TypeReference<>() {
@@ -167,12 +173,4 @@ public class StateChangeScheduler {
 		}
 		hostTimeLogRepository.saveAll(hosts.stream().map(h -> new HostTimeLog(h, h.getState())).collect(Collectors.toList()));
 	}
-
-	public static <T> List<T> joinLists(List<T>... lists) {
-		return Arrays.stream(lists)
-				.filter(Objects::nonNull)
-				.flatMap(Collection::stream)
-				.collect(Collectors.toList());
-	}
-
 }

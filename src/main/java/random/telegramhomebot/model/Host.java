@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.opencsv.bean.CsvBindByPosition;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -19,6 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "hosts")
 public class Host {
@@ -50,65 +54,6 @@ public class Host {
 	@JsonManagedReference
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
 	private List<HostTimeLog> timeLogs;
-
-	public Host() {
-	}
-
-	public UUID getId() {
-		return id;
-	}
-
-	public void setId(UUID id) {
-		this.id = id;
-	}
-
-	public String getIp() {
-		return ip;
-	}
-
-	public void setIp(String ip) {
-		this.ip = ip;
-	}
-
-	public String getHostInterface() {
-		return hostInterface;
-	}
-
-	public void setHostInterface(String hostInterface) {
-		this.hostInterface = hostInterface;
-	}
-
-	public String getMac() {
-		return mac;
-	}
-
-	public void setMac(String mac) {
-		this.mac = mac;
-	}
-
-	public HostState getState() {
-		return state;
-	}
-
-	public void setState(HostState state) {
-		this.state = state;
-	}
-
-	public String getDeviceName() {
-		return deviceName;
-	}
-
-	public void setDeviceName(String deviceName) {
-		this.deviceName = deviceName;
-	}
-
-	public List<HostTimeLog> getTimeLogs() {
-		return timeLogs;
-	}
-
-	public void setTimeLogs(List<HostTimeLog> timeLogs) {
-		this.timeLogs = timeLogs;
-	}
 
 	@Override
 	public String toString() {

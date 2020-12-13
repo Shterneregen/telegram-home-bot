@@ -18,11 +18,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 import static random.telegramhomebot.AppConstants.Hosts.HOSTS_MAPPING;
-import static random.telegramhomebot.AppConstants.HostsTimeLog.DATE_REQ_PARAM;
+import static random.telegramhomebot.AppConstants.HostsTimeLog.END_DATE_REQ_PARAM;
+import static random.telegramhomebot.AppConstants.HostsTimeLog.START_DATE_REQ_PARAM;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAPPING;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAP_MODEL_ATTR;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_VIEW;
@@ -34,18 +37,24 @@ public class HostTimeLogController {
 	@Resource
 	private HostTimeLogRepository hostTimeLogRepository;
 	@Resource
-	private TimeLogConverter convert;
+	private TimeLogConverter converter;
 
 	@RequestMapping(TIME_LOG_MAPPING)
-	public String getTimeLog(
-			@RequestParam(value = DATE_REQ_PARAM, defaultValue = "#{T(java.time.LocalDateTime).now()}")
-			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+	public String getTimeLogForPeriod(
+			@RequestParam(value = START_DATE_REQ_PARAM, defaultValue = "#{T(java.time.LocalDateTime).now()}")
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+			@RequestParam(value = END_DATE_REQ_PARAM, defaultValue = "#{T(java.time.LocalDateTime).now()}")
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
 			Model model) {
-		LocalDateTime startOfDate = date.atTime(LocalTime.MIN);
-		LocalDateTime endOfDate = date.atTime(LocalTime.MAX);
+		LocalDateTime startOfDate = startDate.atTime(LocalTime.MIN);
+		LocalDateTime endOfDate = endDate.atTime(LocalTime.MAX);
 
 		List<HostTimeLog> logs = hostTimeLogRepository
 				.findByCreatedDateBetween(Timestamp.valueOf(startOfDate), Timestamp.valueOf(endOfDate));
+
+		Function<HostTimeLog, String> hostGroupingBy = log -> log.getHost().getDeviceName() != null
+				? log.getHost().getDeviceName()
+				: log.getId().toString();
 
 		Map<String, List<TimeLogDto>> timeLogMap = logs.stream()
 				.peek(log -> {
@@ -53,9 +62,7 @@ public class HostTimeLogController {
 						log.setState(HostState.REACHABLE);
 					}
 				})
-				.collect(groupingBy(log -> log.getHost().getDeviceName() != null
-								? log.getHost().getDeviceName() : log.getId().toString(),
-						Collectors.mapping(log -> convert.convert(log), Collectors.toList())));
+				.collect(groupingBy(hostGroupingBy, mapping(log -> converter.convert(log), toList())));
 
 		model.addAttribute(TIME_LOG_MAP_MODEL_ATTR, timeLogMap);
 		return TIME_LOG_VIEW;

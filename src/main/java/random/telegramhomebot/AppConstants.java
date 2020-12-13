@@ -27,7 +27,8 @@ public interface AppConstants {
 	interface HostsTimeLog {
 		String TIME_LOG_MAPPING = "time-log";
 		String TIME_LOG_VIEW = "time-log";
-		String DATE_REQ_PARAM = "date";
+		String START_DATE_REQ_PARAM = "startDate";
+		String END_DATE_REQ_PARAM = "endDate";
 		String TIME_LOG_MAP_MODEL_ATTR = "timeLogMap";
 	}
 

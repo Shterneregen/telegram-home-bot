@@ -2,8 +2,8 @@ google.charts.load("current", {packages: ["timeline"]});
 google.charts.setOnLoadCallback(drawChart);
 
 function drawChart() {
-    let container = document.getElementById('time_log_table');
-    let chart = new google.visualization.Timeline(container);
+    let timeLogTable = document.getElementById('time_log_table');
+    let chart = new google.visualization.Timeline(timeLogTable);
     let dataTable = new google.visualization.DataTable();
     dataTable.addColumn({type: 'string', id: 'Host'});
     dataTable.addColumn({type: 'string', id: 'State'});
@@ -17,20 +17,43 @@ function drawChart() {
             let log = logArray[i]
             if (i === 0) {
                 let state = log.state === 'FAILED' ? 'REACHABLE' : 'FAILED';
-                dataTable.addRow([deviceName, state, new Date(0, 0, 0, 0, 0, 0), new Date(0, 0, 0, log.hours, log.minutes, 0)]);
+                let startOfDay = new Date(log.createdDate);
+                startOfDay.setHours(0, 0, 0, 0);
+                dataTable.addRow([deviceName, state, startOfDay, new Date(log.createdDate)]);
             }
-            if (i === logArray.length - 1) {
-                dataTable.addRow([deviceName, log.state, new Date(0, 0, 0, log.hours, log.minutes, 0), new Date(0, 0, 0, 23, 59, 0)]);
+            let isLast = i === logArray.length - 1;
+            if (isLast) {
+                let now = new Date()
+                let endOfDay = new Date(log.createdDate);
+                endOfDay.setHours(23, 59, 59, 999);
+                let endOfInterval = endOfDay > now ? now : endOfDay
+                dataTable.addRow([deviceName, log.state, new Date(log.createdDate), endOfInterval]);
             } else {
                 let nextLog = logArray[i + 1]
-                dataTable.addRow([deviceName, log.state, new Date(0, 0, 0, log.hours, log.minutes, 0), new Date(0, 0, 0, nextLog.hours, nextLog.minutes, 0)]);
+                dataTable.addRow([deviceName, log.state, new Date(log.createdDate), new Date(nextLog.createdDate)]);
             }
         }
     })
 
+    let colors = [];
+    let colorMap = {
+        FAILED: '#f36868',
+        REACHABLE: '#82f582'
+    }
+    for (let i = 0; i < dataTable.getNumberOfRows(); i++) {
+        colors.push(colorMap[dataTable.getValue(i, 1)]);
+    }
+
+    let rowHeight = 40;
+    let chartHeight = (dataTable.getNumberOfRows() + 1) * rowHeight;
+
     let options = {
         timeline: {colorByRowLabel: false},
-        backgroundColor: '#ffd'
+        backgroundColor: '#ffd',
+        avoidOverlappingGridLines: true,
+        height: chartHeight,
+        width: '100%',
+        colors: colors
     };
     chart.draw(dataTable, options);
 }

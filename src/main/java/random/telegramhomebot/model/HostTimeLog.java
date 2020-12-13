@@ -1,6 +1,8 @@
 package random.telegramhomebot.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -15,6 +17,8 @@ import javax.persistence.Table;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "host_time_logs")
 public class HostTimeLog {
@@ -35,43 +39,8 @@ public class HostTimeLog {
 	@Column
 	HostState state;
 
-	public HostTimeLog() {
-	}
-
 	public HostTimeLog(Host host, HostState state) {
 		this.host = host;
-		this.state = state;
-	}
-
-	public UUID getId() {
-		return id;
-	}
-
-	public void setId(UUID id) {
-		this.id = id;
-	}
-
-	public Timestamp getCreatedDate() {
-		return createdDate;
-	}
-
-	public void setCreatedDate(Timestamp createdDate) {
-		this.createdDate = createdDate;
-	}
-
-	public Host getHost() {
-		return host;
-	}
-
-	public void setHost(Host host) {
-		this.host = host;
-	}
-
-	public HostState getState() {
-		return state;
-	}
-
-	public void setState(HostState state) {
 		this.state = state;
 	}
 }

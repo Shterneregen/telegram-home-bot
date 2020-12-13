@@ -1,5 +1,7 @@
 package random.telegramhomebot.model;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -11,6 +13,8 @@ import javax.persistence.Table;
 import java.util.Objects;
 import java.util.UUID;
 
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "telegram_commands")
 public class TelegramCommand {
@@ -28,44 +32,9 @@ public class TelegramCommand {
 	@Column(name = "enabled")
 	private Boolean enabled;
 
-	public TelegramCommand() {
-	}
-
 	public TelegramCommand(String commandAlias, String command) {
 		this.commandAlias = commandAlias;
 		this.command = command;
-	}
-
-	public UUID getId() {
-		return id;
-	}
-
-	public void setId(UUID id) {
-		this.id = id;
-	}
-
-	public String getCommandAlias() {
-		return commandAlias;
-	}
-
-	public void setCommandAlias(String commandAlias) {
-		this.commandAlias = commandAlias;
-	}
-
-	public String getCommand() {
-		return command;
-	}
-
-	public void setCommand(String command) {
-		this.command = command;
-	}
-
-	public Boolean isEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(Boolean enabled) {
-		this.enabled = enabled;
 	}
 
 	@Override

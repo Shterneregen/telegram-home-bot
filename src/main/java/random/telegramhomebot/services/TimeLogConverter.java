@@ -7,8 +7,10 @@ import random.telegramhomebot.model.TimeLogDto;
 @Service
 public class TimeLogConverter {
 
-	public TimeLogDto convert(HostTimeLog log) {
-		return new TimeLogDto(String.valueOf(log.getCreatedDate().getHours()),
-				String.valueOf(log.getCreatedDate().getMinutes()), log.getState().toString());
+	public TimeLogDto convert(HostTimeLog timeLog) {
+		return TimeLogDto.builder()
+				.state(timeLog.getState().toString())
+				.createdDate(timeLog.getCreatedDate())
+				.build();
 	}
 }

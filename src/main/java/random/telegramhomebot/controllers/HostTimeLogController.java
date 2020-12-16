@@ -12,19 +12,21 @@ import random.telegramhomebot.repository.HostTimeLogRepository;
 import random.telegramhomebot.services.TimeLogConverter;
 
 import javax.annotation.Resource;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
+import static java.sql.Timestamp.valueOf;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static random.telegramhomebot.AppConstants.Hosts.HOSTS_MAPPING;
+import static random.telegramhomebot.AppConstants.HostsTimeLog.DEFAULT_DATE_VALUE_NOW;
+import static random.telegramhomebot.AppConstants.HostsTimeLog.END_DATE_MODEL_ATTR;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.END_DATE_REQ_PARAM;
+import static random.telegramhomebot.AppConstants.HostsTimeLog.START_DATE_MODEL_ATTR;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.START_DATE_REQ_PARAM;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAPPING;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAP_MODEL_ATTR;
@@ -34,6 +36,7 @@ import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_VIEW;
 @RequestMapping(HOSTS_MAPPING)
 public class HostTimeLogController {
 
+
 	@Resource
 	private HostTimeLogRepository hostTimeLogRepository;
 	@Resource
@@ -41,31 +44,31 @@ public class HostTimeLogController {
 
 	@RequestMapping(TIME_LOG_MAPPING)
 	public String getTimeLogForPeriod(
-			@RequestParam(value = START_DATE_REQ_PARAM, defaultValue = "#{T(java.time.LocalDateTime).now()}")
+			@RequestParam(value = START_DATE_REQ_PARAM, defaultValue = DEFAULT_DATE_VALUE_NOW)
 			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-			@RequestParam(value = END_DATE_REQ_PARAM, defaultValue = "#{T(java.time.LocalDateTime).now()}")
+			@RequestParam(value = END_DATE_REQ_PARAM, defaultValue = DEFAULT_DATE_VALUE_NOW)
 			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
 			Model model) {
 		LocalDateTime startOfDate = startDate.atTime(LocalTime.MIN);
 		LocalDateTime endOfDate = endDate.atTime(LocalTime.MAX);
 
-		List<HostTimeLog> logs = hostTimeLogRepository
-				.findByCreatedDateBetween(Timestamp.valueOf(startOfDate), Timestamp.valueOf(endOfDate));
+		List<HostTimeLog> logs = hostTimeLogRepository.findByCreatedDateBetween(valueOf(startOfDate), valueOf(endOfDate));
 
-		Function<HostTimeLog, String> hostGroupingBy = log -> log.getHost().getDeviceName() != null
-				? log.getHost().getDeviceName()
-				: log.getId().toString();
+		model.addAttribute(TIME_LOG_MAP_MODEL_ATTR, getTimeLogDtoMap(logs));
+		model.addAttribute(START_DATE_MODEL_ATTR, startDate);
+		model.addAttribute(END_DATE_MODEL_ATTR, endDate);
+		return TIME_LOG_VIEW;
+	}
 
-		Map<String, List<TimeLogDto>> timeLogMap = logs.stream()
+	private Map<String, List<TimeLogDto>> getTimeLogDtoMap(List<HostTimeLog> logs) {
+		return logs.stream()
 				.peek(log -> {
 					if (!(log.getState() == HostState.FAILED)) {
 						log.setState(HostState.REACHABLE);
 					}
 				})
-				.collect(groupingBy(hostGroupingBy, mapping(log -> converter.convert(log), toList())));
-
-		model.addAttribute(TIME_LOG_MAP_MODEL_ATTR, timeLogMap);
-		return TIME_LOG_VIEW;
+				.collect(groupingBy(log -> log.getHost().getDeviceName() != null
+						? log.getHost().getDeviceName()
+						: log.getHost().getMac(), mapping(log -> converter.convert(log), toList())));
 	}
-
 }

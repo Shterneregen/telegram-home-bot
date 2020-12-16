@@ -10,7 +10,13 @@ function drawChart() {
     dataTable.addColumn({type: 'date', id: 'Start'});
     dataTable.addColumn({type: 'date', id: 'End'});
 
-    Object.entries(timeLogMap).forEach((log) => {
+    timeLogMap = Object.entries(timeLogMap);
+    if (timeLogMap.length === 0) {
+        timeLogTable.innerHTML = '<h2>No time logs for this period</h2>';
+        return;
+    }
+
+    timeLogMap.forEach((log) => {
         let deviceName = log[0]
         let logArray = log[1]
         for (let i = 0; i < logArray.length; i++) {
@@ -33,7 +39,7 @@ function drawChart() {
                 dataTable.addRow([deviceName, log.state, new Date(log.createdDate), new Date(nextLog.createdDate)]);
             }
         }
-    })
+    });
 
     let colors = [];
     let colorMap = {
@@ -44,14 +50,15 @@ function drawChart() {
         colors.push(colorMap[dataTable.getValue(i, 1)]);
     }
 
-    let rowHeight = 40;
-    let chartHeight = (dataTable.getNumberOfRows() + 1) * rowHeight;
+    // TODO: find right way to calculate chartHeight
+    // let rowHeight = 40;
+    // let chartHeight = (dataTable.getNumberOfRows() + 1) * rowHeight;
 
     let options = {
         timeline: {colorByRowLabel: false},
         backgroundColor: '#ffd',
         avoidOverlappingGridLines: true,
-        height: chartHeight,
+        // height: 900,
         width: '100%',
         colors: colors
     };

@@ -13,3 +13,7 @@
 .validation-error {
     color: red;
 }
+
+#time_log_table {
+    height: 500px;
+}

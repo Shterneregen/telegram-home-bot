@@ -38,3 +38,10 @@ To use this project set environment variables for TELEGRAM_BOT_CHAT_ID, TELEGRAM
 * enter the name of the bot
 * enter Disable
 * get private group __chat_id__, call https://api.telegram.org/bot$TOKEN/getUpdates
+
+### Preview
+![Commands](./screenshots/Commands.png)
+
+![Hosts](./screenshots/Hosts.png)
+
+![TimeLog](./screenshots/TimeLog.png)

@@ -30,6 +30,9 @@ public interface AppConstants {
 		String START_DATE_REQ_PARAM = "startDate";
 		String END_DATE_REQ_PARAM = "endDate";
 		String TIME_LOG_MAP_MODEL_ATTR = "timeLogMap";
+		String START_DATE_MODEL_ATTR = "startDate";
+		String END_DATE_MODEL_ATTR = "endDate";
+		String DEFAULT_DATE_VALUE_NOW = "#{T(java.time.LocalDateTime).now()}";
 	}
 
 	interface HostsCsv {

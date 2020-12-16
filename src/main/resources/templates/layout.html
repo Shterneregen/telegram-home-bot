@@ -41,8 +41,14 @@
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/commands}" th:text="#{commands}"></a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/hosts}" th:text="#{hosts}"></a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:text="#{hosts}">
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" th:href="@{/hosts}" th:text="#{hosts}"></a>
+                            <a class="dropdown-item" th:href="@{/hosts/time-log}" th:text="#{hosts.time-log}"></a>
+                        </div>
                     </li>
                 </ul>
             </div>

@@ -3,9 +3,9 @@ package random.telegramhomebot.scheduling;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,8 +21,6 @@ import random.telegramhomebot.services.MessageFormatService;
 import random.telegramhomebot.services.MessageService;
 import random.telegramhomebot.telegram.Bot;
 
-import javax.annotation.Resource;
-import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,26 +36,19 @@ import static random.telegramhomebot.AppConstants.Messages.REACHABLE_HOSTS_MSG;
 import static random.telegramhomebot.AppConstants.Messages.UNREACHABLE_HOSTS_MSG;
 import static random.telegramhomebot.utils.Utils.joinLists;
 
+@Slf4j
+@RequiredArgsConstructor
 @Profile(Profiles.NETWORK_MONITOR)
 @Service
 public class StateChangeScheduler {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-	@Resource
-	private CommandRunnerService commandRunnerService;
-	@Resource
-	private Bot bot;
-	@Resource
-	private ObjectMapper objectMapper;
-	@Resource
-	private HostRepository hostRepository;
-	@Resource
-	private HostTimeLogRepository hostTimeLogRepository;
-	@Resource
-	private MessageFormatService messageFormatService;
-	@Resource
-	private MessageService messageService;
+	private final CommandRunnerService commandRunnerService;
+	private final Bot bot;
+	private final ObjectMapper objectMapper;
+	private final HostRepository hostRepository;
+	private final HostTimeLogRepository hostTimeLogRepository;
+	private final MessageFormatService messageFormatService;
+	private final MessageService messageService;
 
 	@Value("${state.change.command}")
 	private String stateChangeCommand;

@@ -1,7 +1,7 @@
 package random.telegramhomebot.scheduling;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -9,19 +9,15 @@ import org.springframework.stereotype.Service;
 import random.telegramhomebot.config.Profiles;
 import random.telegramhomebot.services.CommandRunnerService;
 
-import javax.annotation.Resource;
-import java.lang.invoke.MethodHandles;
-
+@Slf4j
+@RequiredArgsConstructor
 @Profile(Profiles.NETWORK_MONITOR)
 @Service
 public class BroadcastPingScheduler {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
 	private static final String ARP_COMMAND = "arp -a";
 
-	@Resource
-	private CommandRunnerService commandRunnerService;
+	private final CommandRunnerService commandRunnerService;
 
 	@Value("${broadcast.ping.command}")
 	private String broadcastPingCommand;

@@ -3,6 +3,8 @@ package random.telegramhomebot.auth;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import random.telegramhomebot.auth.entities.AuthGroup;
+import random.telegramhomebot.auth.entities.User;
 
 import java.util.Collection;
 import java.util.Collections;

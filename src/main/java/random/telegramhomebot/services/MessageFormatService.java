@@ -1,14 +1,12 @@
 package random.telegramhomebot.services;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
 
-import javax.annotation.Resource;
-import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,15 +15,14 @@ import java.util.stream.Collectors;
 import static random.telegramhomebot.AppConstants.Messages.REACHABLE_HOSTS_MSG;
 import static random.telegramhomebot.AppConstants.Messages.UNREACHABLE_HOSTS_MSG;
 
+@Slf4j
+@RequiredArgsConstructor
 @Service
 public class MessageFormatService {
 
 	private static final String HOST_FORMAT = "%1$-15s %2$s\n";
 
-	@Resource
-	private MessageService messageService;
-
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private final MessageService messageService;
 
 	public String formHostsListTable(Map<String, List<Host>> hostsMap) {
 		return hostsMap.entrySet().stream()

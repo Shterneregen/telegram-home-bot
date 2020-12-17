@@ -45,3 +45,7 @@ To use this project set environment variables for TELEGRAM_BOT_CHAT_ID, TELEGRAM
 ![Hosts](./screenshots/Hosts.png)
 
 ![TimeLog](./screenshots/TimeLog.png)
+
+---
+
+Spring Boot, Spring Security, Gradle, H2, Thymeleaf, Google Charts, telegrambots-spring-boot-starter

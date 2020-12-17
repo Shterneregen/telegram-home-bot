@@ -1,26 +1,22 @@
 package random.telegramhomebot.bootstrap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.TelegramCommandRepository;
 
-import javax.annotation.Resource;
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
+@RequiredArgsConstructor
 @Component
 public class CommandsLoader implements CommandLineRunner {
 
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
-
-	@Resource
-	private Map<String, String> telegramCommands;
-	@Resource
-	private TelegramCommandRepository telegramCommandRepository;
+	private final Map<String, String> telegramCommands;
+	private final TelegramCommandRepository telegramCommandRepository;
 
 	@Override
 	public void run(String... args) {

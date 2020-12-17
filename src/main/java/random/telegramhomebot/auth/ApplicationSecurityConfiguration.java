@@ -1,5 +1,6 @@
 package random.telegramhomebot.auth;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,8 +13,7 @@ import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMap
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import javax.annotation.Resource;
-
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapter {
@@ -24,8 +24,7 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
 	@Value("${spring.h2.console.path}")
 	private String springH2ConsolePath;
 
-	@Resource
-	private AppUserDetailsService userDetailsService;
+	private final AppUserDetailsService userDetailsService;
 
 	@Bean
 	public DaoAuthenticationProvider authenticationProvider() {

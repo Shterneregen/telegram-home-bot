@@ -1,6 +1,7 @@
-package random.telegramhomebot.auth;
+package random.telegramhomebot.auth.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import random.telegramhomebot.auth.entities.AuthGroup;
 
 import java.util.List;
 

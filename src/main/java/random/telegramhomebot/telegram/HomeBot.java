@@ -1,9 +1,9 @@
 package random.telegramhomebot.telegram;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -24,19 +24,17 @@ import random.telegramhomebot.services.MessageFormatService;
 import random.telegramhomebot.services.MessageService;
 import random.telegramhomebot.services.UserValidatorService;
 
-import javax.annotation.Resource;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_MSG;
 
+@Slf4j
+@RequiredArgsConstructor
 @Profile("!" + Profiles.MOCK_BOT)
 @Component
 public class HomeBot extends TelegramLongPollingBot implements Bot {
-
-	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
 	private static final String SHOW_STORED_HOSTS_COMMAND = "/hosts";
 	private static final String SHOW_ALL_COMMANDS = "/commands";
@@ -50,18 +48,12 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	@Value("${buttons.in.row}")
 	private int buttonsInRow;
 
-	@Resource
-	private UserValidatorService userValidatorService;
-	@Resource
-	private CommandRunnerService commandRunnerService;
-	@Resource
-	private HostRepository hostRepository;
-	@Resource
-	private MessageFormatService messageFormatService;
-	@Resource
-	private TelegramCommandRepository telegramCommandRepository;
-	@Resource
-	private MessageService messageService;
+	private final UserValidatorService userValidatorService;
+	private final CommandRunnerService commandRunnerService;
+	private final HostRepository hostRepository;
+	private final MessageFormatService messageFormatService;
+	private final TelegramCommandRepository telegramCommandRepository;
+	private final MessageService messageService;
 
 	@Override
 	public void onUpdateReceived(Update update) {

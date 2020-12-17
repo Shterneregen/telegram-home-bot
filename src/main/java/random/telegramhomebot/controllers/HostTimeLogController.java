@@ -1,5 +1,6 @@
 package random.telegramhomebot.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,7 +12,6 @@ import random.telegramhomebot.model.TimeLogDto;
 import random.telegramhomebot.repository.HostTimeLogRepository;
 import random.telegramhomebot.services.TimeLogConverter;
 
-import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,15 +32,13 @@ import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAPPING;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAP_MODEL_ATTR;
 import static random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_VIEW;
 
+@RequiredArgsConstructor
 @Controller
 @RequestMapping(HOSTS_MAPPING)
 public class HostTimeLogController {
 
-
-	@Resource
-	private HostTimeLogRepository hostTimeLogRepository;
-	@Resource
-	private TimeLogConverter converter;
+	private final HostTimeLogRepository hostTimeLogRepository;
+	private final TimeLogConverter timeLogConverter;
 
 	@RequestMapping(TIME_LOG_MAPPING)
 	public String getTimeLogForPeriod(
@@ -69,6 +67,6 @@ public class HostTimeLogController {
 				})
 				.collect(groupingBy(log -> log.getHost().getDeviceName() != null
 						? log.getHost().getDeviceName()
-						: log.getHost().getMac(), mapping(log -> converter.convert(log), toList())));
+						: log.getHost().getMac(), mapping(timeLogConverter::convertToDto, toList())));
 	}
 }

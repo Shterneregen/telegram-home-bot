@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.TelegramCommandRepository;
 
+import javax.annotation.Resource;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -15,7 +16,8 @@ import java.util.stream.Collectors;
 @Component
 public class CommandsLoader implements CommandLineRunner {
 
-	private final Map<String, String> telegramCommands;
+	@Resource
+	private Map<String, String> telegramCommands;
 	private final TelegramCommandRepository telegramCommandRepository;
 
 	@Override

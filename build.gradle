@@ -4,6 +4,13 @@ plugins {
 	id "java"
 }
 
+ext {
+	telegrambotsSpringBootStarterVersion = "4.9.1"
+	thymeleafExtrasSpringsecurity5Version = "3.0.4.RELEASE"
+	opencsvVersion = "5.3"
+	commonsLang3Version = "3.11"
+}
+
 group = "random"
 version = "0.0.1-SNAPSHOT"
 sourceCompatibility = "11"
@@ -26,9 +33,10 @@ dependencies {
 			"org.springframework.boot:spring-boot-starter-security",
 			"org.springframework.boot:spring-boot-starter-validation",
 			"nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect",
-			"org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.0.4.RELEASE",
-			"org.telegram:telegrambots-spring-boot-starter:4.9.1",
-			"com.opencsv:opencsv:5.3"
+			"org.thymeleaf.extras:thymeleaf-extras-springsecurity5:$thymeleafExtrasSpringsecurity5Version",
+			"org.telegram:telegrambots-spring-boot-starter:$telegrambotsSpringBootStarterVersion",
+			"com.opencsv:opencsv:$opencsvVersion",
+			"org.apache.commons:commons-lang3:$commonsLang3Version"
 	)
 	compileOnly "org.projectlombok:lombok"
 	developmentOnly "org.springframework.boot:spring-boot-devtools"

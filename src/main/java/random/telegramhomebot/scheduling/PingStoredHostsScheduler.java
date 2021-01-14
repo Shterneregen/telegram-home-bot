@@ -21,7 +21,7 @@ public class PingStoredHostsScheduler {
 	private final CommandRunnerService commandRunnerService;
 	private final HostRepository hostRepository;
 
-	@Scheduled(fixedRateString = "${state.change.scheduled.time}", initialDelay = 10000)
+	@Scheduled(fixedRateString = "${ping.stored.hosts.scheduled.time}", initialDelay = 10000)
 	public void pingStoredHosts() {
 		log.debug("Ping stored hosts...");
 		List<Host> storedHosts = hostRepository.findAll();

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -55,6 +56,10 @@ public class StateChangeScheduler {
 
 	@Scheduled(fixedRateString = "${state.change.scheduled.time}", initialDelay = 20000)
 	public void checkState() {
+		if (!SystemUtils.IS_OS_LINUX) {
+			log.warn("checkState is not implemented for non-linux systems");
+			return;
+		}
 		List<Host> storedHosts = hostRepository.findAll();
 		List<Host> currentHosts = getCurrentHosts();
 

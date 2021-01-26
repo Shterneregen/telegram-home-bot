@@ -29,6 +29,7 @@
         <!--        </div>-->
 
         <div class="table-responsive">
+            <div th:replace="fragments/paginator :: paginator(${mapping}, ${pager}, ${selectedPageSize}, ${pageSizes})"></div>
             <table class="table table-striped">
                 <thead>
                 <tr>
@@ -65,6 +66,7 @@
                 </tr>
                 </tbody>
             </table>
+            <div th:replace="fragments/paginator :: paginator(${mapping}, ${pager}, ${selectedPageSize}, ${pageSizes})"></div>
         </div>
     </div>
     <div class="modal modal-warning fade in" th:id="modal-warning">

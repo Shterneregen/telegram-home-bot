@@ -91,9 +91,9 @@ public class HostController {
 		if (bindingResult.hasErrors()) {
 			return ADD_EDIT_HOST_VIEW;
 		}
-		Host storedHost = hostRepository.findHostByMac(host.getMac());
-		boolean saveNewHostWithExistingMac = storedHost != null && host.getId() == null;
-		boolean editStoredHostMacToExisting = storedHost != null && !storedHost.getId().equals(host.getId());
+		Optional<Host> storedHost = hostRepository.findHostByMac(host.getMac());
+		boolean saveNewHostWithExistingMac = storedHost.isPresent() && host.getId() == null;
+		boolean editStoredHostMacToExisting = storedHost.isPresent() && !storedHost.get().getId().equals(host.getId());
 		if (saveNewHostWithExistingMac || editStoredHostMacToExisting) {
 			bindingResult.rejectValue(HOST_MAC_FIELD, HOST_MAC_NOT_UNIQUE_MSG);
 			return ADD_EDIT_HOST_VIEW;

@@ -22,6 +22,7 @@ import java.io.Reader;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,10 +52,10 @@ public class HostsCsvService {
 					.filter(hostFromCsv -> validateMac(hostFromCsv.getMac()))
 					.forEach(hostFromCsv -> {
 						String macFromCsv = hostFromCsv.getMac();
-						Host storedHost = hostRepository.findHostByMac(macFromCsv);
-						if (storedHost != null) {
-							storedHost.setDeviceName(hostFromCsv.getDeviceName());
-							parsedHosts.add(storedHost);
+						Optional<Host> storedHost = hostRepository.findHostByMac(macFromCsv);
+						if (storedHost.isPresent()) {
+							storedHost.get().setDeviceName(hostFromCsv.getDeviceName());
+							parsedHosts.add(storedHost.get());
 						} else {
 							parsedHosts.add(hostFromCsv);
 						}

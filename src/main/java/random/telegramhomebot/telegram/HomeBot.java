@@ -26,6 +26,7 @@ import random.telegramhomebot.services.UserValidatorService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_MSG;
@@ -77,9 +78,10 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 			return;
 		}
 
-		TelegramCommand telegramCommand = telegramCommandRepository.findByCommandAliasAndEnabled(messageStr, Boolean.TRUE);
-		if (telegramCommand != null) {
-			List<String> commandOutput = commandRunnerService.runCommand(telegramCommand.getCommand());
+		Optional<TelegramCommand> telegramCommand
+				= telegramCommandRepository.findByCommandAliasAndEnabled(messageStr, Boolean.TRUE);
+		if (telegramCommand.isPresent()) {
+			List<String> commandOutput = commandRunnerService.runCommand(telegramCommand.get().getCommand());
 			sendMessage(String.join("\n", commandOutput), chatId, message.getMessageId());
 			commandOutput.forEach(log::debug);
 		}

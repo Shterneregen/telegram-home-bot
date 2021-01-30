@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -156,10 +157,10 @@ public class StateChangeScheduler {
 	}
 
 	private void fillHostStoredInfo(Host currentHost) {
-		Host storedHost = hostRepository.findHostByMac(currentHost.getMac());
-		if (storedHost != null) {
-			currentHost.setId(storedHost.getId());
-			currentHost.setDeviceName(storedHost.getDeviceName());
+		Optional<Host> storedHost = hostRepository.findHostByMac(currentHost.getMac());
+		if (storedHost.isPresent()) {
+			currentHost.setId(storedHost.get().getId());
+			currentHost.setDeviceName(storedHost.get().getDeviceName());
 		}
 	}
 

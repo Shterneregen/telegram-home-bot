@@ -1,9 +1,12 @@
+[![CircleCI](https://circleci.com/gh/Shterneregen/telegram-home-bot.svg?style=svg)](https://circleci.com/gh/Shterneregen/telegram-home-bot)
+
 # Telegram Home Bot
 
 Can be used for home automation on Raspberry Pi
 
-To use this project set environment variables for TELEGRAM_BOT_CHAT_ID, TELEGRAM_TOKEN and TELEGRAM_BOT_NAME
-
+To use this project set environment variables for TELEGRAM_BOT_CHAT_ID, TELEGRAM_TOKEN and TELEGRAM_BOT_NAME.  
+(Actually, using THB as a Linux service, I just put the properties files next to the jar file and also set the telegram 
+credentials into the application.properties without using env variables)
 
 ### Create telegram chatbot
 * start a chat with __@BotFather__

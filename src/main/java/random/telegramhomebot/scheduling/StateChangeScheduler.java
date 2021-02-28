@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import random.telegramhomebot.config.Profiles;
+import random.telegramhomebot.config.ProfileService;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
 import random.telegramhomebot.model.HostTimeLog;
@@ -40,7 +40,7 @@ import static random.telegramhomebot.utils.Utils.joinLists;
 
 @Slf4j
 @RequiredArgsConstructor
-@Profile(Profiles.NETWORK_MONITOR)
+@Profile(ProfileService.NETWORK_MONITOR)
 @Service
 public class StateChangeScheduler {
 

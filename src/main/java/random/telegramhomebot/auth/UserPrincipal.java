@@ -1,5 +1,6 @@
 package random.telegramhomebot.auth;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,15 +13,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-	private User user;
-	private List<AuthGroup> authGroups;
-
-	public UserPrincipal(User user, List<AuthGroup> authGroups) {
-		this.user = user;
-		this.authGroups = authGroups;
-	}
+	private final User user;
+	private final List<AuthGroup> authGroups;
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {

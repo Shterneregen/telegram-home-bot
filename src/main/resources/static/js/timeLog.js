@@ -41,11 +41,11 @@ function drawChart() {
         }
     });
 
-    let colors = [];
     let colorMap = {
         FAILED: '#f36868',
         REACHABLE: '#82f582'
     }
+    let colors = [];
     for (let i = 0; i < dataTable.getNumberOfRows(); i++) {
         colors.push(colorMap[dataTable.getValue(i, 1)]);
     }

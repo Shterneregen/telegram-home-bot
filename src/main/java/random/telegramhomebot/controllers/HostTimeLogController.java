@@ -6,7 +6,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import random.telegramhomebot.model.HostState;
 import random.telegramhomebot.model.HostTimeLog;
 import random.telegramhomebot.model.TimeLogDto;
 import random.telegramhomebot.repository.HostTimeLogRepository;
@@ -17,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static java.sql.Timestamp.valueOf;
 import static java.util.stream.Collectors.groupingBy;
@@ -59,14 +59,10 @@ public class HostTimeLogController {
 	}
 
 	private Map<String, List<TimeLogDto>> getTimeLogDtoMap(List<HostTimeLog> logs) {
-		return logs.stream()
-				.peek(log -> {
-					if (!(log.getState() == HostState.FAILED)) {
-						log.setState(HostState.REACHABLE);
-					}
-				})
-				.collect(groupingBy(log -> log.getHost().getDeviceName() != null
-						? log.getHost().getDeviceName()
-						: log.getHost().getMac(), mapping(timeLogConverter::convertToDto, toList())));
+		return logs.stream().collect(groupingBy(getDeviceName(), mapping(timeLogConverter::convertToDto, toList())));
+	}
+
+	private Function<HostTimeLog, String> getDeviceName() {
+		return log -> log.getHost().getDeviceName() != null ? log.getHost().getDeviceName() : log.getHost().getMac();
 	}
 }

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import random.telegramhomebot.config.Profiles;
+import random.telegramhomebot.config.ProfileService;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.services.CommandRunnerService;
@@ -14,7 +14,7 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@Profile(Profiles.NETWORK_MONITOR)
+@Profile(ProfileService.NETWORK_MONITOR)
 @Service
 public class PingStoredHostsScheduler {
 

@@ -15,7 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import random.telegramhomebot.config.Profiles;
+import random.telegramhomebot.config.ProfileService;
 import random.telegramhomebot.model.TelegramCommand;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.repository.TelegramCommandRepository;
@@ -33,7 +33,7 @@ import static random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_M
 
 @Slf4j
 @RequiredArgsConstructor
-@Profile("!" + Profiles.MOCK_BOT)
+@Profile("!" + ProfileService.MOCK_BOT)
 @Component
 public class HomeBot extends TelegramLongPollingBot implements Bot {
 

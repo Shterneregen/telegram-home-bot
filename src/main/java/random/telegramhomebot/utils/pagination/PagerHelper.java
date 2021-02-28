@@ -1,4 +1,4 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.utils.pagination;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;

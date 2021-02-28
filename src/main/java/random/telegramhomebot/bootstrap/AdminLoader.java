@@ -27,10 +27,10 @@ public class AdminLoader implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
-		loadAdminUser();
+		createAdminUser();
 	}
 
-	private void loadAdminUser() {
+	private void createAdminUser() {
 		if (userRepository.count() == 0) {
 			log.info("Creating admin user [{}]", adminLogin);
 

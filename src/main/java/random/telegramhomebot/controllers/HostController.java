@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.repository.HostRepository;
-import random.telegramhomebot.utils.PagerHelper;
+import random.telegramhomebot.utils.pagination.PagerHelper;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;

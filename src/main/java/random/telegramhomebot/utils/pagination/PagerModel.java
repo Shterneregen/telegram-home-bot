@@ -1,4 +1,4 @@
-package random.telegramhomebot.utils;
+package random.telegramhomebot.utils.pagination;
 
 import lombok.Data;
 

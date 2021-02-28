@@ -32,6 +32,7 @@ public class CommandsLoader implements CommandLineRunner {
 			log.info("Loading sample commands...");
 			telegramCommandRepository.saveAll(telegramCommands.entrySet().stream()
 					.map(entry -> new TelegramCommand(entry.getKey(), entry.getValue()))
+					.peek(command -> command.setEnabled(true))
 					.collect(Collectors.toList()));
 		}
 	}

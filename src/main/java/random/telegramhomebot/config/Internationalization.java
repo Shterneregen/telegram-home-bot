@@ -20,9 +20,14 @@ public class Internationalization implements WebMvcConfigurer {
 	private String defaultLanguage;
 
 	@Bean
+	public Locale defaultLocale() {
+		return new Locale(defaultLanguage);
+	}
+
+	@Bean
 	public LocaleResolver localeResolver() {
 		CookieLocaleResolver localeResolver = new CookieLocaleResolver();
-		localeResolver.setDefaultLocale(new Locale(defaultLanguage));
+		localeResolver.setDefaultLocale(defaultLocale());
 		return localeResolver;
 	}
 

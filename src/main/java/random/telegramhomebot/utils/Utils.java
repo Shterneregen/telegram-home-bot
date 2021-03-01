@@ -1,5 +1,6 @@
 package random.telegramhomebot.utils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -13,5 +14,17 @@ public abstract class Utils {
 				.filter(Objects::nonNull)
 				.flatMap(Collection::stream)
 				.collect(Collectors.toList());
+	}
+
+	public static String getClientIp(HttpServletRequest request) {
+		String remoteAddr = "undefined";
+
+		if (request != null) {
+			remoteAddr = request.getHeader("X-FORWARDED-FOR");
+			if (remoteAddr == null || "".equals(remoteAddr)) {
+				remoteAddr = request.getRemoteAddr();
+			}
+		}
+		return remoteAddr;
 	}
 }

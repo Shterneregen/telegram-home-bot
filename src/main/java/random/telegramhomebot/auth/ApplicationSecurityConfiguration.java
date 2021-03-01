@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.context.request.RequestContextListener;
 
 @RequiredArgsConstructor
 @Configuration
@@ -20,7 +21,6 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
 
 	@Value("${bcrypt.rounds}")
 	private int bcryptRounds;
-
 	@Value("${spring.h2.console.path}")
 	private String springH2ConsolePath;
 
@@ -43,6 +43,11 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
 		return authorityMapper;
 	}
 
+	@Bean
+	public RequestContextListener requestContextListener() {
+		return new RequestContextListener();
+	}
+
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) {
 		auth.authenticationProvider(authenticationProvider());
@@ -54,5 +59,4 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
 				.ignoring()
 				.antMatchers(springH2ConsolePath + "**");
 	}
-
 }

@@ -21,7 +21,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "telegram_commands")
-public class TelegramCommand {
+public class TelegramCommand implements Command {
 
 	@Id
 	@GeneratedValue(generator = "UUID")
@@ -64,5 +64,10 @@ public class TelegramCommand {
 				", command='" + command + '\'' +
 				", enabled=" + enabled +
 				'}';
+	}
+
+	@Override
+	public String getButtonName() {
+		return getCommandAlias();
 	}
 }

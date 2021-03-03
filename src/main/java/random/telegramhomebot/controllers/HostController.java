@@ -1,5 +1,6 @@
 package random.telegramhomebot.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,10 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import random.telegramhomebot.model.Host;
-import random.telegramhomebot.repository.HostRepository;
+import random.telegramhomebot.services.HostService;
 import random.telegramhomebot.utils.pagination.PagerHelper;
 
-import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,14 +33,14 @@ import static random.telegramhomebot.AppConstants.Hosts.REDIRECT_HOSTS;
 import static random.telegramhomebot.AppConstants.Hosts.SAVE_HOST_MAPPING;
 import static random.telegramhomebot.AppConstants.Messages.HOST_MAC_NOT_UNIQUE_MSG;
 
+@RequiredArgsConstructor
 @Controller
 @RequestMapping(HOSTS_MAPPING)
 public class HostController {
 
 	private static final int DEFAULT_CURRENT_PAGE = 0;
 
-	@Resource
-	private HostRepository hostRepository;
+	private final HostService hostService;
 
 	@Value("${hosts.default.page.size}")
 	private int defaultPageSize;
@@ -51,10 +51,10 @@ public class HostController {
 
 	@RequestMapping
 	public String getAllHosts(@RequestParam("pageSize") Optional<Integer> pageSize,
-							  @RequestParam("page") Optional<Integer> currentPage,
-							  @RequestParam("sortBy") Optional<String> sortBy,
-							  @RequestParam("direction") Optional<String> direction,
-							  Model model) {
+	                          @RequestParam("page") Optional<Integer> currentPage,
+	                          @RequestParam("sortBy") Optional<String> sortBy,
+	                          @RequestParam("direction") Optional<String> direction,
+	                          Model model) {
 
 		PageRequest pageable = PagerHelper.getPageable(
 				pageSize, defaultPageSize,
@@ -63,7 +63,7 @@ public class HostController {
 				direction, defaultSortingDirection
 		);
 
-		Page<Host> hosts = hostRepository.findAll(pageable);
+		Page<Host> hosts = hostService.getAllHosts(pageable);
 		model.addAttribute(HOSTS_MODEL_ATTR, hosts);
 
 		PagerHelper.prepareModelForPager(
@@ -75,14 +75,14 @@ public class HostController {
 	public String editHostById(Model model, @PathVariable(HOST_ID_PATH_VAR) Optional<UUID> id) {
 		model.addAttribute(HOST_MODEL_ATTR, Optional.ofNullable(id)
 				.filter(Optional::isPresent)
-				.flatMap(macOp -> hostRepository.findById(id.get()))
+				.flatMap(macOp -> hostService.getHostById(id.get()))
 				.orElseGet(Host::new));
 		return ADD_EDIT_HOST_VIEW;
 	}
 
 	@RequestMapping(path = DELETE_HOST_MAPPING)
 	public String deleteHostById(@PathVariable(HOST_ID_PATH_VAR) UUID id) {
-		hostRepository.deleteById(id);
+		hostService.deleteHostById(id);
 		return REDIRECT_HOSTS;
 	}
 
@@ -91,14 +91,14 @@ public class HostController {
 		if (bindingResult.hasErrors()) {
 			return ADD_EDIT_HOST_VIEW;
 		}
-		Optional<Host> storedHost = hostRepository.findHostByMac(host.getMac());
+		Optional<Host> storedHost = hostService.getHostByMac(host.getMac());
 		boolean saveNewHostWithExistingMac = storedHost.isPresent() && host.getId() == null;
 		boolean editStoredHostMacToExisting = storedHost.isPresent() && !storedHost.get().getId().equals(host.getId());
 		if (saveNewHostWithExistingMac || editStoredHostMacToExisting) {
 			bindingResult.rejectValue(HOST_MAC_FIELD, HOST_MAC_NOT_UNIQUE_MSG);
 			return ADD_EDIT_HOST_VIEW;
 		}
-		hostRepository.save(host);
+		hostService.saveHost(host);
 		return REDIRECT_HOSTS;
 	}
 }

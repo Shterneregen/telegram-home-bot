@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import random.telegramhomebot.config.ProfileService;
-import random.telegramhomebot.repository.HostRepository;
+import random.telegramhomebot.services.HostService;
 import random.telegramhomebot.services.MessageFormatService;
 import random.telegramhomebot.services.MessageService;
 import random.telegramhomebot.telegram.Bot;
@@ -16,7 +16,7 @@ import static random.telegramhomebot.AppConstants.Messages.CHATBOT_STARTED_MSG;
 public class BootstrapLoader implements CommandLineRunner {
 
 	private final Bot bot;
-	private final HostRepository hostRepository;
+	private final HostService hostService;
 	private final MessageFormatService messageFormatService;
 	private final ProfileService profileService;
 	private final MessageService messageService;
@@ -30,7 +30,7 @@ public class BootstrapLoader implements CommandLineRunner {
 		StringBuilder messageBuilder = new StringBuilder(messageService.getMessage(CHATBOT_STARTED_MSG));
 
 		if (profileService.isNetworkMonitorProfileActive()) {
-			String hostsState = messageFormatService.getHostsState(hostRepository.findAll());
+			String hostsState = messageFormatService.getHostsState(hostService.getAllHosts());
 			messageBuilder.append("\n\n").append(hostsState);
 		}
 

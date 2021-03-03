@@ -22,9 +22,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.config.ProfileService;
 import random.telegramhomebot.model.Command;
 import random.telegramhomebot.model.TelegramCommand;
-import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.repository.TelegramCommandRepository;
 import random.telegramhomebot.services.CommandRunnerService;
+import random.telegramhomebot.services.HostService;
 import random.telegramhomebot.services.MessageFormatService;
 import random.telegramhomebot.services.MessageService;
 import random.telegramhomebot.services.UserValidatorService;
@@ -58,7 +58,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 	private final UserValidatorService userValidatorService;
 	private final CommandRunnerService commandRunnerService;
-	private final HostRepository hostRepository;
+	private final HostService hostService;
 	private final MessageFormatService messageFormatService;
 	private final TelegramCommandRepository telegramCommandRepository;
 	private final MessageService messageService;
@@ -116,7 +116,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 		String answer = "No answer";
 		if (callData.equals(SHOW_STORED_HOSTS_COMMAND)) {
-			String allHosts = messageFormatService.getHostsState(hostRepository.findAll());
+			String allHosts = messageFormatService.getHostsState(hostService.getAllHosts());
 			answer = StringUtils.isNotBlank(allHosts) ? allHosts : "No hosts";
 		} else if (callData.equals(SHOW_ALL_COMMANDS)) {
 			String allCommands = getAllCommands();
@@ -169,7 +169,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 			return true;
 		}
 		if (messageLowerCase.equals(SHOW_STORED_HOSTS_COMMAND)) {
-			sendMessage(messageFormatService.getHostsState(hostRepository.findAll()), chatId);
+			sendMessage(messageFormatService.getHostsState(hostService.getAllHosts()), chatId);
 			return true;
 		}
 		if (messageLowerCase.equals(SHOW_ALL_COMMANDS)) {

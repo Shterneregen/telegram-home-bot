@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import random.telegramhomebot.model.Host;
-import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.services.HostsCsvService;
+import random.telegramhomebot.services.HostService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -29,12 +29,12 @@ import static random.telegramhomebot.AppConstants.HostsCsv.HOSTS_CSV_IMPORT_MAPP
 @RequestMapping(HOSTS_MAPPING)
 public class HostCsvController {
 
-	private final HostRepository hostRepository;
+	private final HostService hostService;
 	private final HostsCsvService hostsCsvService;
 
 	@GetMapping(HOSTS_CSV_EXPORT_MAPPING)
 	public void exportHostsToCsvFile(HttpServletResponse response) throws Exception {
-		hostsCsvService.exportHostsToCsvFile(response, hostRepository.findAll());
+		hostsCsvService.exportHostsToCsvFile(response, hostService.getAllHosts());
 	}
 
 	@PostMapping(HOSTS_CSV_IMPORT_MAPPING)
@@ -48,7 +48,7 @@ public class HostCsvController {
 			try {
 				List<Host> hostsToImport = hostsCsvService.parseHostsFromCsvFile(file);
 				if (CollectionUtils.isNotEmpty(hostsToImport)) {
-					hostRepository.saveAll(hostsToImport);
+					hostService.saveAllHosts(hostsToImport);
 				}
 			} catch (Exception e) {
 				// TODO: impl error message

@@ -38,7 +38,7 @@ public class MessageFormatService {
 
 		StringBuilder outputTable = new StringBuilder(title).append("\n");
 		hosts.forEach(host -> outputTable.append(String.format(HOST_FORMAT, host.getIp(), host.getDeviceName())));
-		log.debug("{}:\n{}", title, outputTable.toString());
+		log.debug("{}:\n{}", title, outputTable);
 		return outputTable.toString();
 	}
 

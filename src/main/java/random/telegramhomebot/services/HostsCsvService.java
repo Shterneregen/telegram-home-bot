@@ -6,14 +6,14 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvFieldAssignmentException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import random.telegramhomebot.model.Host;
-import random.telegramhomebot.repository.HostRepository;
+import random.telegramhomebot.model.HostState;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,14 +28,14 @@ import java.util.regex.Pattern;
 
 import static random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER;
 
+@RequiredArgsConstructor
 @Slf4j
 @Service
 public class HostsCsvService {
 
 	private static final String CSV_FILENAME_PATTERN = "hosts_%s.csv";
 
-	@Resource
-	private HostRepository hostRepository;
+	private final HostService hostService;
 
 	public List<Host> parseHostsFromCsvFile(MultipartFile file) throws IOException {
 		try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
@@ -52,11 +52,12 @@ public class HostsCsvService {
 					.filter(hostFromCsv -> validateMac(hostFromCsv.getMac()))
 					.forEach(hostFromCsv -> {
 						String macFromCsv = hostFromCsv.getMac();
-						Optional<Host> storedHost = hostRepository.findHostByMac(macFromCsv);
+						Optional<Host> storedHost = hostService.getHostByMac(macFromCsv);
 						if (storedHost.isPresent()) {
 							storedHost.get().setDeviceName(hostFromCsv.getDeviceName());
 							parsedHosts.add(storedHost.get());
 						} else {
+							hostFromCsv.setState(HostState.FAILED);
 							parsedHosts.add(hostFromCsv);
 						}
 					});

@@ -1,6 +1,7 @@
 package random.telegramhomebot.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.model.Host;
 
@@ -49,8 +50,6 @@ public class CommandRunnerService {
 	}
 
 	public void pingHosts(List<Host> hosts) {
-		hosts.stream()
-				.filter(host -> host.getIp() != null && !host.getIp().isBlank())
-				.forEach(host -> ping(host.getIp()));
+		hosts.stream().filter(host -> StringUtils.isNotBlank(host.getIp())).forEach(host -> ping(host.getIp()));
 	}
 }

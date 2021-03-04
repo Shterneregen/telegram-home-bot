@@ -36,6 +36,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.toIntExact;
+import static random.telegramhomebot.AppConstants.BotCommands.MENU_COMMAND;
+import static random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS;
+import static random.telegramhomebot.AppConstants.BotCommands.SHOW_STORED_HOSTS_COMMAND;
 import static random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_MSG;
 
 @Slf4j
@@ -43,9 +46,6 @@ import static random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_M
 @Profile("!" + ProfileService.MOCK_BOT)
 @Component
 public class HomeBot extends TelegramLongPollingBot implements Bot {
-
-	private static final String SHOW_STORED_HOSTS_COMMAND = "/hosts";
-	private static final String SHOW_ALL_COMMANDS = "/commands";
 
 	@Value("${telegram.bot.chat.id}")
 	private Long botChatId;
@@ -116,7 +116,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 		String answer = "No answer";
 		if (callData.equals(SHOW_STORED_HOSTS_COMMAND)) {
-			String allHosts = messageFormatService.getHostsState(hostService.getAllHosts());
+			String allHosts = messageFormatService.getHostsState(hostService.getReachableHosts());
 			answer = StringUtils.isNotBlank(allHosts) ? allHosts : "No hosts";
 		} else if (callData.equals(SHOW_ALL_COMMANDS)) {
 			String allCommands = getAllCommands();
@@ -160,21 +160,12 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	private boolean executeControlCommand(Message message) {
 		String messageLowerCase = message.getText().toLowerCase();
 		Long chatId = message.getChatId();
-		if (messageLowerCase.equals("/menu")) {
+		if (messageLowerCase.equals(MENU_COMMAND)) {
 			try {
 				execute(sendInlineKeyBoardMessage(chatId, "Options"));
 			} catch (TelegramApiException e) {
 				log.error(e.getMessage(), e);
 			}
-			return true;
-		}
-		if (messageLowerCase.equals(SHOW_STORED_HOSTS_COMMAND)) {
-			sendMessage(messageFormatService.getHostsState(hostService.getAllHosts()), chatId);
-			return true;
-		}
-		if (messageLowerCase.equals(SHOW_ALL_COMMANDS)) {
-			String commands = getAllCommands();
-			sendMessage(commands, chatId);
 			return true;
 		}
 		return false;

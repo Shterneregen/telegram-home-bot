@@ -65,4 +65,10 @@ public interface AppConstants {
 		String CHATBOT_STARTED_MSG = "chatbot.started";
 		String HOST_MAC_NOT_UNIQUE_MSG = "host.mac.not.unique";
 	}
+
+	interface BotCommands {
+		String SHOW_STORED_HOSTS_COMMAND = "/hosts";
+		String SHOW_ALL_COMMANDS = "/commands";
+		String MENU_COMMAND = "/menu";
+	}
 }

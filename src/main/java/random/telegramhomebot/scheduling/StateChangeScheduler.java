@@ -54,8 +54,8 @@ public class StateChangeScheduler {
 		List<Host> notReachableHosts = null;
 		if (CollectionUtils.isNotEmpty(currentHosts) && CollectionUtils.isNotEmpty(storedHosts)) {
 			newHosts = hostService.getNewHosts(storedHosts, currentHosts);
-			reachableHosts = hostService.getStoredReachableHosts(storedHosts, currentHosts);
-			notReachableHosts = hostService.getStoredNotReachableHosts(storedHosts, currentHosts);
+			reachableHosts = hostService.getHostsThatBecameReachable(storedHosts, currentHosts);
+			notReachableHosts = hostService.getHostsThatBecameNotReachable(storedHosts, currentHosts);
 
 			Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>();
 			hostsMessagesMap.put(messageService.getMessage(NEW_HOSTS_MSG), newHosts);

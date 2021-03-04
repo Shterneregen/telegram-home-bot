@@ -60,6 +60,10 @@ public class HostService {
 		hostRepository.save(host);
 	}
 
+	public List<Host> getReachableHosts() {
+		return hostRepository.findReachableHosts();
+	}
+
 	public List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
 		String newHostNameStub = String.format("[NEW DEVICE] %s", LocalDateTime.now().format(DATE_TIME_FORMATTER));
 		return currentHosts.stream()
@@ -69,7 +73,7 @@ public class HostService {
 				.collect(Collectors.toList());
 	}
 
-	public List<Host> getStoredReachableHosts(List<Host> storedHosts, List<Host> currentHosts) {
+	public List<Host> getHostsThatBecameReachable(List<Host> storedHosts, List<Host> currentHosts) {
 		return currentHosts.stream()
 				.filter(currentHost -> !HostState.FAILED.equals(currentHost.getState())
 						&& storedHosts.stream().anyMatch(storedHost -> storedHost.equals(currentHost)
@@ -79,7 +83,7 @@ public class HostService {
 				.collect(Collectors.toList());
 	}
 
-	public List<Host> getStoredNotReachableHosts(List<Host> storedHosts, List<Host> currentHosts) {
+	public List<Host> getHostsThatBecameNotReachable(List<Host> storedHosts, List<Host> currentHosts) {
 		Stream<Host> hostsFailedStream1 = storedHosts.stream()
 				.filter(storedHost -> !HostState.FAILED.equals(storedHost.getState())
 						&& currentHosts.stream().noneMatch(storedHost::equals))

@@ -7,6 +7,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -21,7 +24,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.config.ProfileService;
 import random.telegramhomebot.model.Command;
+import random.telegramhomebot.model.HostTimeLog;
 import random.telegramhomebot.model.TelegramCommand;
+import random.telegramhomebot.repository.HostTimeLogRepository;
 import random.telegramhomebot.repository.TelegramCommandRepository;
 import random.telegramhomebot.services.CommandRunnerService;
 import random.telegramhomebot.services.HostService;
@@ -29,13 +34,16 @@ import random.telegramhomebot.services.MessageFormatService;
 import random.telegramhomebot.services.MessageService;
 import random.telegramhomebot.services.UserValidatorService;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.toIntExact;
+import static random.telegramhomebot.AppConstants.BotCommands.LAST_ACTIVITY;
 import static random.telegramhomebot.AppConstants.BotCommands.MENU_COMMAND;
 import static random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS;
 import static random.telegramhomebot.AppConstants.BotCommands.SHOW_STORED_HOSTS_COMMAND;
@@ -62,6 +70,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	private final MessageFormatService messageFormatService;
 	private final TelegramCommandRepository telegramCommandRepository;
 	private final MessageService messageService;
+	private final HostTimeLogRepository hostTimeLogRepository;
 
 	@Override
 	public void onUpdateReceived(Update update) {
@@ -121,6 +130,16 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 		} else if (callData.equals(SHOW_ALL_COMMANDS)) {
 			String allCommands = getAllCommands();
 			answer = StringUtils.isNotBlank(allCommands) ? allCommands : "No commands";
+		} else if (callData.equals(LAST_ACTIVITY)) {
+			Pageable page = PageRequest.of(0, 20, Sort.Direction.DESC, "createdDate");
+			List<HostTimeLog> lastActivity = hostTimeLogRepository.findAll(page).stream()
+					.sorted(Comparator.comparing(HostTimeLog::getCreatedDate))
+					.collect(Collectors.toList());
+			String lastActivityStr = lastActivity.stream()
+					.map(this::convertTimeLog)
+					.collect(Collectors.joining("\n"));
+
+			answer = StringUtils.isNotBlank(lastActivityStr) ? lastActivityStr : "No activity";
 		}
 		EditMessageText newMessage = new EditMessageText()
 				.setChatId(chatId)
@@ -134,7 +153,12 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 		}
 	}
 
-	public SendMessage sendInlineKeyBoardMessage(long chatId, String text) {
+	private String convertTimeLog(HostTimeLog log) {
+		return new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+				.format(log.getCreatedDate()) + "\t" + log.getState() + "\t\t" + log.getHost().getDeviceName();
+	}
+
+	private SendMessage sendInlineKeyBoardMessage(long chatId, String text) {
 		return new SendMessage()
 				.setChatId(chatId)
 				.setText(text)
@@ -142,16 +166,20 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	}
 
 	private InlineKeyboardMarkup getInlineKeyboardMarkup() {
-		InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton()
-				.setText(messageService.getMessage("hosts"))
+		InlineKeyboardButton reachableHostsButton = new InlineKeyboardButton()
+				.setText(messageService.getMessage("btn.hosts"))
 				.setCallbackData(SHOW_STORED_HOSTS_COMMAND);
 
-		InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton()
-				.setText(messageService.getMessage("commands"))
+		InlineKeyboardButton commandsButton = new InlineKeyboardButton()
+				.setText(messageService.getMessage("btn.commands"))
 				.setCallbackData(SHOW_ALL_COMMANDS);
 
+		InlineKeyboardButton lastHostActivity = new InlineKeyboardButton()
+				.setText(messageService.getMessage("btn.activity"))
+				.setCallbackData(LAST_ACTIVITY);
+
 		List<List<InlineKeyboardButton>> rowList = Arrays.asList(
-				Arrays.asList(inlineKeyboardButton1, inlineKeyboardButton2)
+				Arrays.asList(reachableHostsButton, commandsButton, lastHostActivity)
 		);
 
 		return new InlineKeyboardMarkup().setKeyboard(rowList);
@@ -205,7 +233,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 		}
 	}
 
-	public void setButtons(SendMessage sendMessage) {
+	private void setButtons(SendMessage sendMessage) {
 		List<TelegramCommand> enabledCommands = telegramCommandRepository.findAllEnabled();
 		log.debug("Enabled commands: {}", enabledCommands);
 		if (CollectionUtils.isEmpty(enabledCommands)) {

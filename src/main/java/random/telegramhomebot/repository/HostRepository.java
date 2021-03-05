@@ -11,6 +11,6 @@ import java.util.UUID;
 public interface HostRepository extends JpaRepository<Host, UUID> {
 	Optional<Host> findHostByMac(String mac);
 
-	@Query(value = "SELECT h FROM Host h WHERE h.state = random.telegramhomebot.model.HostState.REACHABLE")
+	@Query(value = "SELECT h FROM Host h WHERE h.state <> random.telegramhomebot.model.HostState.FAILED")
 	List<Host> findReachableHosts();
 }

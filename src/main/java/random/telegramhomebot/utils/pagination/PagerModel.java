@@ -10,10 +10,16 @@ public class PagerModel {
 	private int endPage;
 	private int totalPages;
 	private int currentPage;
+	private int pageSize;
+	private int[] pageSizes;
+	private String mapping;
 
-	public PagerModel(int totalPages, int currentPage, int buttonsToShow) {
+	public PagerModel(int totalPages, int currentPage, int pageSize, int buttonsToShow, int[] pageSizes, String mapping) {
 		this.totalPages = totalPages;
 		this.currentPage = currentPage;
+		this.pageSize = pageSize;
+		this.pageSizes = pageSizes;
+		this.mapping = mapping;
 		setButtonsToShow(buttonsToShow);
 
 		int halfPagesToShow = this.buttonsToShow / 2;

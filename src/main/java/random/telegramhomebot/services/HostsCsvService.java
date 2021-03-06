@@ -20,11 +20,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER;
 
@@ -40,27 +40,25 @@ public class HostsCsvService {
 	public List<Host> parseHostsFromCsvFile(MultipartFile file) throws IOException {
 		try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
 
-			CsvToBean<Host> csvToBean = new CsvToBeanBuilder<Host>(reader)
+			CsvToBean<Host> csvToBeanHosts = new CsvToBeanBuilder<Host>(reader)
 					.withType(Host.class)
 					.withIgnoreLeadingWhiteSpace(true)
 					.build();
 
-			List<Host> hosts = csvToBean.parse();
-			List<Host> parsedHosts = new ArrayList<>();
-			hosts.stream()
+			List<Host> parsedHosts = csvToBeanHosts.parse().stream()
 					.filter(hostFromCsv -> hostFromCsv.getMac() != null)
 					.filter(hostFromCsv -> validateMac(hostFromCsv.getMac()))
-					.forEach(hostFromCsv -> {
+					.map(hostFromCsv -> {
 						String macFromCsv = hostFromCsv.getMac();
 						Optional<Host> storedHost = hostService.getHostByMac(macFromCsv);
 						if (storedHost.isPresent()) {
 							storedHost.get().setDeviceName(hostFromCsv.getDeviceName());
-							parsedHosts.add(storedHost.get());
+							return storedHost.get();
 						} else {
 							hostFromCsv.setState(HostState.FAILED);
-							parsedHosts.add(hostFromCsv);
+							return hostFromCsv;
 						}
-					});
+					}).collect(Collectors.toList());
 			log.debug("In CSV file were found [{}] hosts", parsedHosts.size());
 			return parsedHosts;
 		}

@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.model.Host;
 import random.telegramhomebot.model.HostState;
@@ -12,7 +14,9 @@ import random.telegramhomebot.model.HostTimeLog;
 import random.telegramhomebot.repository.HostRepository;
 import random.telegramhomebot.repository.HostTimeLogRepository;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -109,5 +113,23 @@ public class HostService {
 		List<Host> storedHosts = getAllHosts();
 		log.debug("Stored hosts: \n{}", storedHosts);
 		commandRunnerService.pingHosts(storedHosts);
+	}
+
+	public List<HostTimeLog> getLastHostTimeLogs(int logCount) {
+		Pageable page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate");
+		return hostTimeLogRepository.findAll(page).stream()
+				.sorted(Comparator.comparing(HostTimeLog::getCreatedDate))
+				.collect(Collectors.toList());
+	}
+
+	public String getLastHostTimeLogsAsString(int logCount) {
+		return getLastHostTimeLogs(logCount).stream()
+				.map(this::convertTimeLog)
+				.collect(Collectors.joining("\n"));
+	}
+
+	private String convertTimeLog(HostTimeLog log) {
+		return new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+				.format(log.getCreatedDate()) + "\t" + log.getState() + "\t\t" + log.getHost().getDeviceName();
 	}
 }

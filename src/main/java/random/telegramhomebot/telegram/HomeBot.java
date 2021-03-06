@@ -3,50 +3,32 @@ package random.telegramhomebot.telegram;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.config.ProfileService;
 import random.telegramhomebot.model.Command;
-import random.telegramhomebot.model.HostTimeLog;
 import random.telegramhomebot.model.TelegramCommand;
-import random.telegramhomebot.repository.HostTimeLogRepository;
-import random.telegramhomebot.repository.TelegramCommandRepository;
+import random.telegramhomebot.services.CallbackMenuService;
 import random.telegramhomebot.services.CommandRunnerService;
-import random.telegramhomebot.services.HostService;
-import random.telegramhomebot.services.MessageFormatService;
+import random.telegramhomebot.services.CommandService;
 import random.telegramhomebot.services.MessageService;
 import random.telegramhomebot.services.UserValidatorService;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static java.lang.Math.toIntExact;
-import static random.telegramhomebot.AppConstants.BotCommands.LAST_ACTIVITY;
 import static random.telegramhomebot.AppConstants.BotCommands.MENU_COMMAND;
-import static random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS;
-import static random.telegramhomebot.AppConstants.BotCommands.SHOW_STORED_HOSTS_COMMAND;
 import static random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_MSG;
 
 @Slf4j
@@ -66,42 +48,33 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 
 	private final UserValidatorService userValidatorService;
 	private final CommandRunnerService commandRunnerService;
-	private final HostService hostService;
-	private final MessageFormatService messageFormatService;
-	private final TelegramCommandRepository telegramCommandRepository;
+	private final CommandService commandService;
 	private final MessageService messageService;
-	private final HostTimeLogRepository hostTimeLogRepository;
+	private final CallbackMenuService callbackMenuService;
 
 	@Override
 	public void onUpdateReceived(Update update) {
+		log.debug(update.toString());
+		if (!checkAccess(update)) {
+			return;
+		}
+
 		if (update.hasCallbackQuery()) {
 			processCallback(update);
 			return;
-		} else if (!update.hasMessage() || !update.getMessage().hasText()) {
-			return;
 		}
-
-		log.debug(update.toString());
 
 		Message message = update.getMessage();
-		String messageLowerCase = message.getText().toLowerCase();
-		Long chatId = message.getChatId();
-		Integer userId = message.getFrom().getId();
-
-		boolean allowedUser = userValidatorService.isAllowedUser(userId);
-		if (!allowedUser) {
-			String warnMessage = messageService.getMessage(UNAUTHORIZED_ACCESS_MSG, new Object[]{userId, messageLowerCase});
-			log.warn(warnMessage);
-			sendMessage(warnMessage);
-			return;
-		}
-
 		if (executeControlCommand(message)) {
 			return;
 		}
+		executeCommand(message);
+	}
 
-		Optional<TelegramCommand> telegramCommand
-				= telegramCommandRepository.findByCommandAliasAndEnabled(messageLowerCase, Boolean.TRUE);
+	private void executeCommand(Message message) {
+		String commandAlias = message.getText().toLowerCase();
+		Long chatId = message.getChatId();
+		Optional<TelegramCommand> telegramCommand = commandService.getEnabledCommand(commandAlias);
 		if (telegramCommand.isPresent()) {
 			List<String> commandOutput = commandRunnerService.runCommand(telegramCommand.get().getCommand());
 			sendMessage(String.join("\n", commandOutput), chatId, message.getMessageId());
@@ -109,100 +82,51 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 		}
 	}
 
-	private void processCallback(Update update) {
-		String callData = update.getCallbackQuery().getData();
-		long messageId = update.getCallbackQuery().getMessage().getMessageId();
-		long chatId = update.getCallbackQuery().getMessage().getChatId();
-		Integer userId = update.getCallbackQuery().getFrom().getId();
+	private boolean checkAccess(Update update) {
+		Integer userId;
+		String messageStr;
+
+		if (update.hasCallbackQuery()) {
+			userId = update.getCallbackQuery().getFrom().getId();
+			messageStr = update.getCallbackQuery().getData();
+		} else if (!update.hasMessage() || !update.getMessage().hasText()) {
+			return false;
+		} else {
+			Message message = update.getMessage();
+			messageStr = message.getText();
+			userId = message.getFrom().getId();
+		}
 
 		boolean allowedUser = userValidatorService.isAllowedUser(userId);
 		if (!allowedUser) {
-			String warnMessage = messageService.getMessage(UNAUTHORIZED_ACCESS_MSG, new Object[]{userId, callData});
+			String warnMessage = messageService.getMessage(UNAUTHORIZED_ACCESS_MSG, new Object[]{userId, messageStr});
 			log.warn(warnMessage);
 			sendMessage(warnMessage);
-			return;
+			return false;
 		}
+		return true;
+	}
 
-		String answer = "No answer";
-		if (callData.equals(SHOW_STORED_HOSTS_COMMAND)) {
-			String allHosts = messageFormatService.getHostsState(hostService.getReachableHosts());
-			answer = StringUtils.isNotBlank(allHosts) ? allHosts : "No hosts";
-		} else if (callData.equals(SHOW_ALL_COMMANDS)) {
-			String allCommands = getAllCommands();
-			answer = StringUtils.isNotBlank(allCommands) ? allCommands : "No commands";
-		} else if (callData.equals(LAST_ACTIVITY)) {
-			Pageable page = PageRequest.of(0, 20, Sort.Direction.DESC, "createdDate");
-			List<HostTimeLog> lastActivity = hostTimeLogRepository.findAll(page).stream()
-					.sorted(Comparator.comparing(HostTimeLog::getCreatedDate))
-					.collect(Collectors.toList());
-			String lastActivityStr = lastActivity.stream()
-					.map(this::convertTimeLog)
-					.collect(Collectors.joining("\n"));
-
-			answer = StringUtils.isNotBlank(lastActivityStr) ? lastActivityStr : "No activity";
-		}
-		EditMessageText newMessage = new EditMessageText()
-				.setChatId(chatId)
-				.setMessageId(toIntExact(messageId))
-				.setText(answer)
-				.setReplyMarkup(getInlineKeyboardMarkup());
+	private void processCallback(Update update) {
 		try {
-			execute(newMessage);
+			execute(callbackMenuService.processCallback(update));
 		} catch (TelegramApiException e) {
 			log.error(e.getMessage(), e);
 		}
 	}
 
-	private String convertTimeLog(HostTimeLog log) {
-		return new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-				.format(log.getCreatedDate()) + "\t" + log.getState() + "\t\t" + log.getHost().getDeviceName();
-	}
-
-	private SendMessage sendInlineKeyBoardMessage(long chatId, String text) {
-		return new SendMessage()
-				.setChatId(chatId)
-				.setText(text)
-				.setReplyMarkup(getInlineKeyboardMarkup());
-	}
-
-	private InlineKeyboardMarkup getInlineKeyboardMarkup() {
-		InlineKeyboardButton reachableHostsButton = new InlineKeyboardButton()
-				.setText(messageService.getMessage("btn.hosts"))
-				.setCallbackData(SHOW_STORED_HOSTS_COMMAND);
-
-		InlineKeyboardButton commandsButton = new InlineKeyboardButton()
-				.setText(messageService.getMessage("btn.commands"))
-				.setCallbackData(SHOW_ALL_COMMANDS);
-
-		InlineKeyboardButton lastHostActivity = new InlineKeyboardButton()
-				.setText(messageService.getMessage("btn.activity"))
-				.setCallbackData(LAST_ACTIVITY);
-
-		List<List<InlineKeyboardButton>> rowList = Arrays.asList(
-				Arrays.asList(reachableHostsButton, commandsButton, lastHostActivity)
-		);
-
-		return new InlineKeyboardMarkup().setKeyboard(rowList);
-	}
-
 	private boolean executeControlCommand(Message message) {
-		String messageLowerCase = message.getText().toLowerCase();
+		String messageLowerCase = message.getText();
 		Long chatId = message.getChatId();
-		if (messageLowerCase.equals(MENU_COMMAND)) {
+		if (messageLowerCase.equalsIgnoreCase(MENU_COMMAND)) {
 			try {
-				execute(sendInlineKeyBoardMessage(chatId, "Options"));
+				execute(callbackMenuService.getInlineKeyBoardMessage(chatId, "Options"));
 			} catch (TelegramApiException e) {
 				log.error(e.getMessage(), e);
 			}
 			return true;
 		}
 		return false;
-	}
-
-	private String getAllCommands() {
-		return telegramCommandRepository.findAllEnabled().stream()
-				.map(command -> command.getCommandAlias() + " = " + command.getCommand())
-				.collect(Collectors.joining("\n"));
 	}
 
 	@Override
@@ -234,18 +158,17 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	}
 
 	private void setButtons(SendMessage sendMessage) {
-		List<TelegramCommand> enabledCommands = telegramCommandRepository.findAllEnabled();
+		List<TelegramCommand> enabledCommands = commandService.getAllEnabledCommands();
 		log.debug("Enabled commands: {}", enabledCommands);
 		if (CollectionUtils.isEmpty(enabledCommands)) {
 			return;
 		}
 
-		ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup()
+		sendMessage.setReplyMarkup(new ReplyKeyboardMarkup()
 				.setSelective(true)
 				.setResizeKeyboard(true)
 				.setOneTimeKeyboard(false)
-				.setKeyboard(getKeyboardRows(enabledCommands, buttonsInRow));
-		sendMessage.setReplyMarkup(replyKeyboardMarkup);
+				.setKeyboard(getKeyboardRows(enabledCommands, buttonsInRow)));
 	}
 
 	private List<KeyboardRow> getKeyboardRows(List<? extends Command> commands, int buttonsInRow) {

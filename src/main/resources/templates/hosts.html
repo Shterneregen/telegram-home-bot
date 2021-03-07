@@ -33,10 +33,7 @@
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th th:text="#{host.ip}"></th>
-                    <th th:text="#{host.mac}"></th>
-                    <th th:text="#{host.interface}"></th>
-                    <th th:text="#{host.state}"></th>
+                    <th th:text="|#{host.ip} / #{host.mac}|"></th>
                     <th th:text="#{host.device}"></th>
                     <th th:text="#{column.edit}"></th>
                     <th th:text="#{column.delete}"></th>
@@ -44,10 +41,7 @@
                 </thead>
                 <tbody>
                 <tr th:each="host : ${hosts}">
-                    <td th:text="${host.ip}"></td>
-                    <td th:text="${host.mac}"></td>
-                    <td th:text="${host.hostInterface}"></td>
-                    <td th:text="${host.state}"></td>
+                    <td th:text="|${host.ip} / ${host.mac}|"></td>
                     <td th:text="${host.deviceName}"
                         th:style="${host.state == null or host.state == T(random.telegramhomebot.model.HostState).FAILED
                         ? 'color: red;' : 'color: green;'}"></td>

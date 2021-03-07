@@ -58,17 +58,8 @@ public class Host {
 	@JsonManagedReference
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
 	private List<HostTimeLog> timeLogs;
-
-	@Override
-	public String toString() {
-		return "Host{" +
-				"ip='" + ip + '\'' +
-				", hostInterface='" + hostInterface + '\'' +
-				", mac='" + mac + '\'' +
-				", state=" + state +
-				", deviceName='" + deviceName + '\'' +
-				'}';
-	}
+	@Column(name = "notes")
+	private String notes;
 
 	@Override
 	public boolean equals(Object o) {

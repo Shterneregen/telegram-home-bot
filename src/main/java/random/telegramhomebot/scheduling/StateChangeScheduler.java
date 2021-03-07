@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.config.ProfileService;
 import random.telegramhomebot.model.Host;
+import random.telegramhomebot.services.FeatureSwitcherService;
 import random.telegramhomebot.services.HostExplorerService;
 import random.telegramhomebot.services.HostService;
 import random.telegramhomebot.services.MessageFormatService;
@@ -35,6 +36,7 @@ public class StateChangeScheduler {
 	private final MessageService messageService;
 	private final HostExplorerService hostExplorerService;
 	private final HostService hostService;
+	private final FeatureSwitcherService featureSwitcherService;
 
 	@Scheduled(fixedRateString = "${state.change.scheduled.time}", initialDelay = 20000)
 	public void checkState() {
@@ -57,12 +59,7 @@ public class StateChangeScheduler {
 			reachableHosts = hostService.getHostsThatBecameReachable(storedHosts, currentHosts);
 			notReachableHosts = hostService.getHostsThatBecameNotReachable(storedHosts, currentHosts);
 
-			Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>();
-			hostsMessagesMap.put(messageService.getMessage(NEW_HOSTS_MSG), newHosts);
-			hostsMessagesMap.put(messageService.getMessage(REACHABLE_HOSTS_MSG), reachableHosts);
-			hostsMessagesMap.put(messageService.getMessage(UNREACHABLE_HOSTS_MSG), notReachableHosts);
-
-			bot.sendMessage(messageFormatService.formHostsListTable(hostsMessagesMap));
+			notifyBotAboutHosts(newHosts, reachableHosts, notReachableHosts);
 
 			if (CollectionUtils.isNotEmpty(notReachableHosts)) {
 				hostService.saveAllHosts(notReachableHosts);
@@ -73,5 +70,29 @@ public class StateChangeScheduler {
 			hostService.saveAllHosts(currentHosts);
 		}
 		hostService.saveTimeLogForHosts(joinLists(newHosts, reachableHosts, notReachableHosts));
+	}
+
+	private void notifyBotAboutHosts(List<Host> newHosts, List<Host> reachableHosts, List<Host> notReachableHosts) {
+		boolean newHostsNotificationEnabled = featureSwitcherService.newHostsNotificationsEnabled();
+		boolean reachableHostsNotificationEnabled = featureSwitcherService.reachableHostsNotificationsEnabled();
+		boolean notReachableHostsNotificationEnabled = featureSwitcherService.notReachableHostsNotificationsEnabled();
+		if (!newHostsNotificationEnabled && !reachableHostsNotificationEnabled && !notReachableHostsNotificationEnabled) {
+			return;
+		}
+
+		Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>();
+		if (newHostsNotificationEnabled) {
+			hostsMessagesMap.put(messageService.getMessage(NEW_HOSTS_MSG), newHosts);
+		}
+		if (reachableHostsNotificationEnabled) {
+			hostsMessagesMap.put(messageService.getMessage(REACHABLE_HOSTS_MSG), reachableHosts);
+		}
+		if (notReachableHostsNotificationEnabled) {
+			hostsMessagesMap.put(messageService.getMessage(UNREACHABLE_HOSTS_MSG), notReachableHosts);
+		}
+
+		if (!hostsMessagesMap.isEmpty()) {
+			bot.sendMessage(messageFormatService.formHostsListTable(hostsMessagesMap));
+		}
 	}
 }

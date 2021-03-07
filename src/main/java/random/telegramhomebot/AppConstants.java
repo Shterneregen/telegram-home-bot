@@ -71,5 +71,6 @@ public interface AppConstants {
 		String SHOW_ALL_COMMANDS = "/commands";
 		String MENU_COMMAND = "/menu";
 		String LAST_ACTIVITY = "/activity";
+		String FEATURES = "/features";
 	}
 }

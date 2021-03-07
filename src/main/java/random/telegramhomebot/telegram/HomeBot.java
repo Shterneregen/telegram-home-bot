@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static random.telegramhomebot.AppConstants.BotCommands.MENU_COMMAND;
 import static random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_MSG;
 
 @Slf4j
@@ -116,17 +115,16 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	}
 
 	private boolean executeControlCommand(Message message) {
-		String messageLowerCase = message.getText();
-		Long chatId = message.getChatId();
-		if (messageLowerCase.equalsIgnoreCase(MENU_COMMAND)) {
-			try {
-				execute(callbackMenuService.getInlineKeyBoardMessage(chatId, "Options"));
-			} catch (TelegramApiException e) {
-				log.error(e.getMessage(), e);
-			}
-			return true;
+		SendMessage menuForCommand = callbackMenuService.getMenuForCommand(message);
+		if (menuForCommand == null) {
+			return false;
 		}
-		return false;
+		try {
+			execute(menuForCommand);
+		} catch (TelegramApiException e) {
+			log.error(e.getMessage(), e);
+		}
+		return true;
 	}
 
 	@Override

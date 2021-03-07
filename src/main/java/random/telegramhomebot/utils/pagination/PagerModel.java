@@ -13,11 +13,13 @@ public class PagerModel {
 	private int pageSize;
 	private int[] pageSizes;
 	private String mapping;
+	private String pageSizeCookieName;
 
-	public PagerModel(int totalPages, int currentPage, int pageSize, int buttonsToShow, int[] pageSizes, String mapping) {
+	public PagerModel(int totalPages, int currentPage, int pageSize, String pageSizeCookieName, int[] pageSizes, int buttonsToShow, String mapping) {
 		this.totalPages = totalPages;
 		this.currentPage = currentPage;
 		this.pageSize = pageSize;
+		this.pageSizeCookieName = pageSizeCookieName;
 		this.pageSizes = pageSizes;
 		this.mapping = mapping;
 		setButtonsToShow(buttonsToShow);

@@ -15,6 +15,7 @@ import random.telegramhomebot.model.Host;
 import random.telegramhomebot.services.HostService;
 import random.telegramhomebot.utils.pagination.PagerHelper;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,20 +55,21 @@ public class HostController {
 	                          @RequestParam("page") Optional<Integer> currentPage,
 	                          @RequestParam("sortBy") Optional<String> sortBy,
 	                          @RequestParam("direction") Optional<String> direction,
-	                          Model model) {
-
+	                          Model model, HttpServletRequest request) {
+		String pageSizeCookieName = "hostsPageSize";
 		PageRequest pageable = PagerHelper.getPageable(
 				pageSize, defaultPageSize,
-				currentPage, DEFAULT_CURRENT_PAGE,
+				currentPage, DEFAULT_CURRENT_PAGE, pageSizeCookieName,
 				sortBy, defaultSorting,
-				direction, defaultSortingDirection
+				direction, defaultSortingDirection,
+				request
 		);
 
 		Page<Host> hosts = hostService.getAllHosts(pageable);
 		model.addAttribute(HOSTS_MODEL_ATTR, hosts);
 
-		PagerHelper.prepareModelForPager(
-				model, pageable.getPageSize(), hosts.getTotalPages(), hosts.getNumber(), "hosts");
+		PagerHelper.prepareModelForPager(model, hosts.getTotalPages(),
+				hosts.getNumber(), pageable.getPageSize(), pageSizeCookieName, HOSTS_MAPPING);
 		return HOSTS_VIEW;
 	}
 

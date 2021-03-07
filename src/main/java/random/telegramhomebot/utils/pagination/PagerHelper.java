@@ -4,6 +4,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.ui.Model;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class PagerHelper {
@@ -14,11 +17,16 @@ public class PagerHelper {
 
 	public static PageRequest getPageable(
 			Optional<Integer> pageSize, int defaultPageSize,
-			Optional<Integer> currentPage, int defaultCurrentPage,
+			Optional<Integer> currentPage, int defaultCurrentPage, String currentPageCookieName,
 			Optional<String> sortBy, String defaultSortBy,
-			Optional<String> direction, String defaultDirection
+			Optional<String> direction, String defaultDirection,
+			HttpServletRequest request
 	) {
-		int evalPageSize = pageSize.orElse(defaultPageSize);
+
+		Cookie pageSizeCookie = getCookie(currentPageCookieName, request);
+		int evalPageSize = pageSizeCookie != null
+				? Integer.parseInt(pageSizeCookie.getValue())
+				: pageSize.orElse(defaultPageSize);
 		int evalPage = (currentPage.orElse(0) < 1) ? defaultCurrentPage : currentPage.get() - 1;
 		String evalSortBy = sortBy.orElse(defaultSortBy);
 		String evalDirection = direction.orElse(defaultDirection);
@@ -27,8 +35,14 @@ public class PagerHelper {
 	}
 
 	public static void prepareModelForPager(
-			Model model, int pageSize, int totalPages, int currentPage, String mapping) {
+			Model model, int totalPages, int currentPage, int pageSize, String pageSizeCookieName, String mapping) {
 		model.addAttribute(PAGER_ATTR,
-				new PagerModel(totalPages, currentPage + 1, pageSize, BUTTONS_TO_SHOW, PAGE_SIZES, mapping));
+				new PagerModel(totalPages, currentPage + 1, pageSize, pageSizeCookieName, PAGE_SIZES, BUTTONS_TO_SHOW, mapping));
+	}
+
+	private static Cookie getCookie(String cookieName, HttpServletRequest request) {
+		return Arrays.stream(request.getCookies())
+				.filter(cookie -> cookieName.equalsIgnoreCase(cookie.getName()))
+				.findFirst().orElse(null);
 	}
 }

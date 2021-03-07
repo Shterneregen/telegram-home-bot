@@ -9,6 +9,7 @@ ext {
 	thymeleafExtrasSpringsecurity5Version = "3.0.4.RELEASE"
 	opencsvVersion = "5.3"
 	commonsLang3Version = "3.11"
+	emojiJavaVersion = "5.1.1"
 }
 
 group = "random"
@@ -36,7 +37,8 @@ dependencies {
 			"org.thymeleaf.extras:thymeleaf-extras-springsecurity5:$thymeleafExtrasSpringsecurity5Version",
 			"org.telegram:telegrambots-spring-boot-starter:$telegrambotsSpringBootStarterVersion",
 			"com.opencsv:opencsv:$opencsvVersion",
-			"org.apache.commons:commons-lang3:$commonsLang3Version"
+			"org.apache.commons:commons-lang3:$commonsLang3Version",
+			"com.vdurmont:emoji-java:$emojiJavaVersion"
 	)
 	compileOnly "org.projectlombok:lombok"
 	developmentOnly "org.springframework.boot:spring-boot-devtools"

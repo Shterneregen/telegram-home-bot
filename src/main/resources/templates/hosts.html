@@ -41,7 +41,7 @@
                 </thead>
                 <tbody>
                 <tr th:each="host : ${hosts}">
-                    <td th:text="|${host.ip} / ${host.mac}|"></td>
+                    <td th:text="|${#strings.isEmpty(host.ip) ? 'NONE' : host.ip} / ${host.mac}|"></td>
                     <td th:text="${host.deviceName}"
                         th:style="${host.state == null or host.state == T(random.telegramhomebot.model.HostState).FAILED
                         ? 'color: red;' : 'color: green;'}"></td>

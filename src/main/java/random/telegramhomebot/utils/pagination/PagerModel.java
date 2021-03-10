@@ -16,7 +16,7 @@ public class PagerModel {
 	private String pageSizeCookieName;
 
 	public PagerModel(int totalPages, int currentPage, int pageSize, String pageSizeCookieName, int[] pageSizes, int buttonsToShow, String mapping) {
-		this.totalPages = totalPages;
+		this.totalPages = totalPages == 0 ? ++totalPages : totalPages;
 		this.currentPage = currentPage;
 		this.pageSize = pageSize;
 		this.pageSizeCookieName = pageSizeCookieName;
@@ -27,7 +27,7 @@ public class PagerModel {
 		int halfPagesToShow = this.buttonsToShow / 2;
 		if (totalPages <= this.buttonsToShow) {
 			startPage = 1;
-			endPage = totalPages;
+			endPage = this.totalPages;
 		} else if (currentPage - halfPagesToShow <= 0) {
 			startPage = 1;
 			endPage = buttonsToShow;

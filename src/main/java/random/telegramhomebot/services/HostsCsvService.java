@@ -36,24 +36,29 @@ public class HostsCsvService {
 	private static final String CSV_FILENAME_PATTERN = "hosts_%s.csv";
 
 	private final HostService hostService;
+	private final HostCsvConverter hostCsvConverter;
 
 	public List<Host> parseHostsFromCsvFile(MultipartFile file) throws IOException {
 		try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
 
-			CsvToBean<Host> csvToBeanHosts = new CsvToBeanBuilder<Host>(reader)
-					.withType(Host.class)
+			CsvToBean<HostCsv> csvToBeanHosts = new CsvToBeanBuilder<HostCsv>(reader)
+					.withType(HostCsv.class)
 					.withIgnoreLeadingWhiteSpace(true)
+					.withIgnoreEmptyLine(true)
 					.build();
 
-			List<Host> parsedHosts = csvToBeanHosts.parse().stream()
+			List<Host> convertedHosts = hostCsvConverter.convertCsvListToHosts(csvToBeanHosts.parse());
+			List<Host> parsedHosts = convertedHosts.stream()
 					.filter(hostFromCsv -> hostFromCsv.getMac() != null)
 					.filter(hostFromCsv -> validateMac(hostFromCsv.getMac()))
 					.map(hostFromCsv -> {
 						String macFromCsv = hostFromCsv.getMac();
-						Optional<Host> storedHost = hostService.getHostByMac(macFromCsv);
-						if (storedHost.isPresent()) {
-							storedHost.get().setDeviceName(hostFromCsv.getDeviceName());
-							return storedHost.get();
+						Optional<Host> storedHostOp = hostService.getHostByMac(macFromCsv);
+						if (storedHostOp.isPresent()) {
+							Host host = storedHostOp.get();
+							host.setDeviceName(hostFromCsv.getDeviceName());
+							host.setNotes(hostFromCsv.getNotes());
+							return host;
 						} else {
 							hostFromCsv.setState(HostState.FAILED);
 							return hostFromCsv;
@@ -64,7 +69,11 @@ public class HostsCsvService {
 		}
 	}
 
-	public void exportHostsToCsvFile(HttpServletResponse response, List beans)
+	public void exportHostsToCsvFile(HttpServletResponse response) throws CsvFieldAssignmentException, IOException {
+		exportBeansToCsvFile(response, hostCsvConverter.convertHostListToCsvs(hostService.getAllHosts()));
+	}
+
+	public void exportBeansToCsvFile(HttpServletResponse response, List beans)
 			throws CsvFieldAssignmentException, IOException {
 		String filename = String.format(CSV_FILENAME_PATTERN, LocalDateTime.now().format(DATE_TIME_FORMATTER));
 

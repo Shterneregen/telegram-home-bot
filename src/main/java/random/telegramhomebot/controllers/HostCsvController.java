@@ -34,7 +34,7 @@ public class HostCsvController {
 
 	@GetMapping(HOSTS_CSV_EXPORT_MAPPING)
 	public void exportHostsToCsvFile(HttpServletResponse response) throws Exception {
-		hostsCsvService.exportHostsToCsvFile(response, hostService.getAllHosts());
+		hostsCsvService.exportHostsToCsvFile(response);
 	}
 
 	@PostMapping(HOSTS_CSV_IMPORT_MAPPING)

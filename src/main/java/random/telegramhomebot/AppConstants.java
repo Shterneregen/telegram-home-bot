@@ -67,7 +67,7 @@ public interface AppConstants {
 	}
 
 	interface BotCommands {
-		String SHOW_STORED_HOSTS_COMMAND = "/hosts";
+		String REACHABLE_HOSTS_COMMAND = "/hosts";
 		String SHOW_ALL_COMMANDS = "/commands";
 		String MENU_COMMAND = "/menu";
 		String LAST_ACTIVITY = "/activity";

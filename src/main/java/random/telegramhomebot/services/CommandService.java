@@ -60,11 +60,13 @@ public class CommandService {
 			return;
 		}
 
-		sendMessage.setReplyMarkup(new ReplyKeyboardMarkup()
-				.setSelective(true)
-				.setResizeKeyboard(true)
-				.setOneTimeKeyboard(false)
-				.setKeyboard(getKeyboardRows(enabledCommands, buttonsInRow)));
+		sendMessage.setReplyMarkup(ReplyKeyboardMarkup.builder()
+				.selective(true)
+				.resizeKeyboard(true)
+				.oneTimeKeyboard(false)
+				.keyboard(getKeyboardRows(enabledCommands, buttonsInRow))
+				.build()
+		);
 	}
 
 	private List<KeyboardRow> getKeyboardRows(List<? extends Command> commands, int buttonsInRow) {

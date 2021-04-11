@@ -64,7 +64,7 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	}
 
 	private boolean checkAccess(Update update) {
-		Integer userId;
+		Long userId;
 		String messageStr;
 
 		if (!update.hasCallbackQuery() && (!update.hasMessage() || !update.getMessage().hasText())) {
@@ -126,11 +126,11 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 			log.debug("trying to send blank message");
 			return;
 		}
-		SendMessage message = new SendMessage()
-				.setChatId(chatId)
-				.setText(messageText)
-				.setReplyToMessageId(replyToMessageId)
-				.enableMarkdown(true);
+		SendMessage message = SendMessage.builder()
+				.chatId(String.valueOf(chatId))
+				.text(messageText)
+				.replyToMessageId(replyToMessageId)
+				.build();
 		commandService.setCommandButtons(message);
 		try {
 			execute(message);

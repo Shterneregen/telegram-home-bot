@@ -31,6 +31,7 @@ import static random.telegramhomebot.utils.Utils.comparingByIp;
 @Service
 public class HostService {
 
+	public static final SimpleDateFormat TIME_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 	private final HostRepository hostRepository;
 	private final HostTimeLogRepository hostTimeLogRepository;
 	private final CommandRunnerService commandRunnerService;
@@ -122,6 +123,13 @@ public class HostService {
 				.collect(Collectors.toList());
 	}
 
+	public List<HostTimeLog> getLastHostTimeLogsForHost(Host host, int logCount) {
+		Pageable page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate");
+		return hostTimeLogRepository.findHostTimeLogByHost(page, host).stream()
+				.sorted(Comparator.comparing(HostTimeLog::getCreatedDate))
+				.collect(Collectors.toList());
+	}
+
 	public String getLastHostTimeLogsAsString(int logCount) {
 		return getLastHostTimeLogs(logCount).stream()
 				.map(this::convertTimeLog)
@@ -129,7 +137,7 @@ public class HostService {
 	}
 
 	private String convertTimeLog(HostTimeLog log) {
-		return new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-				.format(log.getCreatedDate()) + "\t" + log.getState() + "\t\t" + log.getHost().getDeviceName();
+		return TIME_DATE_FORMAT.format(log.getCreatedDate())
+				+ "\t" + log.getState() + "\t\t" + log.getHost().getDeviceName();
 	}
 }

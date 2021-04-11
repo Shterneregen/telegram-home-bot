@@ -15,12 +15,11 @@ import random.telegramhomebot.telegram.Icon;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.Math.toIntExact;
 import static random.telegramhomebot.AppConstants.BotCommands.FEATURES;
 import static random.telegramhomebot.AppConstants.BotCommands.LAST_ACTIVITY;
 import static random.telegramhomebot.AppConstants.BotCommands.MENU_COMMAND;
+import static random.telegramhomebot.AppConstants.BotCommands.REACHABLE_HOSTS_COMMAND;
 import static random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS;
-import static random.telegramhomebot.AppConstants.BotCommands.SHOW_STORED_HOSTS_COMMAND;
 
 // TODO: refactor this class, this is quite ugly
 @Slf4j
@@ -35,44 +34,44 @@ public class CallbackMenuService {
 	private final FeatureSwitcherService featureSwitcherService;
 
 	public InlineKeyboardMarkup getInlineKeyboardMarkup() {
-		InlineKeyboardButton reachableHostsButton = new InlineKeyboardButton()
-				.setText(messageService.getMessage("btn.hosts"))
-				.setCallbackData(SHOW_STORED_HOSTS_COMMAND);
+		InlineKeyboardButton reachableHostsButton = InlineKeyboardButton.builder()
+				.text(messageService.getMessage("btn.hosts"))
+				.callbackData(REACHABLE_HOSTS_COMMAND).build();
 
-		InlineKeyboardButton commandsButton = new InlineKeyboardButton()
-				.setText(messageService.getMessage("btn.commands"))
-				.setCallbackData(SHOW_ALL_COMMANDS);
+		InlineKeyboardButton commandsButton = InlineKeyboardButton.builder()
+				.text(messageService.getMessage("btn.commands"))
+				.callbackData(SHOW_ALL_COMMANDS).build();
 
-		InlineKeyboardButton lastHostActivity = new InlineKeyboardButton()
-				.setText(messageService.getMessage("btn.activity"))
-				.setCallbackData(LAST_ACTIVITY);
+		InlineKeyboardButton lastHostActivity = InlineKeyboardButton.builder()
+				.text(messageService.getMessage("btn.activity"))
+				.callbackData(LAST_ACTIVITY).build();
 
 		List<List<InlineKeyboardButton>> rowList = Arrays.asList(
 				Arrays.asList(reachableHostsButton, commandsButton, lastHostActivity)
 		);
-		return new InlineKeyboardMarkup().setKeyboard(rowList);
+		return InlineKeyboardMarkup.builder().keyboard(rowList).build();
 	}
 
 	public InlineKeyboardMarkup getInlineKeyboardMarkupForFeatures() {
-		InlineKeyboardButton newHostsNotificationsSwitcher = new InlineKeyboardButton()
-				.setText(getIcon(featureSwitcherService.newHostsNotificationsEnabled())
+		InlineKeyboardButton newHostsNotificationsSwitcher = InlineKeyboardButton.builder()
+				.text(getIcon(featureSwitcherService.newHostsNotificationsEnabled())
 						+ " " + messageService.getMessage("btn.newHostsNotifications"))
-				.setCallbackData(FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION.name());
-		InlineKeyboardButton reachableHostsNotificationsSwitcher = new InlineKeyboardButton()
-				.setText(getIcon(featureSwitcherService.reachableHostsNotificationsEnabled())
+				.callbackData(FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION.name()).build();
+		InlineKeyboardButton reachableHostsNotificationsSwitcher = InlineKeyboardButton.builder()
+				.text(getIcon(featureSwitcherService.reachableHostsNotificationsEnabled())
 						+ " " + messageService.getMessage("btn.reachableHostsNotifications"))
-				.setCallbackData(FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION.name());
-		InlineKeyboardButton notReachableNotificationsSwitcher = new InlineKeyboardButton()
-				.setText(getIcon(featureSwitcherService.notReachableHostsNotificationsEnabled())
+				.callbackData(FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION.name()).build();
+		InlineKeyboardButton notReachableNotificationsSwitcher = InlineKeyboardButton.builder()
+				.text(getIcon(featureSwitcherService.notReachableHostsNotificationsEnabled())
 						+ " " + messageService.getMessage("btn.notReachableNotifications"))
-				.setCallbackData(FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION.name());
+				.callbackData(FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION.name()).build();
 
 		List<List<InlineKeyboardButton>> rowList = Arrays.asList(
 				Arrays.asList(newHostsNotificationsSwitcher),
 				Arrays.asList(reachableHostsNotificationsSwitcher),
 				Arrays.asList(notReachableNotificationsSwitcher)
 		);
-		return new InlineKeyboardMarkup().setKeyboard(rowList);
+		return InlineKeyboardMarkup.builder().keyboard(rowList).build();
 	}
 
 	public EditMessageText processCallback(Update update) {
@@ -81,9 +80,8 @@ public class CallbackMenuService {
 		long chatId = update.getCallbackQuery().getMessage().getChatId();
 
 		String answer = "No answer";
-		EditMessageText editMessageText = new EditMessageText();
 		InlineKeyboardMarkup inlineKeyboardMarkup = null;
-		if (callData.equals(SHOW_STORED_HOSTS_COMMAND)) {
+		if (callData.equals(REACHABLE_HOSTS_COMMAND)) {
 			String allHosts = messageFormatService.getHostsState(hostService.getReachableHosts());
 			answer = StringUtils.isNotBlank(allHosts) ? allHosts : "No hosts";
 			inlineKeyboardMarkup = update.getCallbackQuery().getMessage().getReplyMarkup();
@@ -110,15 +108,21 @@ public class CallbackMenuService {
 				inlineKeyboardMarkup = getInlineKeyboardMarkupForFeatures();
 			}
 		}
-		return editMessageText
-				.setChatId(chatId)
-				.setMessageId(toIntExact(messageId))
-				.setReplyMarkup(inlineKeyboardMarkup)
-				.setText(answer);
+
+		return EditMessageText.builder()
+				.chatId(String.valueOf(chatId))
+				.messageId(Math.toIntExact(messageId))
+				.replyMarkup(inlineKeyboardMarkup)
+				.text(answer)
+				.build();
 	}
 
 	public SendMessage getInlineKeyBoardMessage(long chatId, String text, InlineKeyboardMarkup inlineKeyboardMarkup) {
-		return new SendMessage().setChatId(chatId).setText(text).setReplyMarkup(inlineKeyboardMarkup);
+		return SendMessage.builder()
+				.chatId(String.valueOf(chatId))
+				.text(text)
+				.replyMarkup(inlineKeyboardMarkup)
+				.build();
 	}
 
 	public SendMessage getMenuForCommand(Message message) {

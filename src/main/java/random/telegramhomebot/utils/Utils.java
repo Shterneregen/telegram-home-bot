@@ -32,14 +32,29 @@ public abstract class Utils {
 	}
 
 	public static Comparator<Host> comparingByIp() {
-		return Comparator.comparing(
-				Host::getIp, (s1, s2) -> {
-					if (s1 == null) {
-						return -1;
-					} else if (s2 == null) {
-						return 1;
-					}
-					return s1.compareTo(s2);
-				});
+		return (host1, host2) -> {
+			String ip1 = host1.getIp();
+			String ip2 = host2.getIp();
+			if (ip1 == null && ip2 == null) {
+				return 0;
+			}
+			if (ip1 == null) {
+				return -1;
+			}
+			if (ip2 == null) {
+				return 1;
+			}
+
+			int[] aOct = Arrays.stream(ip1.split("\\.")).mapToInt(Integer::parseInt).toArray();
+			int[] bOct = Arrays.stream(ip2.split("\\.")).mapToInt(Integer::parseInt).toArray();
+			int r = 0;
+			for (int i = 0; i < aOct.length && i < bOct.length; i++) {
+				r = Integer.compare(aOct[i], bOct[i]);
+				if (r != 0) {
+					return r;
+				}
+			}
+			return r;
+		};
 	}
 }

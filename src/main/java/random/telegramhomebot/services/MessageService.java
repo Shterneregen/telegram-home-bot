@@ -1,7 +1,6 @@
 package random.telegramhomebot.services;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -17,9 +16,6 @@ public class MessageService {
 	private final MessageSource messageSource;
 	private final LocaleResolver localeResolver;
 	private final Locale defaultLocale;
-
-	@Value("${default.language}")
-	private String defaultLanguage;
 
 	public String getMessage(String code, @Nullable Object[] args) {
 		return getMessage(code, args, defaultLocale);

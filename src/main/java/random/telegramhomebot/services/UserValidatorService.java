@@ -15,17 +15,17 @@ public class UserValidatorService {
 	@Value("${home.group.user.ids}")
 	private List<Integer> homeGroupUserIds;
 
-	public boolean isAllowedUser(Integer userId) {
+	public boolean isAllowedUser(Long userId) {
 		return isOwner(userId) || isHomeGroupUser(userId);
 	}
 
-	private boolean isOwner(Integer userId) {
+	private boolean isOwner(Long userId) {
 		boolean isOwner = userId == botChatId.intValue();
 		log.debug("Is owner: {}", isOwner);
 		return isOwner;
 	}
 
-	private boolean isHomeGroupUser(Integer userId) {
+	private boolean isHomeGroupUser(Long userId) {
 		boolean isHomeGroupUser = homeGroupUserIds != null && homeGroupUserIds.contains(userId);
 		log.debug("Is home group user: {}", isHomeGroupUser);
 		return isHomeGroupUser;

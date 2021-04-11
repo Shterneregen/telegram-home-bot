@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.config.ProfileService;
@@ -23,6 +24,7 @@ public class BroadcastPingScheduler {
 	@Value("${broadcast.ping.command.windows}")
 	private String broadcastPingCommandWindows;
 
+	@Async
 	@Scheduled(fixedRateString = "${broadcast.ping.scheduled.time}")
 	public void broadcastPing() {
 		log.debug("Broadcast ping...");

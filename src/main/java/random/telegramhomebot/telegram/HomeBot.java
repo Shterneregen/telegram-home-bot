@@ -90,11 +90,13 @@ public class HomeBot extends TelegramLongPollingBot implements Bot {
 	}
 
 	private void processCallback(Update update) {
-		try {
-			execute(callbackMenuService.processCallback(update));
-		} catch (TelegramApiException e) {
-			log.error(e.getMessage(), e);
-		}
+		new Thread(() -> {
+			try {
+				execute(callbackMenuService.processCallback(update));
+			} catch (TelegramApiException e) {
+				log.error(e.getMessage(), e);
+			}
+		}).start();
 	}
 
 	private boolean executeControlCommand(Message message) {

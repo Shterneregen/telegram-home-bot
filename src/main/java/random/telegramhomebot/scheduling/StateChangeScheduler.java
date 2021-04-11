@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.config.ProfileService;
@@ -38,6 +39,7 @@ public class StateChangeScheduler {
 	private final HostService hostService;
 	private final FeatureSwitcherService featureSwitcherService;
 
+	@Async
 	@Scheduled(fixedRateString = "${state.change.scheduled.time}", initialDelay = 20000)
 	public void checkState() {
 		if (!SystemUtils.IS_OS_LINUX) {

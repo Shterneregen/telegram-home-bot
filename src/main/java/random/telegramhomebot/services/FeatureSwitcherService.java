@@ -33,17 +33,19 @@ public class FeatureSwitcherService {
 	}
 
 	public boolean newHostsNotificationsEnabled() {
-		Optional<FeatureSwitcher> feature = getFeatureSwitcherByName(Features.NEW_HOSTS_NOTIFICATION.name());
-		return feature.isPresent() ? feature.get().getEnabled() : false;
+		return isFeatureEnabled(Features.NEW_HOSTS_NOTIFICATION);
 	}
 
 	public boolean reachableHostsNotificationsEnabled() {
-		Optional<FeatureSwitcher> feature = getFeatureSwitcherByName(Features.REACHABLE_HOSTS_NOTIFICATION.name());
-		return feature.isPresent() ? feature.get().getEnabled() : false;
+		return isFeatureEnabled(Features.REACHABLE_HOSTS_NOTIFICATION);
 	}
 
 	public boolean notReachableHostsNotificationsEnabled() {
-		Optional<FeatureSwitcher> feature = getFeatureSwitcherByName(Features.NOT_REACHABLE_HOSTS_NOTIFICATION.name());
+		return isFeatureEnabled(Features.NOT_REACHABLE_HOSTS_NOTIFICATION);
+	}
+
+	private boolean isFeatureEnabled(Features featureName) {
+		Optional<FeatureSwitcher> feature = getFeatureSwitcherByName(featureName.name());
 		return feature.isPresent() ? feature.get().getEnabled() : false;
 	}
 }

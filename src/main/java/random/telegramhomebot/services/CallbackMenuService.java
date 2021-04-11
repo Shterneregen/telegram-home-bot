@@ -82,34 +82,38 @@ public class CallbackMenuService {
 
 		String answer = "No answer";
 		EditMessageText editMessageText = new EditMessageText();
+		InlineKeyboardMarkup inlineKeyboardMarkup = null;
 		if (callData.equals(SHOW_STORED_HOSTS_COMMAND)) {
 			String allHosts = messageFormatService.getHostsState(hostService.getReachableHosts());
 			answer = StringUtils.isNotBlank(allHosts) ? allHosts : "No hosts";
-			editMessageText.setReplyMarkup(update.getCallbackQuery().getMessage().getReplyMarkup());
+			inlineKeyboardMarkup = update.getCallbackQuery().getMessage().getReplyMarkup();
 		} else if (callData.equals(SHOW_ALL_COMMANDS)) {
 			String allEnabledCommands = commandService.getAllEnabledCommandsAsString();
 			answer = StringUtils.isNotBlank(allEnabledCommands) ? allEnabledCommands : "No commands";
-			editMessageText.setReplyMarkup(update.getCallbackQuery().getMessage().getReplyMarkup());
+			inlineKeyboardMarkup = update.getCallbackQuery().getMessage().getReplyMarkup();
 		} else if (callData.equals(LAST_ACTIVITY)) {
 			String lastActivityStr = hostService.getLastHostTimeLogsAsString(20);
 			answer = StringUtils.isNotBlank(lastActivityStr) ? lastActivityStr : "No activity";
-			editMessageText.setReplyMarkup(update.getCallbackQuery().getMessage().getReplyMarkup());
-		} else if (callData.equals(FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION.name())) {
-			featureSwitcherService.switchFeature(FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION.name());
-			answer = update.getCallbackQuery().getMessage().getText();
-			editMessageText.setReplyMarkup(getInlineKeyboardMarkupForFeatures());
-		} else if (callData.equals(FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION.name())) {
-			featureSwitcherService.switchFeature(FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION.name());
-			answer = update.getCallbackQuery().getMessage().getText();
-			editMessageText.setReplyMarkup(getInlineKeyboardMarkupForFeatures());
-		} else if (callData.equals(FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION.name())) {
-			featureSwitcherService.switchFeature(FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION.name());
-			answer = update.getCallbackQuery().getMessage().getText();
-			editMessageText.setReplyMarkup(getInlineKeyboardMarkupForFeatures());
+			inlineKeyboardMarkup = update.getCallbackQuery().getMessage().getReplyMarkup();
+		} else {
+			if (callData.equals(FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION.name())) {
+				featureSwitcherService.switchFeature(FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION.name());
+				answer = update.getCallbackQuery().getMessage().getText();
+				inlineKeyboardMarkup = getInlineKeyboardMarkupForFeatures();
+			} else if (callData.equals(FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION.name())) {
+				featureSwitcherService.switchFeature(FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION.name());
+				answer = update.getCallbackQuery().getMessage().getText();
+				inlineKeyboardMarkup = getInlineKeyboardMarkupForFeatures();
+			} else if (callData.equals(FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION.name())) {
+				featureSwitcherService.switchFeature(FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION.name());
+				answer = update.getCallbackQuery().getMessage().getText();
+				inlineKeyboardMarkup = getInlineKeyboardMarkupForFeatures();
+			}
 		}
 		return editMessageText
 				.setChatId(chatId)
 				.setMessageId(toIntExact(messageId))
+				.setReplyMarkup(inlineKeyboardMarkup)
 				.setText(answer);
 	}
 

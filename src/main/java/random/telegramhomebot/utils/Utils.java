@@ -45,8 +45,19 @@ public abstract class Utils {
 				return 1;
 			}
 
-			int[] aOct = Arrays.stream(ip1.split("\\.")).mapToInt(Integer::parseInt).toArray();
-			int[] bOct = Arrays.stream(ip2.split("\\.")).mapToInt(Integer::parseInt).toArray();
+			int[] aOct;
+			try {
+				aOct = Arrays.stream(ip1.split("\\.")).mapToInt(Integer::parseInt).toArray();
+			} catch (Exception e) {
+				return -1;
+			}
+			int[] bOct;
+			try {
+				bOct = Arrays.stream(ip2.split("\\.")).mapToInt(Integer::parseInt).toArray();
+			} catch (Exception e) {
+				return 1;
+			}
+
 			int r = 0;
 			for (int i = 0; i < aOct.length && i < bOct.length; i++) {
 				r = Integer.compare(aOct[i], bOct[i]);

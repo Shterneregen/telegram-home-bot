@@ -1,33 +1,31 @@
 package random.telegramhomebot.services;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import random.telegramhomebot.telegram.BotProperties;
 
-import java.util.List;
-
+@RequiredArgsConstructor
 @Slf4j
 @Service
 public class UserValidatorService {
 
-	@Value("${telegram.bot.chat.id}")
-	private Long botChatId;
-	@Value("${home.group.user.ids}")
-	private List<Integer> homeGroupUserIds;
+    private final BotProperties botProperties;
 
-	public boolean isAllowedUser(Long userId) {
-		return isOwner(userId) || isHomeGroupUser(userId);
-	}
+    public boolean isAllowedUser(Long userId) {
+        return isOwner(userId) || isHomeGroupUser(userId);
+    }
 
-	private boolean isOwner(Long userId) {
-		boolean isOwner = userId == botChatId.intValue();
-		log.debug("Is owner: {}", isOwner);
-		return isOwner;
-	}
+    private boolean isOwner(Long userId) {
+        boolean isOwner = userId == botProperties.getBotOwnerId().intValue();
+        log.debug("Is owner: {}", isOwner);
+        return isOwner;
+    }
 
-	private boolean isHomeGroupUser(Long userId) {
-		boolean isHomeGroupUser = homeGroupUserIds != null && homeGroupUserIds.contains(userId);
-		log.debug("Is home group user: {}", isHomeGroupUser);
-		return isHomeGroupUser;
-	}
+    private boolean isHomeGroupUser(Long userId) {
+        boolean isHomeGroupUser = botProperties.getHomeGroupUserIds() != null
+                && botProperties.getHomeGroupUserIds().contains(userId);
+        log.debug("Is home group user: {}", isHomeGroupUser);
+        return isHomeGroupUser;
+    }
 }

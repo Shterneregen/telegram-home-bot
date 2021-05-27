@@ -5,22 +5,26 @@
 Can be used for home automation on Raspberry Pi
 
 To use this project set environment variables for TELEGRAM_BOT_CHAT_ID, TELEGRAM_TOKEN and TELEGRAM_BOT_NAME.  
-(Actually, using THB as a Linux service, I just put the properties files next to the jar file and also set the telegram 
+(Actually, using THB as a Linux service, I just put the properties files next to the jar file and also set the telegram
 credentials into the application.properties without using env variables)
 
 ### Create telegram chatbot
+
 * start a chat with __@BotFather__
 * use message __/newbot__
 * set bot name (TELEGRAM_BOT_NAME)
 * set unique bot username (ends with _bot or Bot)
 * get __token__ from the final message (TELEGRAM_TOKEN)
 * start conversation with bot
-* retrieve __chat_id__, call https://api.telegram.org/bot$TOKEN/getUpdates (TELEGRAM_BOT_CHAT_ID)
+* retrieve __chat_id__, call https://api.telegram.org/bot[YOUR_TOKEN]/getUpdates (TELEGRAM_BOT_CHAT_ID)
 
-1. Periodically calls a command (_state.change.command_) to check network changes and in case of state changes sends a message to telegram bot (only to TELEGRAM_BOT_CHAT_ID)
-2. You can add any commands in [commands.properties](src/main/resources/commands.properties). These commands work for TELEGRAM_BOT_CHAT_ID and users from __home.group.user.ids__ list
+1. Periodically calls a command (_state.change.command_) to check network changes and in case of state changes sends a
+   message to telegram bot (only to TELEGRAM_BOT_CHAT_ID)
+2. You can add any commands in [commands.properties](src/main/resources/commands.properties). These commands work for
+   TELEGRAM_BOT_CHAT_ID and users from __home.group.user.ids__ list
 
 ### [Installation as an init.d Service](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#deployment-initd-service)
+
 * `gradlew clean bootJar`
 * copy a jar file to SOME_LINUX_FOLDER on linux machine
 
@@ -33,9 +37,25 @@ credentials into the application.properties without using env variables)
     * `sudo service thb start` (start bot as a service)
     * `update-rc.d thb defaults` (autostart)
 
+### Enable HTTPS
+
+This example will be with a self-signed certificate on the local machine
+
+* Create `thb-keystore.p12`
+
+```shell
+keytool -genkeypair -alias thb -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore thb-keystore.p12 -validity 3650 -ext san=ip:127.0.0.1
+```
+
+* Enter `SOME_SECURE_PSW` for keystore
+* Uncomment `server.ssl.*` properties in the [application.properties](src/main/resources/application.properties)
+  file (put your `SOME_SECURE_PSW` and change others if needed)
+* Add `thb-keystore.p12` to the `Trusted Root Certification Authorities certificate` store
+
 ---
 
 #### Create private chat group with chatbot (JFYI)
+
 * open a session with __@BotFather__
 * enter __/setjoingroups__
 * enter the name of the bot
@@ -43,6 +63,7 @@ credentials into the application.properties without using env variables)
 * get private group __chat_id__, call https://api.telegram.org/bot$TOKEN/getUpdates
 
 ### Preview
+
 ![Commands](./screenshots/Commands.png)
 
 ![Hosts](./screenshots/Hosts.png)

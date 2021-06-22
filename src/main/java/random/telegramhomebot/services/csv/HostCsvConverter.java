@@ -26,13 +26,13 @@ public class HostCsvConverter {
     }
 
     public Host convertScvToHost(HostCsv hostCsv) {
-        return Host.builder()
-                .mac(hostCsv.getMac())
-                .deviceName(hostCsv.getDeviceName())
-                .notes(StringUtils.isNotBlank(hostCsv.getNotes())
+        return new Host(
+                hostCsv.getMac(),
+                hostCsv.getDeviceName(),
+                StringUtils.isNotBlank(hostCsv.getNotes())
                         ? new String(Base64.getDecoder().decode(hostCsv.getNotes()))
-                        : StringUtils.EMPTY)
-                .build();
+                        : StringUtils.EMPTY
+        );
     }
 
     public List<Host> convertCsvRowsToHosts(List<HostCsv> hostCsvList) {

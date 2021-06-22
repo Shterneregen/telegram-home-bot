@@ -2,6 +2,9 @@ plugins {
     id "org.springframework.boot" version "2.5.2"
     id "io.spring.dependency-management" version "1.0.11.RELEASE"
     id "java"
+    id "org.jetbrains.kotlin.jvm" version "1.5.20"
+    id "org.jetbrains.kotlin.plugin.spring" version "1.5.20"
+    id "org.jetbrains.kotlin.plugin.jpa" version "1.5.20"
 }
 
 ext {
@@ -10,6 +13,10 @@ ext {
     opencsvVersion = "5.3"
     commonsLang3Version = "3.11"
     emojiJavaVersion = "5.1.1"
+}
+
+sourceSets {
+    main.kotlin.srcDirs += "src/main/java"
 }
 
 group = "random"
@@ -52,6 +59,12 @@ dependencies {
             "org.springframework.boot:spring-boot-starter-test",
             "org.springframework.security:spring-security-test"
     )
+
+    runtimeOnly "org.jetbrains.kotlin:kotlin-reflect:1.5.20"
+    implementation(
+            "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
+            "com.fasterxml.jackson.module:jackson-module-kotlin:2.12.4"
+    )
 }
 
 test {
@@ -61,4 +74,14 @@ test {
 bootJar {
     archiveFileName = "thb.jar"
     launchScript()
+}
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }

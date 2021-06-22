@@ -16,35 +16,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DataJpaTest
 class TelegramCommandRepositoryTest {
 
-	@Resource
-	private TelegramCommandRepository repository;
+    @Resource
+    private TelegramCommandRepository repository;
 
-	@AfterEach
-	void tearDown() {
-		repository.deleteAll();
-	}
+    @AfterEach
+    void tearDown() {
+        repository.deleteAll();
+    }
 
-	@Test
-	public void shouldReturnHostFromAll() {
-		TelegramCommand command = getMockTelegramCommand("/ping", "echo pong");
-		repository.save(command);
-		List<TelegramCommand> commands = repository.findAll();
-		assertEquals("/ping", commands.get(0).getCommandAlias());
-	}
+    @Test
+    public void shouldReturnPingCommand() {
+        TelegramCommand command = getMockTelegramCommand("/ping", "echo pong");
+        repository.save(command);
+        List<TelegramCommand> commands = repository.findAll();
+        assertEquals("/ping", commands.get(0).getCommandAlias());
+    }
 
-	@Test
-	public void shouldDeleteHost() {
-		TelegramCommand command = getMockTelegramCommand("/ping", "echo pong");
-		TelegramCommand fetchedCommand = repository.save(command);
-		repository.deleteById(fetchedCommand.getId());
-		List<TelegramCommand> all = repository.findAll();
-		assertEquals(0, all.size());
-	}
+    @Test
+    public void shouldDeleteCommand() {
+        TelegramCommand command = getMockTelegramCommand("/ping", "echo pong");
+        TelegramCommand fetchedCommand = repository.save(command);
+        repository.deleteById(fetchedCommand.getId());
+        List<TelegramCommand> all = repository.findAll();
+        assertEquals(0, all.size());
+    }
 
-	private TelegramCommand getMockTelegramCommand(String commandAlias, String command) {
-		return TelegramCommand.builder()
-				.commandAlias(commandAlias)
-				.command(command)
-				.build();
-	}
+    private TelegramCommand getMockTelegramCommand(String commandAlias, String command) {
+        return new TelegramCommand(commandAlias, command, true);
+    }
 }

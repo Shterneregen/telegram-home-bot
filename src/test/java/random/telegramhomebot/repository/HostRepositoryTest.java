@@ -19,52 +19,47 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DataJpaTest
 class HostRepositoryTest {
 
-	private static final String MAC = "00:00:00:00:00:00";
+    private static final String MAC = "00:00:00:00:00:00";
 
-	@Resource
-	private HostRepository repository;
-	private Host host;
+    @Resource
+    private HostRepository repository;
+    private Host host;
 
-	@BeforeEach
-	void setUp() {
-		host = getMockHost();
-	}
+    @BeforeEach
+    void setUp() {
+        host = getMockHost();
+    }
 
-	@AfterEach
-	void tearDown() {
-		repository.deleteAll();
-		host = null;
-	}
+    @AfterEach
+    void tearDown() {
+        repository.deleteAll();
+        host = null;
+    }
 
-	@Test
-	public void shouldSaveHost() {
-		repository.save(host);
-		Optional<Host> fetchedHost = repository.findHostByMac(host.getMac());
-		assertEquals(MAC, fetchedHost.get().getMac());
-	}
+    @Test
+    public void shouldSaveHost() {
+        repository.save(host);
+        Optional<Host> fetchedHost = repository.findHostByMac(host.getMac());
+        assertEquals(MAC, fetchedHost.get().getMac());
+    }
 
-	@Test
-	public void shouldReturnHostFromAll() {
-		repository.save(host);
-		List<Host> hosts = repository.findAll();
-		assertEquals(MAC, hosts.get(0).getMac());
-	}
+    @Test
+    public void shouldReturnHostFromAll() {
+        repository.save(host);
+        List<Host> hosts = repository.findAll();
+        assertEquals(MAC, hosts.get(0).getMac());
+    }
 
-	@Test
-	public void shouldDeleteHost() {
-		repository.save(host);
-		repository.deleteById(host.getId());
-		Optional<Host> optional = repository.findHostByMac(MAC);
-		assertEquals(Optional.empty(), optional);
-	}
+    @Test
+    public void shouldDeleteHost() {
+        repository.save(host);
+        repository.deleteById(host.getId());
+        Optional<Host> optional = repository.findHostByMac(MAC);
+        assertEquals(Optional.empty(), optional);
+    }
 
-	private Host getMockHost() {
-		return Host.builder()
-				.mac(MAC)
-				.deviceName("test-device")
-				.hostInterface("interface")
-				.ip("127.0.0.1")
-				.state(HostState.REACHABLE)
-				.build();
-	}
+    private Host getMockHost() {
+        return new Host(null, "127.0.0.1", "interface", MAC, HostState.REACHABLE,
+                "test-device", null, "notes");
+    }
 }

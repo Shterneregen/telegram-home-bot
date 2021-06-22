@@ -16,24 +16,23 @@ import java.util.stream.Collectors;
 @Component
 public class CommandsLoader implements CommandLineRunner {
 
-	@Resource
-	private Map<String, String> telegramCommands;
-	private final TelegramCommandRepository telegramCommandRepository;
+    @Resource
+    private Map<String, String> telegramCommands;
+    private final TelegramCommandRepository telegramCommandRepository;
 
-	@Override
-	public void run(String... args) {
-		loadSampleCommands();
-	}
+    @Override
+    public void run(String... args) {
+        loadSampleCommands();
+    }
 
-	private void loadSampleCommands() {
-		long commandsCount = telegramCommandRepository.count();
-		log.info("Stored commands count [{}]", commandsCount);
-		if (commandsCount == 0) {
-			log.info("Loading sample commands...");
-			telegramCommandRepository.saveAll(telegramCommands.entrySet().stream()
-					.map(entry -> new TelegramCommand(entry.getKey(), entry.getValue()))
-					.peek(command -> command.setEnabled(true))
-					.collect(Collectors.toList()));
-		}
-	}
+    private void loadSampleCommands() {
+        long commandsCount = telegramCommandRepository.count();
+        log.info("Stored commands count [{}]", commandsCount);
+        if (commandsCount == 0) {
+            log.info("Loading sample commands...");
+            telegramCommandRepository.saveAll(telegramCommands.entrySet().stream()
+                    .map(entry -> new TelegramCommand(entry.getKey(), entry.getValue(), true))
+                    .collect(Collectors.toList()));
+        }
+    }
 }

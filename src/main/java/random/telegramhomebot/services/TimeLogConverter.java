@@ -8,16 +8,13 @@ import random.telegramhomebot.model.TimeLogDto;
 @Service
 public class TimeLogConverter {
 
-	public TimeLogDto convertToDto(HostTimeLog timeLog) {
-		return TimeLogDto.builder()
-				.state(getState(timeLog))
-				.createdDate(timeLog.getCreatedDate())
-				.build();
-	}
+    public TimeLogDto convertToDto(HostTimeLog timeLog) {
+        return new TimeLogDto(getState(timeLog), timeLog.getCreatedDate());
+    }
 
-	private String getState(HostTimeLog timeLog) {
-		return timeLog.getState() != HostState.FAILED
-				? HostState.REACHABLE.toString()
-				: timeLog.getState().toString();
-	}
+    private String getState(HostTimeLog timeLog) {
+        return timeLog.getState() != HostState.FAILED
+                ? HostState.REACHABLE.toString()
+                : timeLog.getState().toString();
+    }
 }

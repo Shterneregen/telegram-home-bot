@@ -11,10 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface HostTimeLogRepository extends JpaRepository<HostTimeLog, UUID> {
+    List<HostTimeLog> findByCreatedDateBetween(Timestamp startDate, Timestamp endDay);
 
-	List<HostTimeLog> findByCreatedDateBetween(Timestamp startDate, Timestamp endDay);
-
-	Page<HostTimeLog> findAll(Pageable pageable);
-
-	Page<HostTimeLog> findHostTimeLogByHost(Pageable pageable, Host host);
+    Page<HostTimeLog> findHostTimeLogByHost(Pageable pageable, Host host);
 }

@@ -34,3 +34,5 @@ out/
 .vscode/
 
 *.db
+*.p12
+*.cer

@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -21,67 +23,75 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class CommandService {
+public class CommandService implements HealthIndicator {
 
-	@Value("${buttons.in.row}")
-	private int buttonsInRow;
+    @Value("${buttons.in.row}")
+    private int buttonsInRow;
 
-	private final TelegramCommandRepository telegramCommandRepository;
-	private final CommandRunnerService commandRunnerService;
+    private final TelegramCommandRepository telegramCommandRepository;
+    private final CommandRunnerService commandRunnerService;
 
-	public List<TelegramCommand> getAllEnabledCommands() {
-		return telegramCommandRepository.findAllEnabled();
-	}
+    public List<TelegramCommand> getAllEnabledCommands() {
+        return telegramCommandRepository.findAllEnabled();
+    }
 
-	public Optional<TelegramCommand> getEnabledCommand(String commandAlias) {
-		return telegramCommandRepository.findByCommandAliasAndEnabled(commandAlias, Boolean.TRUE);
-	}
+    public Optional<TelegramCommand> getEnabledCommand(String commandAlias) {
+        return telegramCommandRepository.findByCommandAliasAndEnabled(commandAlias, Boolean.TRUE);
+    }
 
-	public String getAllEnabledCommandsAsString() {
-		return getAllEnabledCommands().stream()
-				.map(command -> command.getCommandAlias() + " = " + command.getCommand())
-				.collect(Collectors.joining("\n"));
-	}
+    public String getAllEnabledCommandsAsString() {
+        return getAllEnabledCommands().stream()
+                .map(command -> command.getCommandAlias() + " = " + command.getCommand())
+                .collect(Collectors.joining("\n"));
+    }
 
-	public String executeCommandOnMachine(String command) {
-		Optional<TelegramCommand> telegramCommand = getEnabledCommand(command);
-		if (telegramCommand.isPresent()) {
-			List<String> commandOutput = commandRunnerService.runCommand(telegramCommand.get().getCommand());
-			commandOutput.forEach(log::debug);
-			return String.join("\n", commandOutput);
-		}
-		return null;
-	}
+    public String executeCommandOnMachine(String command) {
+        Optional<TelegramCommand> telegramCommand = getEnabledCommand(command);
+        if (telegramCommand.isPresent()) {
+            List<String> commandOutput = commandRunnerService.runCommand(telegramCommand.get().getCommand());
+            commandOutput.forEach(log::debug);
+            return String.join("\n", commandOutput);
+        }
+        return null;
+    }
 
-	public void setCommandButtons(SendMessage sendMessage) {
-		List<TelegramCommand> enabledCommands = getAllEnabledCommands();
-		log.debug("Enabled commands: {}", enabledCommands);
-		if (CollectionUtils.isEmpty(enabledCommands)) {
-			return;
-		}
+    public void setCommandButtons(SendMessage sendMessage) {
+        List<TelegramCommand> enabledCommands = getAllEnabledCommands();
+        log.debug("Enabled commands: {}", enabledCommands);
+        if (CollectionUtils.isEmpty(enabledCommands)) {
+            return;
+        }
 
-		sendMessage.setReplyMarkup(ReplyKeyboardMarkup.builder()
-				.selective(true)
-				.resizeKeyboard(true)
-				.oneTimeKeyboard(false)
-				.keyboard(getKeyboardRows(enabledCommands, buttonsInRow))
-				.build()
-		);
-	}
+        sendMessage.setReplyMarkup(ReplyKeyboardMarkup.builder()
+                .selective(true)
+                .resizeKeyboard(true)
+                .oneTimeKeyboard(false)
+                .keyboard(getKeyboardRows(enabledCommands, buttonsInRow))
+                .build()
+        );
+    }
 
-	private List<KeyboardRow> getKeyboardRows(List<? extends Command> commands, int buttonsInRow) {
-		List<KeyboardRow> keyboardRowList = new ArrayList<>();
-		KeyboardRow keyboardRow = new KeyboardRow();
-		for (int i = 0, j = 0; i < commands.size(); i++) {
-			if (i % buttonsInRow == 0) {
-				j++;
-				keyboardRow = new KeyboardRow();
-			}
-			keyboardRow.add(new KeyboardButton(commands.get(i).getButtonName()));
-			if ((buttonsInRow * j) - 1 == i || i == commands.size() - 1) {
-				keyboardRowList.add(keyboardRow);
-			}
-		}
-		return keyboardRowList;
-	}
+    private List<KeyboardRow> getKeyboardRows(List<? extends Command> commands, int buttonsInRow) {
+        List<KeyboardRow> keyboardRowList = new ArrayList<>();
+        KeyboardRow keyboardRow = new KeyboardRow();
+        for (int i = 0, j = 0; i < commands.size(); i++) {
+            if (i % buttonsInRow == 0) {
+                j++;
+                keyboardRow = new KeyboardRow();
+            }
+            keyboardRow.add(new KeyboardButton(commands.get(i).getButtonName()));
+            if ((buttonsInRow * j) - 1 == i || i == commands.size() - 1) {
+                keyboardRowList.add(keyboardRow);
+            }
+        }
+        return keyboardRowList;
+    }
+
+    @Override
+    public Health health() {
+        List<TelegramCommand> commands = telegramCommandRepository.findAll();
+        return commands.size() > 0
+                ? Health.up().build()
+                : Health.down().build();
+    }
 }

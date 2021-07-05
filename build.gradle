@@ -1,15 +1,15 @@
 plugins {
-	id "org.springframework.boot" version "2.4.5"
-	id "io.spring.dependency-management" version "1.0.11.RELEASE"
-	id "java"
+    id "org.springframework.boot" version "2.5.2"
+    id "io.spring.dependency-management" version "1.0.11.RELEASE"
+    id "java"
 }
 
 ext {
-	telegrambotsSpringBootStarterVersion = "5.1.1"
-	thymeleafExtrasSpringsecurity5Version = "3.0.4.RELEASE"
-	opencsvVersion = "5.3"
-	commonsLang3Version = "3.11"
-	emojiJavaVersion = "5.1.1"
+    telegrambotsSpringBootStarterVersion = "5.1.1"
+    thymeleafExtrasSpringsecurity5Version = "3.0.4.RELEASE"
+    opencsvVersion = "5.3"
+    commonsLang3Version = "3.11"
+    emojiJavaVersion = "5.1.1"
 }
 
 group = "random"
@@ -17,46 +17,48 @@ version = "0.0.1-SNAPSHOT"
 sourceCompatibility = "11"
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation(
-			"org.springframework.boot:spring-boot-starter-web",
-			"org.springframework.boot:spring-boot-starter-data-jpa",
-			"org.springframework.boot:spring-boot-starter-thymeleaf",
-			"org.springframework.boot:spring-boot-starter-security",
-			"org.springframework.boot:spring-boot-starter-validation",
-			"nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect",
-			"org.thymeleaf.extras:thymeleaf-extras-springsecurity5:$thymeleafExtrasSpringsecurity5Version",
-			"org.telegram:telegrambots-spring-boot-starter:$telegrambotsSpringBootStarterVersion",
-			"com.opencsv:opencsv:$opencsvVersion",
-			"org.apache.commons:commons-lang3:$commonsLang3Version",
-			"com.vdurmont:emoji-java:$emojiJavaVersion"
-	)
-	compileOnly "org.projectlombok:lombok"
-	developmentOnly "org.springframework.boot:spring-boot-devtools"
-	runtimeOnly "com.h2database:h2"
-	annotationProcessor(
-			"org.springframework.boot:spring-boot-configuration-processor",
-			"org.projectlombok:lombok"
-	)
-	testImplementation("org.springframework.boot:spring-boot-starter-test") {
-		exclude group: "org.junit.vintage", module: "junit-vintage-engine"
-	}
+    implementation(
+            "org.springframework.boot:spring-boot-starter-actuator",
+            "org.springframework.boot:spring-boot-starter-web",
+            "org.springframework.boot:spring-boot-starter-data-jpa",
+            "org.springframework.boot:spring-boot-starter-thymeleaf",
+            "org.springframework.boot:spring-boot-starter-security",
+            "org.springframework.boot:spring-boot-starter-validation",
+            "nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect",
+            "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:$thymeleafExtrasSpringsecurity5Version",
+            "org.telegram:telegrambots-spring-boot-starter:$telegrambotsSpringBootStarterVersion",
+            "com.opencsv:opencsv:$opencsvVersion",
+            "org.apache.commons:commons-lang3:$commonsLang3Version",
+            "com.vdurmont:emoji-java:$emojiJavaVersion"
+    )
+    compileOnly "org.projectlombok:lombok"
+    developmentOnly "org.springframework.boot:spring-boot-devtools"
+    runtimeOnly "com.h2database:h2"
+    annotationProcessor(
+            "org.springframework.boot:spring-boot-configuration-processor",
+            "org.projectlombok:lombok"
+    )
+    testImplementation(
+            "org.springframework.boot:spring-boot-starter-test",
+            "org.springframework.security:spring-security-test"
+    )
 }
 
 test {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 bootJar {
-	archiveFileName = "thb.jar"
-	launchScript()
+    archiveFileName = "thb.jar"
+    launchScript()
 }

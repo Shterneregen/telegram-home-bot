@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import random.telegramhomebot.model.Host;
-import random.telegramhomebot.utils.Utils;
+import random.telegramhomebot.utils.NetUtils;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,14 +58,14 @@ public class MessageFormatService {
     private List<Host> getNotReachableHosts(List<Host> hosts) {
         return hosts.stream()
                 .filter(host -> host.getState() == null || FAILED.equals(host.getState()))
-                .sorted(Utils.comparingByIp())
+                .sorted(NetUtils.comparingByIp())
                 .collect(Collectors.toList());
     }
 
     private List<Host> getReachableHosts(List<Host> hosts) {
         return hosts.stream()
                 .filter(host -> host.getState() != null && !FAILED.equals(host.getState()))
-                .sorted(Utils.comparingByIp())
+                .sorted(NetUtils.comparingByIp())
                 .collect(Collectors.toList());
     }
 }

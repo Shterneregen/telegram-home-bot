@@ -69,6 +69,10 @@ public class HostService {
         return hostRepository.findReachableHosts();
     }
 
+    public long count() {
+        return hostRepository.count();
+    }
+
     public List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
         String newHostNameStub = String.format("[NEW DEVICE] %s", LocalDateTime.now().format(DATE_TIME_FORMATTER));
         return currentHosts.stream()
@@ -113,7 +117,7 @@ public class HostService {
         commandRunnerService.pingHosts(storedHosts);
     }
 
-    public List<HostTimeLog> getLastHostTimeLogs(int logCount) {
+    private List<HostTimeLog> getLastHostTimeLogs(int logCount) {
         Pageable page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate");
         return hostTimeLogRepository.findAll(page).stream()
                 .sorted(Comparator.comparing(HostTimeLog::getCreatedDate))
@@ -135,14 +139,14 @@ public class HostService {
 
     private String convertTimeLog(HostTimeLog log) {
         return TIME_DATE_FORMAT.format(log.getCreatedDate())
-               + "\t" + log.getState() + "\t\t" + log.getHost().getDeviceName();
+                + "\t" + log.getState() + "\t\t" + log.getHost().getDeviceName();
     }
 
     private boolean isReachable(List<Host> storedHosts, Host currentHost) {
         return !HostState.FAILED.equals(currentHost.getState())
-               && storedHosts.stream()
-                       .anyMatch(storedHost -> storedHost.equals(currentHost)
-                                               && HostState.FAILED.equals(storedHost.getState()));
+                && storedHosts.stream()
+                .anyMatch(storedHost -> storedHost.equals(currentHost)
+                        && HostState.FAILED.equals(storedHost.getState()));
     }
 
     private boolean reachableBecameNotFound(List<Host> currentHosts, Host storedHost) {
@@ -151,8 +155,8 @@ public class HostService {
 
     private boolean reachableBecameNotReachable(List<Host> storedHosts, Host currentHost) {
         return HostState.FAILED.equals(currentHost.getState())
-               && storedHosts.stream()
-                       .anyMatch(storedHost -> storedHost.equals(currentHost)
-                                               && !HostState.FAILED.equals(storedHost.getState()));
+                && storedHosts.stream()
+                .anyMatch(storedHost -> storedHost.equals(currentHost)
+                        && !HostState.FAILED.equals(storedHost.getState()));
     }
 }

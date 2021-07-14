@@ -12,7 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import random.telegramhomebot.config.ProfileService;
-import random.telegramhomebot.services.CallbackMenuService;
+import random.telegramhomebot.services.menu.CallbackMenuService;
 import random.telegramhomebot.services.CommandService;
 import random.telegramhomebot.services.MessageService;
 import random.telegramhomebot.services.UserValidatorService;

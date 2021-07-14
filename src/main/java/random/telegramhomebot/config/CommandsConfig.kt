@@ -1,16 +1,16 @@
-package random.telegramhomebot.config;
+package random.telegramhomebot.config
 
-import org.springframework.beans.factory.config.PropertiesFactoryBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.config.PropertiesFactoryBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.ClassPathResource
 
 @Configuration
-public class CommandsConfig {
-	@Bean(name = "telegramCommands")
-	public PropertiesFactoryBean telegramCommands() {
-		PropertiesFactoryBean bean = new PropertiesFactoryBean();
-		bean.setLocation(new ClassPathResource("commands.properties"));
-		return bean;
-	}
+class CommandsConfig {
+    @Bean(name = ["telegramCommands"])
+    fun telegramCommands(): PropertiesFactoryBean {
+        val bean = PropertiesFactoryBean()
+        bean.setLocation(ClassPathResource("commands.properties"))
+        return bean
+    }
 }

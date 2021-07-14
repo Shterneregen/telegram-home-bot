@@ -1,38 +1,39 @@
-package random.telegramhomebot.bootstrap;
+package random.telegramhomebot.bootstrap
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
-import random.telegramhomebot.model.TelegramCommand;
-import random.telegramhomebot.repository.TelegramCommandRepository;
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.CommandLineRunner
+import org.springframework.stereotype.Component
+import random.telegramhomebot.model.TelegramCommand
+import random.telegramhomebot.repository.TelegramCommandRepository
+import java.util.stream.Collectors
 
-import javax.annotation.Resource;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-@Slf4j
-@RequiredArgsConstructor
 @Component
-public class CommandsLoader implements CommandLineRunner {
+class CommandsLoader(
+    private val telegramCommandRepository: TelegramCommandRepository,
+    @Qualifier("telegramCommands")
+    private val telegramCommands: Map<String, String>
+) : CommandLineRunner {
 
-    @Resource
-    private Map<String, String> telegramCommands;
-    private final TelegramCommandRepository telegramCommandRepository;
-
-    @Override
-    public void run(String... args) {
-        loadSampleCommands();
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 
-    private void loadSampleCommands() {
-        long commandsCount = telegramCommandRepository.count();
-        log.info("Stored commands count [{}]", commandsCount);
-        if (commandsCount == 0) {
-            log.info("Loading sample commands...");
-            telegramCommandRepository.saveAll(telegramCommands.entrySet().stream()
-                    .map(entry -> new TelegramCommand(entry.getKey(), entry.getValue(), true))
-                    .collect(Collectors.toList()));
+    override fun run(vararg args: String) {
+        loadSampleCommands()
+    }
+
+    private fun loadSampleCommands() {
+        val commandsCount = telegramCommandRepository.count()
+        log.info("Stored commands count [{}]", commandsCount)
+        if (commandsCount == 0L) {
+            log.info("Loading sample commands...")
+            telegramCommandRepository.saveAll(
+                telegramCommands.entries.stream()
+                    .map { (key, value) -> TelegramCommand(key, value, true) }
+                    .collect(Collectors.toList()))
         }
     }
 }

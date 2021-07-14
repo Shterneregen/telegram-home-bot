@@ -15,8 +15,8 @@ class TelegramCommand(
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     var id: UUID? = null,
     @Column(name = "command_alias", unique = true)
-    var commandAlias: String,
-    var command: String,
+    var commandAlias: String = "",
+    var command: String = "",
     var enabled: Boolean = false
 ) : Command {
     constructor(commandAlias: String, command: String, enabled: Boolean) : this(null, commandAlias, command, enabled)

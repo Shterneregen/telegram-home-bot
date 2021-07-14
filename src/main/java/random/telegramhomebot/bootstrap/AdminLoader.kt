@@ -1,43 +1,46 @@
-package random.telegramhomebot.bootstrap;
+package random.telegramhomebot.bootstrap
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
-import random.telegramhomebot.auth.entities.AuthGroup;
-import random.telegramhomebot.auth.repositories.AuthGroupRepository;
-import random.telegramhomebot.auth.entities.User;
-import random.telegramhomebot.auth.repositories.UserRepository;
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.CommandLineRunner
+import org.springframework.stereotype.Component
+import random.telegramhomebot.auth.entities.AuthGroup
+import random.telegramhomebot.auth.entities.User
+import random.telegramhomebot.auth.repositories.AuthGroupRepository
+import random.telegramhomebot.auth.repositories.UserRepository
 
-import java.util.List;
-
-@Slf4j
-@RequiredArgsConstructor
 @Component
-public class AdminLoader implements CommandLineRunner {
+class AdminLoader(
+    private val userRepository: UserRepository,
+    private val authGroupRepository: AuthGroupRepository
+) : CommandLineRunner {
 
-	@Value("${default.admin.login}")
-	private String adminLogin;
-	@Value("${default.admin.password}")
-	private String adminPassword;
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
+    }
 
-	private final UserRepository userRepository;
-	private final AuthGroupRepository authGroupRepository;
+    @Value("\${default.admin.login}")
+    private lateinit var adminLogin: String
 
-	@Override
-	public void run(String... args) {
-		createAdminUser();
-	}
+    @Value("\${default.admin.password}")
+    private lateinit var adminPassword: String
 
-	private void createAdminUser() {
-		if (userRepository.count() == 0) {
-			log.info("Creating admin user [{}]", adminLogin);
+    override fun run(vararg args: String) {
+        createAdminUser()
+    }
 
-			userRepository.save(new User(adminLogin, adminPassword));
-			authGroupRepository.saveAll(
-					List.of(new AuthGroup(adminLogin, "USER"),
-							new AuthGroup(adminLogin, "ADMIN")));
-		}
-	}
+    private fun createAdminUser() {
+        if (userRepository.count() == 0L) {
+            log.info("Creating admin user [{}]", adminLogin)
+            userRepository.save(User(adminLogin, adminPassword))
+            authGroupRepository.saveAll(
+                listOf(
+                    AuthGroup(adminLogin, "USER"),
+                    AuthGroup(adminLogin, "ADMIN")
+                )
+            )
+        }
+    }
 }

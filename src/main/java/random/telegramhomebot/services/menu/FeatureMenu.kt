@@ -1,19 +1,9 @@
-package random.telegramhomebot.services.menu;
+package random.telegramhomebot.services.menu
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import java.util.function.Supplier
 
-import java.util.function.Supplier;
-
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
-@Data
-public class FeatureMenu extends Menu {
-    private Supplier<Boolean> featureMethod;
-
-    public FeatureMenu(String message, Supplier<String> method, Supplier<Boolean> featureMethod) {
-        super(message, method);
-        this.featureMethod = featureMethod;
-    }
-}
+class FeatureMenu(
+    message: String,
+    method: Supplier<String>,
+    var featureMethod: Supplier<Boolean>
+) : Menu(message, method)

@@ -44,7 +44,7 @@ class Host(
 
     var notes: String? = null
 ) {
-    constructor(deviceName: String, mac: String, notes: String)
+    constructor(mac: String, deviceName: String, notes: String)
             : this(null, null, null, mac, null, deviceName, null, notes)
 
     override fun equals(other: Any?): Boolean {

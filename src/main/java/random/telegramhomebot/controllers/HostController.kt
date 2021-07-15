@@ -1,106 +1,95 @@
-package random.telegramhomebot.controllers;
+package random.telegramhomebot.controllers
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import random.telegramhomebot.model.Host;
-import random.telegramhomebot.services.HostService;
-import random.telegramhomebot.utils.pagination.PagerHelper;
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Controller
+import org.springframework.ui.Model
+import org.springframework.validation.BindingResult
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import random.telegramhomebot.AppConstants
+import random.telegramhomebot.AppConstants.Hosts
+import random.telegramhomebot.model.Host
+import random.telegramhomebot.services.HostService
+import random.telegramhomebot.utils.pagination.PagerHelper
+import java.util.*
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.util.Optional;
-import java.util.UUID;
-
-import static random.telegramhomebot.AppConstants.Hosts.ADD_EDIT_HOST_VIEW;
-import static random.telegramhomebot.AppConstants.Hosts.DELETE_HOST_MAPPING;
-import static random.telegramhomebot.AppConstants.Hosts.EDIT_HOST_BY_ID_MAPPING;
-import static random.telegramhomebot.AppConstants.Hosts.EDIT_HOST_MAPPING;
-import static random.telegramhomebot.AppConstants.Hosts.HOSTS_MAPPING;
-import static random.telegramhomebot.AppConstants.Hosts.HOSTS_MODEL_ATTR;
-import static random.telegramhomebot.AppConstants.Hosts.HOSTS_VIEW;
-import static random.telegramhomebot.AppConstants.Hosts.HOST_ID_PATH_VAR;
-import static random.telegramhomebot.AppConstants.Hosts.HOST_MAC_FIELD;
-import static random.telegramhomebot.AppConstants.Hosts.HOST_MODEL_ATTR;
-import static random.telegramhomebot.AppConstants.Hosts.REDIRECT_HOSTS;
-import static random.telegramhomebot.AppConstants.Hosts.SAVE_HOST_MAPPING;
-import static random.telegramhomebot.AppConstants.Messages.HOST_MAC_NOT_UNIQUE_MSG;
-
-@RequiredArgsConstructor
 @Controller
-@RequestMapping(HOSTS_MAPPING)
-public class HostController {
+@RequestMapping(Hosts.HOSTS_MAPPING)
+class HostController(
+    private val hostService: HostService
+) {
 
-	private static final int DEFAULT_CURRENT_PAGE = 0;
+    @Value("\${hosts.default.page.size}")
+    private lateinit var defaultPageSize: Number
 
-	private final HostService hostService;
+    @Value("\${hosts.default.sorting}")
+    private lateinit var defaultSorting: String
 
-	@Value("${hosts.default.page.size}")
-	private int defaultPageSize;
-	@Value("${hosts.default.sorting}")
-	private String defaultSorting;
-	@Value("${hosts.default.sorting.direction}")
-	private String defaultSortingDirection;
+    @Value("\${hosts.default.sorting.direction}")
+    private lateinit var defaultSortingDirection: String
 
-	@RequestMapping
-	public String getAllHosts(@RequestParam("pageSize") Optional<Integer> pageSize,
-	                          @RequestParam("page") Optional<Integer> currentPage,
-	                          @RequestParam("sortBy") Optional<String> sortBy,
-	                          @RequestParam("direction") Optional<String> direction,
-	                          Model model, HttpServletRequest request) {
-		String pageSizeCookieName = "hostsPageSize";
-		PageRequest pageable = PagerHelper.getPageable(
-				pageSize, defaultPageSize,
-				currentPage, DEFAULT_CURRENT_PAGE, pageSizeCookieName,
-				sortBy, defaultSorting,
-				direction, defaultSortingDirection,
-				request
-		);
+    @RequestMapping
+    fun getAllHosts(
+        @RequestParam("pageSize") pageSize: Optional<Int?>?,
+        @RequestParam("page") currentPage: Optional<Int?>?,
+        @RequestParam("sortBy") sortBy: Optional<String?>?,
+        @RequestParam("direction") direction: Optional<String?>?,
+        model: Model, request: HttpServletRequest?
+    ): String {
+        val pageSizeCookieName = "hostsPageSize"
+        val pageable = PagerHelper.getPageable(
+            pageSize, defaultPageSize.toInt(),
+            currentPage, DEFAULT_CURRENT_PAGE, pageSizeCookieName,
+            sortBy, defaultSorting,
+            direction, defaultSortingDirection,
+            request
+        )
+        val hosts = hostService.getAllHosts(pageable)
+        model.addAttribute(Hosts.HOSTS_MODEL_ATTR, hosts)
+        PagerHelper.prepareModelForPager(
+            model, hosts.totalPages,
+            hosts.number, pageable.pageSize, pageSizeCookieName, Hosts.HOSTS_MAPPING
+        )
+        return Hosts.HOSTS_VIEW
+    }
 
-		Page<Host> hosts = hostService.getAllHosts(pageable);
-		model.addAttribute(HOSTS_MODEL_ATTR, hosts);
+    @RequestMapping(path = [Hosts.EDIT_HOST_MAPPING, Hosts.EDIT_HOST_BY_ID_MAPPING])
+    fun editHostById(model: Model, @PathVariable(Hosts.HOST_ID_PATH_VAR) id: Optional<UUID>): String {
+        model.addAttribute(Hosts.HOST_MODEL_ATTR, Optional.ofNullable(id)
+            .filter { obj -> obj.isPresent }
+            .flatMap { opId -> hostService.getHostById(opId.get()) }
+            .orElseGet { Host() }
+        )
+        return Hosts.ADD_EDIT_HOST_VIEW
+    }
 
-		PagerHelper.prepareModelForPager(model, hosts.getTotalPages(),
-				hosts.getNumber(), pageable.getPageSize(), pageSizeCookieName, HOSTS_MAPPING);
-		return HOSTS_VIEW;
-	}
+    @RequestMapping(path = [Hosts.DELETE_HOST_MAPPING])
+    fun deleteHostById(@PathVariable(Hosts.HOST_ID_PATH_VAR) id: UUID?): String {
+        hostService.deleteHostById(id)
+        return Hosts.REDIRECT_HOSTS
+    }
 
-	@RequestMapping(path = {EDIT_HOST_MAPPING, EDIT_HOST_BY_ID_MAPPING})
-	public String editHostById(Model model, @PathVariable(HOST_ID_PATH_VAR) Optional<UUID> id) {
-		model.addAttribute(HOST_MODEL_ATTR, Optional.ofNullable(id)
-				.filter(Optional::isPresent)
-				.flatMap(macOp -> hostService.getHostById(id.get()))
-				.orElseGet(Host::new));
-		return ADD_EDIT_HOST_VIEW;
-	}
+    @PostMapping(path = [Hosts.SAVE_HOST_MAPPING])
+    fun createOrUpdateHost(@Valid host: Host, bindingResult: BindingResult): String {
+        if (bindingResult.hasErrors()) {
+            return Hosts.ADD_EDIT_HOST_VIEW
+        }
+        val storedHost = hostService.getHostByMac(host.mac)
+        val saveNewHostWithExistingMac = storedHost.isPresent && host.id == null
+        val editStoredHostMacToExisting = storedHost.isPresent && storedHost.get().id != host.id
+        if (saveNewHostWithExistingMac || editStoredHostMacToExisting) {
+            bindingResult.rejectValue(Hosts.HOST_MAC_FIELD, AppConstants.Messages.HOST_MAC_NOT_UNIQUE_MSG)
+            return Hosts.ADD_EDIT_HOST_VIEW
+        }
+        hostService.saveHost(host)
+        return Hosts.REDIRECT_HOSTS
+    }
 
-	@RequestMapping(path = DELETE_HOST_MAPPING)
-	public String deleteHostById(@PathVariable(HOST_ID_PATH_VAR) UUID id) {
-		hostService.deleteHostById(id);
-		return REDIRECT_HOSTS;
-	}
-
-	@PostMapping(path = SAVE_HOST_MAPPING)
-	public String createOrUpdateHost(@Valid Host host, BindingResult bindingResult) {
-		if (bindingResult.hasErrors()) {
-			return ADD_EDIT_HOST_VIEW;
-		}
-		Optional<Host> storedHost = hostService.getHostByMac(host.getMac());
-		boolean saveNewHostWithExistingMac = storedHost.isPresent() && host.getId() == null;
-		boolean editStoredHostMacToExisting = storedHost.isPresent() && !storedHost.get().getId().equals(host.getId());
-		if (saveNewHostWithExistingMac || editStoredHostMacToExisting) {
-			bindingResult.rejectValue(HOST_MAC_FIELD, HOST_MAC_NOT_UNIQUE_MSG);
-			return ADD_EDIT_HOST_VIEW;
-		}
-		hostService.saveHost(host);
-		return REDIRECT_HOSTS;
-	}
+    companion object {
+        private const val DEFAULT_CURRENT_PAGE = 0
+    }
 }

@@ -19,9 +19,7 @@ import javax.validation.Valid
 
 @Controller
 @RequestMapping(Hosts.HOSTS_MAPPING)
-class HostController(
-    private val hostService: HostService
-) {
+class HostController(private val hostService: HostService) {
 
     @Value("\${hosts.default.page.size}")
     private lateinit var defaultPageSize: Number
@@ -34,25 +32,24 @@ class HostController(
 
     @RequestMapping
     fun getAllHosts(
-        @RequestParam("pageSize") pageSize: Optional<Int?>?,
-        @RequestParam("page") currentPage: Optional<Int?>?,
-        @RequestParam("sortBy") sortBy: Optional<String?>?,
-        @RequestParam("direction") direction: Optional<String?>?,
+        @RequestParam("pageSize") pageSize: Int?,
+        @RequestParam("page") currentPage: Int?,
+        @RequestParam("sortBy") sortBy: String?,
+        @RequestParam("direction") direction: String?,
         model: Model, request: HttpServletRequest?
     ): String {
         val pageSizeCookieName = "hostsPageSize"
         val pageable = PagerHelper.getPageable(
-            pageSize, defaultPageSize.toInt(),
-            currentPage, DEFAULT_CURRENT_PAGE, pageSizeCookieName,
-            sortBy, defaultSorting,
-            direction, defaultSortingDirection,
-            request
+            pageSize ?: defaultPageSize.toInt(),
+            currentPage ?: DEFAULT_CURRENT_PAGE,
+            sortBy ?: defaultSorting,
+            direction ?: defaultSortingDirection,
+            pageSizeCookieName, request
         )
         val hosts = hostService.getAllHosts(pageable)
         model.addAttribute(Hosts.HOSTS_MODEL_ATTR, hosts)
         PagerHelper.prepareModelForPager(
-            model, hosts.totalPages,
-            hosts.number, pageable.pageSize, pageSizeCookieName, Hosts.HOSTS_MAPPING
+            model, hosts.totalPages, hosts.number, pageable.pageSize, pageSizeCookieName, Hosts.HOSTS_MAPPING
         )
         return Hosts.HOSTS_VIEW
     }
@@ -68,7 +65,7 @@ class HostController(
     }
 
     @RequestMapping(path = [Hosts.DELETE_HOST_MAPPING])
-    fun deleteHostById(@PathVariable(Hosts.HOST_ID_PATH_VAR) id: UUID?): String {
+    fun deleteHostById(@PathVariable(Hosts.HOST_ID_PATH_VAR) id: UUID): String {
         hostService.deleteHostById(id)
         return Hosts.REDIRECT_HOSTS
     }
@@ -79,8 +76,8 @@ class HostController(
             return Hosts.ADD_EDIT_HOST_VIEW
         }
         val storedHost = hostService.getHostByMac(host.mac)
-        val saveNewHostWithExistingMac = storedHost.isPresent && host.id == null
-        val editStoredHostMacToExisting = storedHost.isPresent && storedHost.get().id != host.id
+        val saveNewHostWithExistingMac = storedHost != null && host.id == null
+        val editStoredHostMacToExisting = storedHost != null && storedHost.id != host.id
         if (saveNewHostWithExistingMac || editStoredHostMacToExisting) {
             bindingResult.rejectValue(Hosts.HOST_MAC_FIELD, AppConstants.Messages.HOST_MAC_NOT_UNIQUE_MSG)
             return Hosts.ADD_EDIT_HOST_VIEW
@@ -90,6 +87,6 @@ class HostController(
     }
 
     companion object {
-        private const val DEFAULT_CURRENT_PAGE = 0
+        private const val DEFAULT_CURRENT_PAGE = 1
     }
 }

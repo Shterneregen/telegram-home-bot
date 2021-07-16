@@ -1,60 +1,63 @@
-package random.telegramhomebot.services;
+package random.telegramhomebot.services
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import random.telegramhomebot.config.ProfileService;
-import random.telegramhomebot.model.Host;
-import random.telegramhomebot.telegram.Bot;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static random.telegramhomebot.utils.NetUtils.comparingByIp;
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+import lombok.RequiredArgsConstructor
+import lombok.extern.slf4j.Slf4j
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Service
+import random.telegramhomebot.config.ProfileService
+import random.telegramhomebot.model.Host
+import random.telegramhomebot.telegram.Bot
+import random.telegramhomebot.utils.NetUtils
+import java.util.stream.Collectors
 
 @Slf4j
 @RequiredArgsConstructor
 @Profile(ProfileService.NETWORK_MONITOR)
 @Service
-public class DefaultHostExplorerService implements HostExplorerService {
+class DefaultHostExplorerService(
+    private val commandRunnerService: CommandRunnerService,
+    private val bot: Bot,
+    private val objectMapper: ObjectMapper,
+    private val hostService: HostService
+) : HostExplorerService {
 
-    private final CommandRunnerService commandRunnerService;
-    private final Bot bot;
-    private final ObjectMapper objectMapper;
-    private final HostService hostService;
+    @Value("\${state.change.command}")
+    private lateinit var stateChangeCommand: String
 
-    @Value("${state.change.command}")
-    private String stateChangeCommand;
-
-    @Override
-    public List<Host> getCurrentHosts() {
-        List<String> hostsJson = commandRunnerService.runCommand(stateChangeCommand);
-        List<Host> currentHosts = null;
+    override fun getCurrentHosts(): List<Host> {
+        val hostsJson = commandRunnerService.runCommand(stateChangeCommand)
+        var currentHosts: List<Host>? = null
         try {
-            currentHosts = objectMapper.readValue(hostsJson.get(0), new TypeReference<>() {
-            });
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage(), e);
-            bot.sendMessage("Unable to determine the state of the hosts");
+            currentHosts = objectMapper.readValue(hostsJson[0], object : TypeReference<List<Host>>() {})
+        } catch (e: JsonProcessingException) {
+            log.error(e.message, e)
+            bot.sendMessage("Unable to determine the state of the hosts")
         }
-        return currentHosts != null && currentHosts.size() > 0
-                ? currentHosts.stream().filter(host -> host.getMac() != null).peek(this::fillHostStoredInfo)
-                .sorted(comparingByIp()).collect(Collectors.toList())
-                : Collections.emptyList();
+        return when {
+            (currentHosts != null && currentHosts.isNotEmpty()) -> currentHosts.stream()
+                .filter { host: Host -> host.mac != null }
+                .peek { currentHost: Host -> fillHostStoredInfo(currentHost) }
+                .sorted(NetUtils.comparingByIp()).collect(Collectors.toList())
+            else -> emptyList()
+        }
     }
 
-    private void fillHostStoredInfo(Host currentHost) {
-        Optional<Host> storedHost = hostService.getHostByMac(currentHost.getMac());
-        if (storedHost.isPresent()) {
-            currentHost.setId(storedHost.get().getId());
-            currentHost.setDeviceName(storedHost.get().getDeviceName());
+    private fun fillHostStoredInfo(currentHost: Host) {
+        val storedHost = hostService.getHostByMac(currentHost.mac)
+        if (storedHost != null) {
+            currentHost.id = storedHost.id
+            currentHost.deviceName = storedHost.deviceName
         }
+    }
+
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 }

@@ -39,7 +39,7 @@ class Host(
     var deviceName: String? = null,
 
     @field:JsonManagedReference
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "host")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "host", cascade = [CascadeType.REMOVE])
     var timeLogs: List<HostTimeLog>? = null,
 
     var notes: String? = null

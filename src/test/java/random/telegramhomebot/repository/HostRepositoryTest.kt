@@ -1,65 +1,62 @@
-package random.telegramhomebot.repository;
+package random.telegramhomebot.repository
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import random.telegramhomebot.model.Host;
-import random.telegramhomebot.model.HostState;
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.test.context.junit.jupiter.SpringExtension
+import random.telegramhomebot.model.Host
+import random.telegramhomebot.model.HostState
+import javax.annotation.Resource
 
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-@ExtendWith(SpringExtension.class)
+@ExtendWith(SpringExtension::class)
 @DataJpaTest
-class HostRepositoryTest {
-
-    private static final String MAC = "00:00:00:00:00:00";
+internal class HostRepositoryTest {
 
     @Resource
-    private HostRepository repository;
-    private Host host;
+    private val repository: HostRepository? = null
+    private lateinit var host: Host
 
     @BeforeEach
-    void setUp() {
-        host = getMockHost();
+    fun setUp() {
+        host = getMockHost()
     }
 
     @AfterEach
-    void tearDown() {
-        repository.deleteAll();
-        host = null;
+    fun tearDown() {
+        repository!!.deleteAll()
     }
 
     @Test
-    public void shouldSaveHost() {
-        repository.save(host);
-        Optional<Host> fetchedHost = repository.findHostByMac(host.getMac());
-        assertEquals(MAC, fetchedHost.get().getMac());
+    fun shouldSaveHost() {
+        repository!!.save(host)
+        val fetchedHost = repository.findHostByMac(host.mac)
+        Assertions.assertEquals(MAC, fetchedHost?.mac)
     }
 
     @Test
-    public void shouldReturnHostFromAll() {
-        repository.save(host);
-        List<Host> hosts = repository.findAll();
-        assertEquals(MAC, hosts.get(0).getMac());
+    fun shouldReturnHostFromAll() {
+        repository!!.save(host)
+        val hosts = repository.findAll()
+        Assertions.assertEquals(MAC, hosts[0]?.mac)
     }
 
     @Test
-    public void shouldDeleteHost() {
-        repository.save(host);
-        repository.deleteById(host.getId());
-        Optional<Host> optional = repository.findHostByMac(MAC);
-        assertEquals(Optional.empty(), optional);
+    fun shouldDeleteHost() {
+        repository!!.save(host)
+        repository.deleteById(host.id)
+        val optional = repository.findHostByMac(MAC)
+        Assertions.assertEquals(null, optional)
     }
 
-    private Host getMockHost() {
-        return new Host(null, "127.0.0.1", "interface", MAC, HostState.REACHABLE,
-                "test-device", null, "notes");
+    private fun getMockHost() = Host(
+        null, "127.0.0.1", "interface", MAC, HostState.REACHABLE,
+        "test-device", null, "notes"
+    )
+
+    companion object {
+        private const val MAC = "00:00:00:00:00:00"
     }
 }

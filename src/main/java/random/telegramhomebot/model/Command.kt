@@ -1,5 +1,5 @@
-package random.telegramhomebot.model;
+package random.telegramhomebot.model
 
-public interface Command {
-    String getButtonName();
+interface Command {
+    fun getButtonName(): String
 }

@@ -1,51 +1,31 @@
-package random.telegramhomebot.services;
+package random.telegramhomebot.services
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import random.telegramhomebot.model.FeatureSwitcher;
-import random.telegramhomebot.repository.FeatureSwitcherRepository;
+import org.springframework.stereotype.Service
+import random.telegramhomebot.model.FeatureSwitcher
+import random.telegramhomebot.repository.FeatureSwitcherRepository
 
-import java.util.Optional;
-
-@RequiredArgsConstructor
 @Service
-public class FeatureSwitcherService {
+class FeatureSwitcherService(private val repository: FeatureSwitcherRepository) {
 
-    public enum Features {NEW_HOSTS_NOTIFICATION, REACHABLE_HOSTS_NOTIFICATION, NOT_REACHABLE_HOSTS_NOTIFICATION}
-
-    private final FeatureSwitcherRepository repository;
-
-    public Optional<FeatureSwitcher> getFeatureSwitcherByName(String featureName) {
-        return repository.findFeatureSwitcherByName(featureName);
+    enum class Features(val command: String, val messageCode: String) {
+        NEW_HOSTS_NOTIFICATION("/new_hosts_notification", "btn.newHostsNotifications"),
+        REACHABLE_HOSTS_NOTIFICATION("/reachable_hosts_notification", "btn.reachableHostsNotifications"),
+        NOT_REACHABLE_HOSTS_NOTIFICATION("/not_reachable_hosts_notification", "btn.notReachableNotifications")
     }
 
-    public void saveFeatureSwitcher(FeatureSwitcher featureSwitcher) {
-        repository.save(featureSwitcher);
-    }
-
-    public void switchFeature(String featureName) {
-        Optional<FeatureSwitcher> featureSwitcherOptional = getFeatureSwitcherByName(featureName);
-        if (featureSwitcherOptional.isPresent()) {
-            FeatureSwitcher featureSwitcher = featureSwitcherOptional.get();
-            featureSwitcher.setEnabled(!featureSwitcher.getEnabled());
-            saveFeatureSwitcher(featureSwitcher);
+    fun switchFeature(featureName: String) {
+        val featureSwitcherOptional = getFeatureSwitcherByName(featureName)
+        featureSwitcherOptional?.let {
+            it.enabled = !it.enabled
+            saveFeatureSwitcher(it)
         }
     }
 
-    public boolean newHostsNotificationsEnabled() {
-        return isFeatureEnabled(Features.NEW_HOSTS_NOTIFICATION);
-    }
+    fun newHostsNotificationsEnabled() = isFeatureEnabled(Features.NEW_HOSTS_NOTIFICATION)
+    fun reachableHostsNotificationsEnabled() = isFeatureEnabled(Features.REACHABLE_HOSTS_NOTIFICATION)
+    fun notReachableHostsNotificationsEnabled() = isFeatureEnabled(Features.NOT_REACHABLE_HOSTS_NOTIFICATION)
 
-    public boolean reachableHostsNotificationsEnabled() {
-        return isFeatureEnabled(Features.REACHABLE_HOSTS_NOTIFICATION);
-    }
-
-    public boolean notReachableHostsNotificationsEnabled() {
-        return isFeatureEnabled(Features.NOT_REACHABLE_HOSTS_NOTIFICATION);
-    }
-
-    private boolean isFeatureEnabled(Features featureName) {
-        Optional<FeatureSwitcher> feature = getFeatureSwitcherByName(featureName.name());
-        return feature.isPresent() && feature.get().getEnabled();
-    }
+    private fun saveFeatureSwitcher(featureSwitcher: FeatureSwitcher) = repository.save(featureSwitcher)
+    private fun getFeatureSwitcherByName(featureName: String) = repository.findFeatureSwitcherByName(featureName)
+    private fun isFeatureEnabled(featureName: Features) = getFeatureSwitcherByName(featureName.name)?.enabled ?: false
 }

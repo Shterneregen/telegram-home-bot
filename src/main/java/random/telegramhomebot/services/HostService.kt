@@ -1,162 +1,141 @@
-package random.telegramhomebot.services;
+package random.telegramhomebot.services
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import random.telegramhomebot.model.Host;
-import random.telegramhomebot.model.HostState;
-import random.telegramhomebot.model.HostTimeLog;
-import random.telegramhomebot.repository.HostRepository;
-import random.telegramhomebot.repository.HostTimeLogRepository;
-
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER;
-import static random.telegramhomebot.utils.NetUtils.comparingByIp;
+import lombok.RequiredArgsConstructor
+import lombok.extern.slf4j.Slf4j
+import org.apache.commons.collections4.CollectionUtils
+import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.stereotype.Service
+import random.telegramhomebot.AppConstants
+import random.telegramhomebot.model.Host
+import random.telegramhomebot.model.HostState
+import random.telegramhomebot.model.HostTimeLog
+import random.telegramhomebot.repository.HostRepository
+import random.telegramhomebot.repository.HostTimeLogRepository
+import random.telegramhomebot.utils.NetUtils
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.util.*
+import java.util.stream.Collectors
+import java.util.stream.Stream
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class HostService {
+class HostService(
+    private val hostRepository: HostRepository,
+    private val hostTimeLogRepository: HostTimeLogRepository,
+    private val commandRunnerService: CommandRunnerService
+) {
 
-    public static final SimpleDateFormat TIME_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-    private final HostRepository hostRepository;
-    private final HostTimeLogRepository hostTimeLogRepository;
-    private final CommandRunnerService commandRunnerService;
+    fun getAllHosts(): List<Host?> = hostRepository.findAll()
+    fun getAllHosts(pageable: PageRequest): Page<Host?> = hostRepository.findAll(pageable)
 
-    public List<Host> getAllHosts() {
-        return hostRepository.findAll();
+    fun saveAllHosts(hosts: List<Host>) {
+        hostRepository.saveAll<Host>(hosts)
+        //		hostRepository.flush();
     }
 
-    public Page<Host> getAllHosts(PageRequest pageable) {
-        return hostRepository.findAll(pageable);
-    }
+    fun getHostByMac(mac: String?): Host? = hostRepository.findHostByMac(mac)
+    fun getHostById(id: UUID): Optional<Host?> = hostRepository.findById(id)
+    fun deleteHostById(id: UUID) = hostRepository.deleteById(id)
+    fun saveHost(host: Host): Host = hostRepository.save(host)
+    fun getReachableHosts(): List<Host?>? = hostRepository.findReachableHosts()
+    fun count() = hostRepository.count()
 
-    public void saveAllHosts(List<Host> hosts) {
-        hostRepository.saveAll(hosts);
-//		hostRepository.flush();
-    }
-
-    public Optional<Host> getHostByMac(String mac) {
-        return hostRepository.findHostByMac(mac);
-    }
-
-    public Optional<Host> getHostById(UUID id) {
-        return hostRepository.findById(id);
-    }
-
-    public void deleteHostById(UUID id) {
-        hostRepository.deleteById(id);
-    }
-
-    public void saveHost(Host host) {
-        hostRepository.save(host);
-    }
-
-    public List<Host> getReachableHosts() {
-        return hostRepository.findReachableHosts();
-    }
-
-    public long count() {
-        return hostRepository.count();
-    }
-
-    public List<Host> getNewHosts(List<Host> storedHosts, List<Host> currentHosts) {
-        String newHostNameStub = String.format("[NEW DEVICE] %s", LocalDateTime.now().format(DATE_TIME_FORMATTER));
+    fun getNewHosts(storedHosts: List<Host?>, currentHosts: List<Host>): List<Host> {
+        val newHostNameStub =
+            String.format("[NEW DEVICE] %s", LocalDateTime.now().format(AppConstants.DATE_TIME_FORMATTER))
         return currentHosts.stream()
-                .filter(currentHost -> storedHosts.stream().noneMatch(currentHost::equals))
-                .peek(host -> host.setDeviceName(newHostNameStub))
-                .sorted(comparingByIp())
-                .collect(Collectors.toList());
+            .filter { currentHost: Host ->
+                storedHosts.stream().noneMatch { other: Host? -> currentHost.equals(other) }
+            }
+            .peek { host: Host -> host.deviceName = newHostNameStub }
+            .sorted(NetUtils.comparingByIp())
+            .collect(Collectors.toList())
     }
 
-    public List<Host> getHostsThatBecameReachable(List<Host> storedHosts, List<Host> currentHosts) {
+    fun getHostsThatBecameReachable(storedHosts: List<Host>, currentHosts: List<Host>): List<Host> {
         return currentHosts.stream()
-                .filter(currentHost -> isReachable(storedHosts, currentHost))
-                .distinct()
-                .sorted(comparingByIp())
-                .collect(Collectors.toList());
+            .filter { currentHost: Host -> isReachable(storedHosts, currentHost) }
+            .distinct()
+            .sorted(NetUtils.comparingByIp())
+            .collect(Collectors.toList())
     }
 
-    public List<Host> getHostsThatBecameNotReachable(List<Host> storedHosts, List<Host> currentHosts) {
-        Stream<Host> hostsFailedStream1 = storedHosts.stream()
-                .filter(storedHost -> reachableBecameNotFound(currentHosts, storedHost))
-                .peek(host -> host.setState(HostState.FAILED));
-        Stream<Host> hostsFailedStream2 = currentHosts.stream()
-                .filter(currentHost -> reachableBecameNotReachable(storedHosts, currentHost));
+    fun getHostsThatBecameNotReachable(storedHosts: List<Host>, currentHosts: List<Host>): List<Host> {
+        val hostsFailedStream1 = storedHosts.stream()
+            .filter { storedHost: Host -> reachableBecameNotFound(currentHosts, storedHost) }
+            .peek { host: Host -> host.state = HostState.FAILED }
+        val hostsFailedStream2 = currentHosts.stream()
+            .filter { currentHost: Host -> reachableBecameNotReachable(storedHosts, currentHost) }
         return Stream.concat(hostsFailedStream1, hostsFailedStream2)
-                .sorted(comparingByIp())
-                .collect(Collectors.toList());
+            .sorted(NetUtils.comparingByIp())
+            .collect(Collectors.toList())
     }
 
-    public void saveTimeLogForHosts(List<Host> hosts) {
+    fun saveTimeLogForHosts(hosts: List<Host?>) {
         if (CollectionUtils.isEmpty(hosts)) {
-            return;
+            return
         }
-        hostTimeLogRepository.saveAll(hosts.stream()
-                .map(h -> new HostTimeLog(h, h.getState()))
-                .collect(Collectors.toList()));
+        val timeLogs = hosts.stream()
+            .map { h: Host? -> HostTimeLog(h!!, h.state!!) }
+            .collect(Collectors.toList())
+        hostTimeLogRepository.saveAll(timeLogs)
     }
 
-    public void pingStoredHosts() {
-        log.debug("Ping stored hosts...");
-        List<Host> storedHosts = getAllHosts();
-        log.debug("Stored hosts: \n{}", storedHosts);
-        commandRunnerService.pingHosts(storedHosts);
+    fun pingStoredHosts() {
+        log.debug("Ping stored hosts...")
+        val storedHosts = getAllHosts()
+        log.debug("Stored hosts: \n{}", storedHosts)
+        commandRunnerService.pingHosts(storedHosts)
     }
 
-    private List<HostTimeLog> getLastHostTimeLogs(int logCount) {
-        Pageable page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate");
+    private fun getLastHostTimeLogs(logCount: Int): List<HostTimeLog> {
+        val page: Pageable = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate")
         return hostTimeLogRepository.findAll(page).stream()
-                .sorted(Comparator.comparing(HostTimeLog::getCreatedDate))
-                .collect(Collectors.toList());
+            .sorted(Comparator.comparing(HostTimeLog::createdDate))
+            .collect(Collectors.toList())
     }
 
-    public List<HostTimeLog> getLastHostTimeLogsForHost(Host host, int logCount) {
-        Pageable page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate");
+    fun getLastHostTimeLogsForHost(host: Host?, logCount: Int): List<HostTimeLog> {
+        val page: Pageable = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate")
         return hostTimeLogRepository.findHostTimeLogByHost(page, host).stream()
-                .sorted(Comparator.comparing(HostTimeLog::getCreatedDate))
-                .collect(Collectors.toList());
+            .sorted(Comparator.comparing(HostTimeLog::createdDate))
+            .collect(Collectors.toList())
     }
 
-    public String getLastHostTimeLogsAsString(int logCount) {
+    fun getLastHostTimeLogsAsString(logCount: Int): String {
         return getLastHostTimeLogs(logCount).stream()
-                .map(this::convertTimeLog)
-                .collect(Collectors.joining("\n"));
+            .map { log: HostTimeLog -> convertTimeLog(log) }
+            .collect(Collectors.joining("\n"))
     }
 
-    private String convertTimeLog(HostTimeLog log) {
-        return TIME_DATE_FORMAT.format(log.getCreatedDate())
-                + "\t" + log.getState() + "\t\t" + log.getHost().getDeviceName();
-    }
+    private fun convertTimeLog(log: HostTimeLog) =
+        "${TIME_DATE_FORMAT.format(log.createdDate)} \t ${log.state} \t\t ${log.host.deviceName}"
 
-    private boolean isReachable(List<Host> storedHosts, Host currentHost) {
-        return !HostState.FAILED.equals(currentHost.getState())
-                && storedHosts.stream()
-                .anyMatch(storedHost -> storedHost.equals(currentHost)
-                        && HostState.FAILED.equals(storedHost.getState()));
-    }
+    private fun isReachable(storedHosts: List<Host>, currentHost: Host) =
+        HostState.FAILED != currentHost.state && storedHosts.stream()
+            .anyMatch { storedHost: Host -> storedHost.equals(currentHost) && HostState.FAILED == storedHost.state }
 
-    private boolean reachableBecameNotFound(List<Host> currentHosts, Host storedHost) {
-        return !HostState.FAILED.equals(storedHost.getState()) && currentHosts.stream().noneMatch(storedHost::equals);
-    }
 
-    private boolean reachableBecameNotReachable(List<Host> storedHosts, Host currentHost) {
-        return HostState.FAILED.equals(currentHost.getState())
-                && storedHosts.stream()
-                .anyMatch(storedHost -> storedHost.equals(currentHost)
-                        && !HostState.FAILED.equals(storedHost.getState()));
+    private fun reachableBecameNotFound(currentHosts: List<Host>, storedHost: Host) =
+        HostState.FAILED != storedHost.state && currentHosts.stream()
+            .noneMatch { other: Host? -> storedHost.equals(other) }
+
+
+    private fun reachableBecameNotReachable(storedHosts: List<Host>, currentHost: Host) =
+        HostState.FAILED == currentHost.state && storedHosts.stream()
+            .anyMatch { storedHost: Host -> storedHost.equals(currentHost) && HostState.FAILED != storedHost.state }
+
+
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
+        private val TIME_DATE_FORMAT = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
     }
 }

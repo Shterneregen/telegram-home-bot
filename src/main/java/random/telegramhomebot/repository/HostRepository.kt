@@ -1,16 +1,13 @@
-package random.telegramhomebot.repository;
+package random.telegramhomebot.repository
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import random.telegramhomebot.model.Host;
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import random.telegramhomebot.model.Host
+import java.util.*
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+interface HostRepository : JpaRepository<Host?, UUID?> {
+    fun findHostByMac(mac: String?): Host?
 
-public interface HostRepository extends JpaRepository<Host, UUID> {
-	Optional<Host> findHostByMac(String mac);
-
-	@Query(value = "SELECT h FROM Host h WHERE h.state <> random.telegramhomebot.model.HostState.FAILED")
-	List<Host> findReachableHosts();
+    @Query(value = "SELECT h FROM Host h WHERE h.state <> random.telegramhomebot.model.HostState.FAILED")
+    fun findReachableHosts(): List<Host?>?
 }

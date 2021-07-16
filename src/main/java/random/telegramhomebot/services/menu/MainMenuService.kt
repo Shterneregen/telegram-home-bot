@@ -4,7 +4,7 @@ import org.apache.commons.lang3.StringUtils
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
-import random.telegramhomebot.AppConstants
+import random.telegramhomebot.AppConstants.BotCommands.*
 import random.telegramhomebot.services.CommandService
 import random.telegramhomebot.services.HostService
 import random.telegramhomebot.services.MessageFormatService
@@ -21,15 +21,15 @@ class MainMenuService(
 
     fun getMainMenuMap(): Map<String, Menu> {
         return mapOf(
-            AppConstants.BotCommands.REACHABLE_HOSTS_COMMAND to Menu(messageService.getMessage("btn.hosts")) {
-                val allHosts = messageFormatService.getHostsState(hostService.reachableHosts)
+            REACHABLE_HOSTS_COMMAND to Menu(messageService.getMessage("btn.hosts")) {
+                val allHosts = messageFormatService.getHostsState(hostService.getReachableHosts())
                 if (StringUtils.isNotBlank(allHosts)) allHosts else "No hosts"
             },
-            AppConstants.BotCommands.SHOW_ALL_COMMANDS to Menu(messageService.getMessage("btn.commands")) {
+            SHOW_ALL_COMMANDS to Menu(messageService.getMessage("btn.commands")) {
                 val allEnabledCommands = commandService.allEnabledCommandsAsString
                 if (StringUtils.isNotBlank(allEnabledCommands)) allEnabledCommands else "No commands"
             },
-            AppConstants.BotCommands.LAST_ACTIVITY to Menu(messageService.getMessage("btn.activity")) {
+            LAST_ACTIVITY to Menu(messageService.getMessage("btn.activity")) {
                 val lastActivityStr = hostService.getLastHostTimeLogsAsString(20)
                 if (StringUtils.isNotBlank(lastActivityStr)) lastActivityStr else "No activity"
             }

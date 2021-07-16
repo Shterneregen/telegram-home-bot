@@ -1,69 +1,70 @@
-package random.telegramhomebot.services.csv;
+package random.telegramhomebot.services.csv
 
-import com.opencsv.exceptions.CsvFieldAssignmentException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import random.telegramhomebot.model.Host;
-import random.telegramhomebot.model.HostState;
-import random.telegramhomebot.services.HostService;
-import random.telegramhomebot.utils.NetUtils;
+import com.opencsv.exceptions.CsvFieldAssignmentException
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
+import random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER
+import random.telegramhomebot.model.Host
+import random.telegramhomebot.model.HostState
+import random.telegramhomebot.services.HostService
+import random.telegramhomebot.utils.NetUtils
+import java.io.IOException
+import java.time.LocalDateTime.now
+import java.util.stream.Collectors
+import javax.servlet.http.HttpServletResponse
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER;
-
-@RequiredArgsConstructor
-@Slf4j
 @Service
-public class HostsCsvService extends CsvService<HostCsv> {
+class HostsCsvService(
+    private val hostService: HostService,
+    private val hostCsvConverter: HostCsvConverter
+) : CsvService<HostCsv>() {
 
-    private static final String CSV_FILENAME_PATTERN = "hosts_%s.csv";
-
-    private final HostService hostService;
-    private final HostCsvConverter hostCsvConverter;
-
-    public List<Host> parseHostsFromCsvFile(MultipartFile file) throws IOException {
-        List<HostCsv> csvToBeanHosts = getBeansFromFile(file);
-        List<Host> convertedHosts = hostCsvConverter.convertCsvRowsToHosts(csvToBeanHosts);
-        List<Host> parsedHosts = prepareHostsAfterCsvParsing(convertedHosts);
-        log.debug("In CSV file were found [{}] hosts", parsedHosts.size());
-        return parsedHosts;
+    @Throws(IOException::class)
+    fun parseHostsFromCsvFile(file: MultipartFile?): List<Host> {
+        val csvToBeanHosts = getBeansFromFile(file)
+        val convertedHosts = hostCsvConverter.convertCsvRowsToHosts(csvToBeanHosts)
+        val parsedHosts = prepareHostsAfterCsvParsing(convertedHosts)
+        log.debug("In CSV file were found [{}] hosts", parsedHosts.size)
+        return parsedHosts
     }
 
-    private List<Host> prepareHostsAfterCsvParsing(List<Host> convertedHosts) {
+    @Throws(CsvFieldAssignmentException::class, IOException::class)
+    fun exportHostsToCsvFile(response: HttpServletResponse?) {
+        exportBeansToCsvFile(
+            response, hostCsvConverter.convertHostListToCsvRows(hostService.getAllHosts()),
+            String.format(CSV_FILENAME_PATTERN, now().format(DATE_TIME_FORMATTER))
+        )
+    }
+
+    private fun prepareHostsAfterCsvParsing(convertedHosts: List<Host>): List<Host> {
         return convertedHosts.stream()
-                .filter(this::validateHostFromCsv)
-                .map(this::prepareHostAfterCsvParsing)
-                .collect(Collectors.toList());
+            .filter { host -> validateHostFromCsv(host) }
+            .map { hostFromCsv -> prepareHostAfterCsvParsing(hostFromCsv) }
+            .collect(Collectors.toList())
     }
 
-    private boolean validateHostFromCsv(Host host) {
-        return host.getMac() != null
-               && NetUtils.validateMac(host.getMac());
+    private fun validateHostFromCsv(host: Host): Boolean {
+        return host.mac != null && NetUtils.validateMac(host.mac)
     }
 
-    private Host prepareHostAfterCsvParsing(Host hostFromCsv) {
-        String macFromCsv = hostFromCsv.getMac();
-        Optional<Host> storedHostOp = hostService.getHostByMac(macFromCsv);
-        if (storedHostOp.isPresent()) {
-            Host host = storedHostOp.get();
-            host.setDeviceName(hostFromCsv.getDeviceName());
-            host.setNotes(hostFromCsv.getNotes());
-            return host;
+    private fun prepareHostAfterCsvParsing(hostFromCsv: Host): Host {
+        val macFromCsv = hostFromCsv.mac
+        val host = hostService.getHostByMac(macFromCsv)
+        if (host != null) {
+            host.deviceName = hostFromCsv.deviceName
+            host.notes = hostFromCsv.notes
+            return host
         }
-        hostFromCsv.setState(HostState.FAILED);
-        return hostFromCsv;
+        hostFromCsv.state = HostState.FAILED
+        return hostFromCsv
     }
 
-    public void exportHostsToCsvFile(HttpServletResponse response) throws CsvFieldAssignmentException, IOException {
-        exportBeansToCsvFile(response, hostCsvConverter.convertHostListToCsvRows(hostService.getAllHosts()),
-                String.format(CSV_FILENAME_PATTERN, LocalDateTime.now().format(DATE_TIME_FORMATTER)));
+    companion object {
+        private const val CSV_FILENAME_PATTERN = "hosts_%s.csv"
+
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 }

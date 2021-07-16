@@ -43,7 +43,7 @@ public abstract class CsvService<T> {
         write(response.getWriter(), beans);
     }
 
-    public void write(PrintWriter printWriter, List<T> beans)
+    private void write(PrintWriter printWriter, List<T> beans)
             throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
         StatefulBeanToCsv<T> writer = new StatefulBeanToCsvBuilder<T>(printWriter)
                 .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)

@@ -1,17 +1,20 @@
-package random.telegramhomebot.telegram;
+package random.telegramhomebot.telegram
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
-import random.telegramhomebot.config.ProfileService;
+import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
+import random.telegramhomebot.config.ProfileService
 
-@Slf4j
 @Profile(ProfileService.MOCK_BOT)
 @Component
-public class MockBot implements Bot {
+class MockBot : Bot {
+    override fun sendMessage(messageText: String) {
+        log.info(messageText)
+    }
 
-	@Override
-	public void sendMessage(String messageText) {
-		log.info(messageText);
-	}
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
+    }
 }

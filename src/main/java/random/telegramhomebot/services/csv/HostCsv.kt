@@ -1,20 +1,9 @@
-package random.telegramhomebot.services.csv;
+package random.telegramhomebot.services.csv
 
-import com.opencsv.bean.CsvBindByPosition;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.opencsv.bean.CsvBindByPosition
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
-public class HostCsv {
-    @CsvBindByPosition(position = 0)
-    private String mac;
-    @CsvBindByPosition(position = 1)
-    private String deviceName;
-    @CsvBindByPosition(position = 2)
-    private String notes;
-}
+class HostCsv(
+    @CsvBindByPosition(position = 0) var mac: String? = null,
+    @CsvBindByPosition(position = 1) var deviceName: String? = null,
+    @CsvBindByPosition(position = 2) var notes: String? = null
+)

@@ -1,71 +1,69 @@
-package random.telegramhomebot.services;
+package random.telegramhomebot.services
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-import random.telegramhomebot.model.Host;
-import random.telegramhomebot.utils.NetUtils;
+import org.apache.commons.collections4.CollectionUtils
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import random.telegramhomebot.AppConstants
+import random.telegramhomebot.model.Host
+import random.telegramhomebot.model.HostState
+import random.telegramhomebot.utils.NetUtils
+import java.util.function.Consumer
+import java.util.stream.Collectors
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static random.telegramhomebot.AppConstants.Messages.REACHABLE_HOSTS_MSG;
-import static random.telegramhomebot.AppConstants.Messages.UNREACHABLE_HOSTS_MSG;
-import static random.telegramhomebot.model.HostState.FAILED;
-
-@Slf4j
-@RequiredArgsConstructor
 @Service
-public class MessageFormatService {
+class MessageFormatService(private val messageService: MessageService) {
 
-    private static final String HOST_FORMAT = "\t\t\t\t%1$-15s %2$s\n";
-
-    private final MessageService messageService;
-
-    public String formHostsListTable(Map<String, List<Host>> hostsMap) {
-        return hostsMap.entrySet().stream()
-                .map(entry -> formHostsListTable(entry.getKey(), entry.getValue()))
-                .filter(string -> !string.isEmpty())
-                .collect(Collectors.joining("\n"));
+    fun formHostsListTable(hostsMap: Map<String?, List<Host?>>): String {
+        return hostsMap.entries.stream()
+            .map { (key, value) -> formHostsListTable(key, value) }
+            .filter { string -> string.isNotEmpty() }
+            .collect(Collectors.joining("\n"))
     }
 
-    public String formHostsListTable(String title, List<Host> hosts) {
-        if (isEmpty(hosts)) {
-            return "";
+    fun formHostsListTable(title: String?, hosts: List<Host?>): String {
+        if (CollectionUtils.isEmpty(hosts)) {
+            return ""
         }
-
-        StringBuilder outputTable = new StringBuilder(title).append("\n");
-        hosts.forEach(host -> outputTable.append(String.format(HOST_FORMAT, host.getIp(), host.getDeviceName())));
-        log.debug("{}:\n{}", title, outputTable);
-        return outputTable.toString();
+        val outputTable = StringBuilder(title).append("\n")
+        hosts.forEach(Consumer { host: Host? ->
+            outputTable.append(String.format(HOST_FORMAT, host!!.ip, host.deviceName))
+        })
+        log.debug("{}:\n{}", title, outputTable)
+        return outputTable.toString()
     }
 
-    public String getHostsState(List<Host> hosts) {
-        return isEmpty(hosts) ? StringUtils.EMPTY : formHostsListTable(getHostsMap(hosts));
+    fun getHostsState(hosts: List<Host?>): String {
+        return if (CollectionUtils.isEmpty(hosts)) StringUtils.EMPTY else formHostsListTable(getHostsMap(hosts))
     }
 
-    private Map<String, List<Host>> getHostsMap(List<Host> hosts) {
-        Map<String, List<Host>> hostsMessagesMap = new LinkedHashMap<>();
-        hostsMessagesMap.put(messageService.getMessage(REACHABLE_HOSTS_MSG), getReachableHosts(hosts));
-        hostsMessagesMap.put(messageService.getMessage(UNREACHABLE_HOSTS_MSG), getNotReachableHosts(hosts));
-        return hostsMessagesMap;
+    private fun getHostsMap(hosts: List<Host?>): Map<String?, List<Host?>> {
+        val hostsMessagesMap: MutableMap<String?, List<Host?>> = LinkedHashMap()
+        hostsMessagesMap[messageService.getMessage(AppConstants.Messages.REACHABLE_HOSTS_MSG)] =
+            getReachableHosts(hosts)
+        hostsMessagesMap[messageService.getMessage(AppConstants.Messages.UNREACHABLE_HOSTS_MSG)] =
+            getNotReachableHosts(hosts)
+        return hostsMessagesMap
     }
 
-    private List<Host> getNotReachableHosts(List<Host> hosts) {
+    private fun getNotReachableHosts(hosts: List<Host?>): List<Host?> {
         return hosts.stream()
-                .filter(host -> host.getState() == null || FAILED.equals(host.getState()))
-                .sorted(NetUtils.comparingByIp())
-                .collect(Collectors.toList());
+            .filter { host -> host!!.state == null || HostState.FAILED == host.state }
+            .sorted(NetUtils.comparingByIp())
+            .collect(Collectors.toList())
     }
 
-    private List<Host> getReachableHosts(List<Host> hosts) {
+    private fun getReachableHosts(hosts: List<Host?>): List<Host?> {
         return hosts.stream()
-                .filter(host -> host.getState() != null && !FAILED.equals(host.getState()))
-                .sorted(NetUtils.comparingByIp())
-                .collect(Collectors.toList());
+            .filter { host -> host!!.state != null && HostState.FAILED != host.state }
+            .sorted(NetUtils.comparingByIp())
+            .collect(Collectors.toList())
+    }
+
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
+        private const val HOST_FORMAT = "\t\t\t\t%1$-15s %2\$s\n"
     }
 }

@@ -26,7 +26,7 @@ class MainMenuService(
                 if (StringUtils.isNotBlank(allHosts)) allHosts else "No hosts"
             },
             SHOW_ALL_COMMANDS to Menu(messageService.getMessage("btn.commands")) {
-                val allEnabledCommands = commandService.allEnabledCommandsAsString
+                val allEnabledCommands = commandService.getAllEnabledCommandsAsString()
                 if (StringUtils.isNotBlank(allEnabledCommands)) allEnabledCommands else "No commands"
             },
             LAST_ACTIVITY to Menu(messageService.getMessage("btn.activity")) {

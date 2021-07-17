@@ -1,48 +1,49 @@
-package random.telegramhomebot.scheduling;
+package random.telegramhomebot.scheduling
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.SystemUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import random.telegramhomebot.config.ProfileService;
-import random.telegramhomebot.services.CommandRunnerService;
+import org.apache.commons.lang3.SystemUtils
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Profile
+import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Service
+import random.telegramhomebot.config.ProfileService
+import random.telegramhomebot.services.CommandRunnerService
 
-@Slf4j
-@RequiredArgsConstructor
 @Profile(ProfileService.NETWORK_MONITOR)
 @Service
-public class BroadcastPingScheduler {
+class BroadcastPingScheduler(private val commandRunnerService: CommandRunnerService) {
 
-	private final CommandRunnerService commandRunnerService;
+    @Value("\${broadcast.ping.command.linux}")
+    private lateinit var broadcastPingCommandLinux: String
 
-	@Value("${broadcast.ping.command.linux}")
-	private String broadcastPingCommandLinux;
-	@Value("${broadcast.ping.command.windows}")
-	private String broadcastPingCommandWindows;
+    @Value("\${broadcast.ping.command.windows}")
+    private lateinit var broadcastPingCommandWindows: String
 
-	@Async
-	@Scheduled(fixedRateString = "${broadcast.ping.scheduled.time}")
-	public void broadcastPing() {
-		log.debug("Broadcast ping...");
-		String broadcastPingCommand = getBroadcastPingCommand();
-		if (!broadcastPingCommand.isEmpty()) {
-			commandRunnerService.runCommand(broadcastPingCommand);
-		}
-	}
+    @Async
+    @Scheduled(fixedRateString = "\${broadcast.ping.scheduled.time}")
+    fun broadcastPing() {
+        log.debug("Broadcast ping...")
+        val broadcastPingCommand = getBroadcastPingCommand()
+        if (broadcastPingCommand.isNotEmpty()) {
+            commandRunnerService.runCommand(broadcastPingCommand)
+        }
+    }
 
-	private String getBroadcastPingCommand() {
-		String broadcastPingCommand = "";
-		if (SystemUtils.IS_OS_WINDOWS) {
-			broadcastPingCommand = broadcastPingCommandWindows;
-		} else if (SystemUtils.IS_OS_LINUX) {
-			broadcastPingCommand = broadcastPingCommandLinux;
-		} else {
-			log.warn("Unknown OS. Unable to ping.");
-		}
-		return broadcastPingCommand;
-	}
+    fun getBroadcastPingCommand(): String {
+        return when {
+            SystemUtils.IS_OS_WINDOWS -> broadcastPingCommandWindows
+            SystemUtils.IS_OS_LINUX -> broadcastPingCommandLinux
+            else -> {
+                log.warn("Unknown OS. Unable to ping.")
+                ""
+            }
+        }
+    }
+
+    companion object {
+        @Suppress("JAVA_CLASS_ON_COMPANION")
+        @JvmStatic
+        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
+    }
 }

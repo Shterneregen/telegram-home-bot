@@ -1,41 +1,30 @@
-package random.telegramhomebot.services.csv;
+package random.telegramhomebot.services.csv
 
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
-import random.telegramhomebot.model.Host;
-
-import java.util.Base64;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils
+import org.springframework.stereotype.Component
+import random.telegramhomebot.model.Host
+import java.util.*
+import java.util.stream.Collectors
 
 @Component
-public class HostCsvConverter {
-
-    public HostCsv convertHostToCsv(Host host) {
-        return HostCsv.builder()
-                .mac(host.getMac())
-                .deviceName(host.getDeviceName())
-                .notes(StringUtils.isNotBlank(host.getNotes())
-                        ? Base64.getEncoder().encodeToString(host.getNotes().getBytes())
-                        : StringUtils.EMPTY)
-                .build();
+class HostCsvConverter {
+    fun convertHostToCsv(host: Host): HostCsv {
+        return HostCsv(
+            host.mac, host.deviceName, if (StringUtils.isNotBlank(host.notes)) Base64.getEncoder()
+                .encodeToString(host.notes?.toByteArray()) else StringUtils.EMPTY
+        )
     }
 
-    public List<HostCsv> convertHostListToCsvRows(List<Host> hosts) {
-        return hosts.stream().map(this::convertHostToCsv).collect(Collectors.toList());
-    }
+    fun convertHostListToCsvRows(hosts: List<Host?>): List<HostCsv> =
+        hosts.stream().filter { it != null }.map { convertHostToCsv(it!!) }.collect(Collectors.toList())
 
-    public Host convertScvToHost(HostCsv hostCsv) {
-        return new Host(
-                hostCsv.getMac(),
-                hostCsv.getDeviceName(),
-                StringUtils.isNotBlank(hostCsv.getNotes())
-                        ? new String(Base64.getDecoder().decode(hostCsv.getNotes()))
-                        : StringUtils.EMPTY
-        );
-    }
+    fun convertScvToHost(hostCsv: HostCsv): Host = Host(
+        hostCsv.mac!!, hostCsv.deviceName.toString(),
+        if (StringUtils.isNotBlank(hostCsv.notes)) String(
+            Base64.getDecoder().decode(hostCsv.notes)
+        ) else StringUtils.EMPTY
+    )
 
-    public List<Host> convertCsvRowsToHosts(List<HostCsv> hostCsvList) {
-        return hostCsvList.stream().map(this::convertScvToHost).collect(Collectors.toList());
-    }
+    fun convertCsvRowsToHosts(hostCsvList: List<HostCsv>): List<Host> =
+        hostCsvList.stream().map { hostCsv -> convertScvToHost(hostCsv) }.collect(Collectors.toList())
 }

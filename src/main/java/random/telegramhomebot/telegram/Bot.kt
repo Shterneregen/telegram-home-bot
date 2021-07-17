@@ -1,6 +1,5 @@
-package random.telegramhomebot.telegram;
+package random.telegramhomebot.telegram
 
-public interface Bot {
-
-	void sendMessage(String messageText);
+interface Bot {
+    fun sendMessage(messageText: String)
 }

@@ -57,6 +57,6 @@ class HostTimeLogController(
     }
 
     private fun getDeviceName(): Function<HostTimeLog, String?> =
-        Function { log: HostTimeLog -> if (log.host.deviceName != null) log.host.deviceName else log.host.mac }
+        Function { log -> if (log.host.deviceName != null) log.host.deviceName else log.host.mac }
 
 }

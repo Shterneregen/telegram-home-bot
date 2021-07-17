@@ -31,11 +31,11 @@ class HostService(
     private val commandRunnerService: CommandRunnerService
 ) {
 
-    fun getAllHosts(): List<Host?> = hostRepository.findAll()
+    fun getAllHosts(): List<Host> = hostRepository.findAll()
     fun getAllHosts(pageable: PageRequest): Page<Host?> = hostRepository.findAll(pageable)
 
     fun saveAllHosts(hosts: List<Host>) {
-        hostRepository.saveAll<Host>(hosts)
+        hostRepository.saveAll(hosts)
         //		hostRepository.flush();
     }
 
@@ -43,7 +43,7 @@ class HostService(
     fun getHostById(id: UUID): Optional<Host?> = hostRepository.findById(id)
     fun deleteHostById(id: UUID) = hostRepository.deleteById(id)
     fun saveHost(host: Host): Host = hostRepository.save(host)
-    fun getReachableHosts(): List<Host?>? = hostRepository.findReachableHosts()
+    fun getReachableHosts(): List<Host> = hostRepository.findReachableHosts()
     fun count() = hostRepository.count()
 
     fun getNewHosts(storedHosts: List<Host?>, currentHosts: List<Host>): List<Host> {

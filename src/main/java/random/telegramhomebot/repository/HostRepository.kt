@@ -5,9 +5,9 @@ import org.springframework.data.jpa.repository.Query
 import random.telegramhomebot.model.Host
 import java.util.*
 
-interface HostRepository : JpaRepository<Host?, UUID?> {
+interface HostRepository : JpaRepository<Host, UUID> {
     fun findHostByMac(mac: String?): Host?
 
     @Query(value = "SELECT h FROM Host h WHERE h.state <> random.telegramhomebot.model.HostState.FAILED")
-    fun findReachableHosts(): List<Host?>?
+    fun findReachableHosts(): List<Host>
 }

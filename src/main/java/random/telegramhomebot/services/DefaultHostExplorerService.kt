@@ -3,8 +3,6 @@ package random.telegramhomebot.services
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import lombok.RequiredArgsConstructor
-import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
@@ -15,8 +13,6 @@ import random.telegramhomebot.telegram.Bot
 import random.telegramhomebot.utils.NetUtils
 import java.util.stream.Collectors
 
-@Slf4j
-@RequiredArgsConstructor
 @Profile(ProfileService.NETWORK_MONITOR)
 @Service
 class DefaultHostExplorerService(

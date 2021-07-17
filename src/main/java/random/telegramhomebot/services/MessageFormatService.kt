@@ -2,17 +2,18 @@ package random.telegramhomebot.services
 
 import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import random.telegramhomebot.AppConstants
 import random.telegramhomebot.model.Host
 import random.telegramhomebot.model.HostState
 import random.telegramhomebot.utils.NetUtils
+import random.telegramhomebot.utils.logger
 import java.util.function.Consumer
 import java.util.stream.Collectors
 
 @Service
 class MessageFormatService(private val messageService: MessageService) {
+    val log = logger()
 
     fun formHostsListTable(hostsMap: Map<String?, List<Host?>>): String {
         return hostsMap.entries.stream()
@@ -61,9 +62,6 @@ class MessageFormatService(private val messageService: MessageService) {
     }
 
     companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
         private const val HOST_FORMAT = "\t\t\t\t%1$-15s %2\$s\n"
     }
 }

@@ -1,6 +1,5 @@
 package random.telegramhomebot.controllers
 
-import org.slf4j.LoggerFactory
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -12,6 +11,7 @@ import random.telegramhomebot.model.HostTimeLog
 import random.telegramhomebot.model.TimeLogDto
 import random.telegramhomebot.repository.HostTimeLogRepository
 import random.telegramhomebot.services.TimeLogConverter
+import random.telegramhomebot.utils.logger
 import java.sql.Timestamp.valueOf
 import java.time.LocalDate
 import java.time.LocalTime
@@ -24,11 +24,7 @@ class HostTimeLogController(
     private val hostTimeLogRepository: HostTimeLogRepository,
     private val timeLogConverter: TimeLogConverter
 ) {
-    companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
-    }
+    val log = logger()
 
     @RequestMapping(TIME_LOG_MAPPING)
     fun getTimeLogForPeriod(

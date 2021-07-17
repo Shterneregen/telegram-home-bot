@@ -2,7 +2,6 @@ package random.telegramhomebot.scheduling
 
 import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.lang3.SystemUtils
-import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
@@ -13,6 +12,7 @@ import random.telegramhomebot.model.Host
 import random.telegramhomebot.services.*
 import random.telegramhomebot.telegram.Bot
 import random.telegramhomebot.utils.Utils
+import random.telegramhomebot.utils.logger
 
 @Profile(ProfileService.NETWORK_MONITOR)
 @Service
@@ -24,6 +24,7 @@ class StateChangeScheduler(
     private val hostService: HostService,
     private val featureSwitcherService: FeatureSwitcherService
 ) {
+    val log = logger()
 
     @Async
     @Scheduled(fixedRateString = "\${state.change.scheduled.time}", initialDelay = 20000)
@@ -83,11 +84,5 @@ class StateChangeScheduler(
         if (hostsMessagesMap.isNotEmpty()) {
             bot.sendMessage(messageFormatService.formHostsListTable(hostsMessagesMap))
         }
-    }
-
-    companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 }

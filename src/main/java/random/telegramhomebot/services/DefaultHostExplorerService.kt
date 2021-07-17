@@ -3,7 +3,6 @@ package random.telegramhomebot.services
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
@@ -11,6 +10,7 @@ import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.model.Host
 import random.telegramhomebot.telegram.Bot
 import random.telegramhomebot.utils.NetUtils
+import random.telegramhomebot.utils.logger
 import java.util.stream.Collectors
 
 @Profile(ProfileService.NETWORK_MONITOR)
@@ -21,6 +21,7 @@ class DefaultHostExplorerService(
     private val objectMapper: ObjectMapper,
     private val hostService: HostService
 ) : HostExplorerService {
+    val log = logger()
 
     @Value("\${state.change.command}")
     private lateinit var stateChangeCommand: String
@@ -49,11 +50,5 @@ class DefaultHostExplorerService(
             currentHost.id = storedHost.id
             currentHost.deviceName = storedHost.deviceName
         }
-    }
-
-    companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 }

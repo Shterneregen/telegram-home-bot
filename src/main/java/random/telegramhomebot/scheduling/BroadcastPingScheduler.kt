@@ -1,7 +1,6 @@
 package random.telegramhomebot.scheduling
 
 import org.apache.commons.lang3.SystemUtils
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
@@ -9,10 +8,12 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.services.CommandRunnerService
+import random.telegramhomebot.utils.logger
 
 @Profile(ProfileService.NETWORK_MONITOR)
 @Service
 class BroadcastPingScheduler(private val commandRunnerService: CommandRunnerService) {
+    val log = logger()
 
     @Value("\${broadcast.ping.command.linux}")
     private lateinit var broadcastPingCommandLinux: String
@@ -39,11 +40,5 @@ class BroadcastPingScheduler(private val commandRunnerService: CommandRunnerServ
                 ""
             }
         }
-    }
-
-    companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
     }
 }

@@ -1,7 +1,6 @@
 package random.telegramhomebot.controllers
 
 import org.apache.commons.collections4.CollectionUtils
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,6 +13,7 @@ import random.telegramhomebot.AppConstants.Hosts.REDIRECT_HOSTS
 import random.telegramhomebot.AppConstants.HostsCsv.*
 import random.telegramhomebot.services.HostService
 import random.telegramhomebot.services.csv.HostsCsvService
+import random.telegramhomebot.utils.logger
 import javax.servlet.http.HttpServletResponse
 
 @Controller
@@ -22,11 +22,7 @@ class HostCsvController(
     private val hostService: HostService,
     private val hostsCsvService: HostsCsvService
 ) {
-    companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
-    }
+    val log = logger()
 
     @GetMapping(HOSTS_CSV_EXPORT_MAPPING)
     @Throws(Exception::class)

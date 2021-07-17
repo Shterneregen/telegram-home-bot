@@ -1,11 +1,11 @@
 package random.telegramhomebot.bootstrap
 
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 import random.telegramhomebot.model.TelegramCommand
 import random.telegramhomebot.repository.TelegramCommandRepository
+import random.telegramhomebot.utils.logger
 import java.util.stream.Collectors
 
 @Component
@@ -14,12 +14,7 @@ class CommandsLoader(
     @Qualifier("telegramCommands")
     private val telegramCommands: Map<String, String>
 ) : CommandLineRunner {
-
-    companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
-    }
+    val log = logger()
 
     override fun run(vararg args: String) {
         loadSampleCommands()

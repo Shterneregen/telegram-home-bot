@@ -3,7 +3,6 @@ package random.telegramhomebot.services
 import lombok.RequiredArgsConstructor
 import lombok.extern.slf4j.Slf4j
 import org.apache.commons.collections4.CollectionUtils
-import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -16,6 +15,7 @@ import random.telegramhomebot.model.HostTimeLog
 import random.telegramhomebot.repository.HostRepository
 import random.telegramhomebot.repository.HostTimeLogRepository
 import random.telegramhomebot.utils.NetUtils
+import random.telegramhomebot.utils.logger
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
@@ -30,6 +30,7 @@ class HostService(
     private val hostTimeLogRepository: HostTimeLogRepository,
     private val commandRunnerService: CommandRunnerService
 ) {
+    val log = logger()
 
     fun getAllHosts(): List<Host> = hostRepository.findAll()
     fun getAllHosts(pageable: PageRequest): Page<Host?> = hostRepository.findAll(pageable)
@@ -133,9 +134,6 @@ class HostService(
 
 
     companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
         private val TIME_DATE_FORMAT = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
     }
 }

@@ -1,7 +1,6 @@
 package random.telegramhomebot.services
 
 import org.apache.commons.collections4.CollectionUtils
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
@@ -13,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import random.telegramhomebot.model.Command
 import random.telegramhomebot.model.TelegramCommand
 import random.telegramhomebot.repository.TelegramCommandRepository
+import random.telegramhomebot.utils.logger
 import java.util.function.Consumer
 import java.util.stream.Collectors
 
@@ -21,6 +21,8 @@ class CommandService(
     private val telegramCommandRepository: TelegramCommandRepository,
     private val commandRunnerService: CommandRunnerService
 ) : HealthIndicator {
+    val log = logger()
+
     @Value("\${buttons.in.row}")
     private val buttonsInRow = 0
 
@@ -78,10 +80,4 @@ class CommandService(
 
     override fun health(): Health =
         if (telegramCommandRepository.findAll().size > 0) Health.up().build() else Health.down().build()
-
-    companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
-    }
 }

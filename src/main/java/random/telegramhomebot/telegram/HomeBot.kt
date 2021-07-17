@@ -1,7 +1,6 @@
 package random.telegramhomebot.telegram
 
 import org.apache.logging.log4j.util.Strings
-import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
@@ -15,6 +14,7 @@ import random.telegramhomebot.services.CommandService
 import random.telegramhomebot.services.MessageService
 import random.telegramhomebot.services.UserValidatorService
 import random.telegramhomebot.services.menu.CallbackMenuService
+import random.telegramhomebot.utils.logger
 
 @Profile("!${ProfileService.MOCK_BOT}")
 @Component
@@ -25,6 +25,7 @@ class HomeBot(
     private val callbackMenuService: CallbackMenuService,
     private val botProperties: BotProperties
 ) : TelegramLongPollingBot(), Bot {
+    val log = logger()
 
     override fun onUpdateReceived(update: Update) {
         log.debug(update.toString())
@@ -123,10 +124,4 @@ class HomeBot(
 
     override fun getBotUsername() = botProperties.botName
     override fun getBotToken() = botProperties.token
-
-    companion object {
-        @Suppress("JAVA_CLASS_ON_COMPANION")
-        @JvmStatic
-        private val log = LoggerFactory.getLogger(javaClass.enclosingClass)
-    }
 }

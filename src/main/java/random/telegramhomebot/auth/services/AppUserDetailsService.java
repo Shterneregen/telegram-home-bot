@@ -1,10 +1,12 @@
-package random.telegramhomebot.auth;
+package random.telegramhomebot.auth.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import random.telegramhomebot.auth.AuthErrorCodes;
+import random.telegramhomebot.auth.UserPrincipal;
 import random.telegramhomebot.auth.entities.AuthGroup;
 import random.telegramhomebot.auth.entities.User;
 import random.telegramhomebot.auth.repositories.AuthGroupRepository;

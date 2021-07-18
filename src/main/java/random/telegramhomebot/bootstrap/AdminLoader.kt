@@ -3,6 +3,8 @@ package random.telegramhomebot.bootstrap
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
+import random.telegramhomebot.auth.AuthGroups.ADMIN
+import random.telegramhomebot.auth.AuthGroups.USER
 import random.telegramhomebot.auth.entities.AuthGroup
 import random.telegramhomebot.auth.entities.User
 import random.telegramhomebot.auth.repositories.AuthGroupRepository
@@ -32,8 +34,8 @@ class AdminLoader(
             userRepository.save(User(adminLogin, adminPassword))
             authGroupRepository.saveAll(
                 listOf(
-                    AuthGroup(adminLogin, "USER"),
-                    AuthGroup(adminLogin, "ADMIN")
+                    AuthGroup(adminLogin, USER.authGroup),
+                    AuthGroup(adminLogin, ADMIN.authGroup)
                 )
             )
         }

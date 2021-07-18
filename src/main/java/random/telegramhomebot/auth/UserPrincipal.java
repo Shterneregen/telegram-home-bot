@@ -30,6 +30,10 @@ public class UserPrincipal implements UserDetails {
 		return grantedAuthorities;
 	}
 
+	public long getId() {
+		return user.getId();
+	}
+
 	@Override
 	public String getPassword() {
 		return user.getPassword();

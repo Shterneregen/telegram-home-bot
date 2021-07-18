@@ -46,7 +46,8 @@ dependencies {
             "org.telegram:telegrambots-spring-boot-starter:$telegrambotsSpringBootStarterVersion",
             "com.opencsv:opencsv:$opencsvVersion",
             "org.apache.commons:commons-lang3:$commonsLang3Version",
-            "com.vdurmont:emoji-java:$emojiJavaVersion"
+            "com.vdurmont:emoji-java:$emojiJavaVersion",
+            "org.passay:passay:1.6.0"
     )
     compileOnly "org.projectlombok:lombok"
     developmentOnly "org.springframework.boot:spring-boot-devtools"

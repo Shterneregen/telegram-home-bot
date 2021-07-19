@@ -7,8 +7,7 @@ import org.springframework.stereotype.Service
 class ProfileService(
     private val environment: Environment
 ) {
-    val isNetworkMonitorProfileActive: Boolean
-        get() = listOf(*environment.activeProfiles).contains(NETWORK_MONITOR)
+    fun isNetworkMonitorProfileActive() = listOf(*environment.activeProfiles).contains(NETWORK_MONITOR)
 
     companion object {
         const val NETWORK_MONITOR = "network-monitor"

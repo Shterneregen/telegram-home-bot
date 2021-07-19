@@ -15,8 +15,6 @@ import random.telegramhomebot.utils.logger
 import java.sql.Timestamp.valueOf
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.function.Function
-import java.util.stream.Collectors
 
 @Controller
 @RequestMapping(Hosts.HOSTS_MAPPING)
@@ -43,14 +41,7 @@ class HostTimeLogController(
         return TIME_LOG_VIEW
     }
 
-    private fun getTimeLogDtoMap(logs: List<HostTimeLog>): Map<String, List<TimeLogDto>> = logs.stream().collect(
-        Collectors.groupingBy(
-            getDeviceName(), Collectors.mapping({ timeLogConverter.convertToDto(it) }, Collectors.toList())
-        )
-    )
-
-
-    private fun getDeviceName(): Function<HostTimeLog, String?> =
-        Function { if (it.host.deviceName != null) it.host.deviceName else it.host.mac }
+    private fun getTimeLogDtoMap(logs: List<HostTimeLog>): Map<String, List<TimeLogDto>> =
+        logs.groupBy({ it.host.deviceName ?: it.host.mac ?: "" }, { timeLogConverter.convertToDto(it) }).toSortedMap()
 
 }

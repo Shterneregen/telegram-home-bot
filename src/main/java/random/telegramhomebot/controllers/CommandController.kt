@@ -6,15 +6,15 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import random.telegramhomebot.AppConstants.Commands.*
+import random.telegramhomebot.AppConstants.Redirects.ERROR_404_REDIRECT
 import random.telegramhomebot.model.TelegramCommand
 import random.telegramhomebot.repository.TelegramCommandRepository
 import java.util.*
 
 @Controller
 @RequestMapping(COMMANDS_MAPPING)
-class CommandController(
-    private val telegramCommandRepository: TelegramCommandRepository
-) {
+class CommandController(private val telegramCommandRepository: TelegramCommandRepository) {
+
     @RequestMapping
     fun getAllCommands(model: Model): String {
         model.addAttribute(COMMANDS_MODEL_ATTR, telegramCommandRepository.findAll())
@@ -22,11 +22,12 @@ class CommandController(
     }
 
     @RequestMapping(path = [EDIT_COMMAND_MAPPING, EDIT_COMMAND_BY_ID_MAPPING])
-    fun editCommandById(model: Model, @PathVariable(COMMAND_ID_PATH_VAR) id: Optional<UUID>): String {
-        model.addAttribute(COMMAND_MODEL_ATTR, Optional.ofNullable(id)
-            .filter { obj -> obj.isPresent }
-            .flatMap { opId -> telegramCommandRepository.findById(opId.get()) }
-            .orElseGet { TelegramCommand() })
+    fun editCommandById(model: Model, @PathVariable(COMMAND_ID_PATH_VAR) id: UUID?): String {
+        val command =
+            if (id == null) TelegramCommand()
+            else id.let { telegramCommandRepository.findById(it).orElse(null) } ?: return ERROR_404_REDIRECT
+
+        model.addAttribute(COMMAND_MODEL_ATTR, command)
         return ADD_EDIT_COMMAND_VIEW
     }
 

@@ -43,16 +43,14 @@ class HostTimeLogController(
         return TIME_LOG_VIEW
     }
 
-    private fun getTimeLogDtoMap(logs: List<HostTimeLog>): Map<String, List<TimeLogDto>> {
-        return logs.stream().collect(
-            Collectors.groupingBy(
-                getDeviceName(),
-                Collectors.mapping({ timeLog -> timeLogConverter.convertToDto(timeLog) }, Collectors.toList())
-            )
+    private fun getTimeLogDtoMap(logs: List<HostTimeLog>): Map<String, List<TimeLogDto>> = logs.stream().collect(
+        Collectors.groupingBy(
+            getDeviceName(), Collectors.mapping({ timeLogConverter.convertToDto(it) }, Collectors.toList())
         )
-    }
+    )
+
 
     private fun getDeviceName(): Function<HostTimeLog, String?> =
-        Function { log -> if (log.host.deviceName != null) log.host.deviceName else log.host.mac }
+        Function { if (it.host.deviceName != null) it.host.deviceName else it.host.mac }
 
 }

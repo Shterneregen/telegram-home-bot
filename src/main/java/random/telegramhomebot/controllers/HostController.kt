@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import random.telegramhomebot.AppConstants
-import random.telegramhomebot.AppConstants.Hosts
+import random.telegramhomebot.AppConstants.Hosts.*
+import random.telegramhomebot.AppConstants.Redirects.ERROR_404_REDIRECT
 import random.telegramhomebot.model.Host
 import random.telegramhomebot.services.HostService
 import random.telegramhomebot.utils.pagination.PagerHelper
@@ -18,7 +19,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.validation.Valid
 
 @Controller
-@RequestMapping(Hosts.HOSTS_MAPPING)
+@RequestMapping(HOSTS_MAPPING)
 class HostController(private val hostService: HostService) {
 
     @Value("\${hosts.default.page.size}")
@@ -47,43 +48,43 @@ class HostController(private val hostService: HostService) {
             pageSizeCookieName, request
         )
         val hosts = hostService.getAllHosts(pageable)
-        model.addAttribute(Hosts.HOSTS_MODEL_ATTR, hosts)
+        model.addAttribute(HOSTS_MODEL_ATTR, hosts)
         PagerHelper.prepareModelForPager(
-            model, hosts.totalPages, hosts.number, pageable.pageSize, pageSizeCookieName, Hosts.HOSTS_MAPPING
+            model, hosts.totalPages, hosts.number, pageable.pageSize, pageSizeCookieName, HOSTS_MAPPING
         )
-        return Hosts.HOSTS_VIEW
+        return HOSTS_VIEW
     }
 
-    @RequestMapping(path = [Hosts.EDIT_HOST_MAPPING, Hosts.EDIT_HOST_BY_ID_MAPPING])
-    fun editHostById(model: Model, @PathVariable(Hosts.HOST_ID_PATH_VAR) id: Optional<UUID>): String {
-        model.addAttribute(Hosts.HOST_MODEL_ATTR, Optional.ofNullable(id)
-            .filter { obj -> obj.isPresent }
-            .flatMap { opId -> hostService.getHostById(opId.get()) }
-            .orElseGet { Host() }
-        )
-        return Hosts.ADD_EDIT_HOST_VIEW
+    @RequestMapping(path = [EDIT_HOST_MAPPING, EDIT_HOST_BY_ID_MAPPING])
+    fun editHostById(model: Model, @PathVariable(HOST_ID_PATH_VAR) id: UUID?): String {
+        val host =
+            if (id == null) Host()
+            else id.let { hostService.getHostById(it).orElse(null) } ?: return ERROR_404_REDIRECT
+
+        model.addAttribute(HOST_MODEL_ATTR, host)
+        return ADD_EDIT_HOST_VIEW
     }
 
-    @RequestMapping(path = [Hosts.DELETE_HOST_MAPPING])
-    fun deleteHostById(@PathVariable(Hosts.HOST_ID_PATH_VAR) id: UUID): String {
+    @RequestMapping(path = [DELETE_HOST_MAPPING])
+    fun deleteHostById(@PathVariable(HOST_ID_PATH_VAR) id: UUID): String {
         hostService.deleteHostById(id)
-        return Hosts.REDIRECT_HOSTS
+        return REDIRECT_HOSTS
     }
 
-    @PostMapping(path = [Hosts.SAVE_HOST_MAPPING])
+    @PostMapping(path = [SAVE_HOST_MAPPING])
     fun createOrUpdateHost(@Valid host: Host, bindingResult: BindingResult): String {
         if (bindingResult.hasErrors()) {
-            return Hosts.ADD_EDIT_HOST_VIEW
+            return ADD_EDIT_HOST_VIEW
         }
         val storedHost = hostService.getHostByMac(host.mac)
         val saveNewHostWithExistingMac = storedHost != null && host.id == null
         val editStoredHostMacToExisting = storedHost != null && storedHost.id != host.id
         if (saveNewHostWithExistingMac || editStoredHostMacToExisting) {
-            bindingResult.rejectValue(Hosts.HOST_MAC_FIELD, AppConstants.Messages.HOST_MAC_NOT_UNIQUE_MSG)
-            return Hosts.ADD_EDIT_HOST_VIEW
+            bindingResult.rejectValue(HOST_MAC_FIELD, AppConstants.Messages.HOST_MAC_NOT_UNIQUE_MSG)
+            return ADD_EDIT_HOST_VIEW
         }
         hostService.saveHost(host)
-        return Hosts.REDIRECT_HOSTS
+        return REDIRECT_HOSTS
     }
 
     companion object {

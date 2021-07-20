@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}">
 
 <head>
@@ -10,20 +11,20 @@
 <body>
 <div layout:fragment="content">
     <div class="container">
-        <div class="btn-block">
+        <div class="btn-block" sec:authorize="hasRole('ADD_COMMAND')">
             <a href="/commands/edit" class="btn btn-primary">
                 <i class="fas fa-plus"><span th:text="#{add.command}" class="ml-1"></span></i>
             </a>
         </div>
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped" sec:authorize="hasRole('VIEW_COMMANDS')">
                 <thead>
                 <tr>
                     <th th:text="#{command.alias}"></th>
                     <th th:text="#{command.command}"></th>
                     <th th:text="#{command.enabled}"></th>
-                    <th th:text="#{column.edit}"></th>
-                    <th th:text="#{column.delete}"></th>
+                    <th th:text="#{column.edit}" sec:authorize="hasRole('EDIT_COMMAND')"></th>
+                    <th th:text="#{column.delete}" sec:authorize="hasRole('DELETE_COMMAND')"></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -31,12 +32,12 @@
                     <td th:text="${command.commandAlias}"></td>
                     <td th:text="${command.command}"></td>
                     <td><input type="checkbox" th:checked="${command.enabled}" disabled/></td>
-                    <td>
+                    <td sec:authorize="hasRole('EDIT_COMMAND')">
                         <a th:href="@{/commands/edit/{id}(id=${command.id})}" class="btn btn-primary">
                             <i class="fas fa-edit"></i>
                         </a>
                     </td>
-                    <td>
+                    <td sec:authorize="hasRole('DELETE_COMMAND')">
                         <a th:href="@{/commands/delete/{id}(id=${command.id})}" class="btn btn-danger"
                            th:data-confirm-delete="|#{command.confirm.delete} '${command.commandAlias}'?|"
                            onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}">
 
 <head>
@@ -11,14 +12,14 @@
 <div layout:fragment="content">
     <div class="container">
         <div class="btn-block">
-            <a href="/hosts/edit" class="btn btn-primary">
+            <a href="/hosts/edit" class="btn btn-primary" sec:authorize="hasRole('ADD_HOST')">
                 <i class="fas fa-plus"><span th:text="#{add.host}" class="ml-1"></span></i>
             </a>
-            <a href="/hosts/export" class="btn btn-primary" download>
+            <a href="/hosts/export" class="btn btn-primary" download sec:authorize="hasRole('EXPORT_CSV_HOSTS')">
                 <i class="fas fa-file-export"><span th:text="#{host.export}" class="ml-1"></span></i>
             </a>
             <a href="" class="btn btn-primary" data-toggle="modal" data-target="#modal-warning"
-               th:attr="data-target='#modal-warning'">
+               th:attr="data-target='#modal-warning'" sec:authorize="hasRole('IMPORT_CSV_HOSTS')">
                 <i class="fas fa-file-import"><span th:text="#{host.import}" class="ml-1"></span></i>
             </a>
         </div>
@@ -28,15 +29,15 @@
         <!--            <strong>Error:</strong><span th:text="${message}"></span>-->
         <!--        </div>-->
 
-        <div class="table-responsive">
+        <div class="table-responsive" sec:authorize="hasRole('VIEW_HOSTS')">
             <div th:replace="fragments/paginator :: paginator(${pager})"></div>
             <table class="table table-striped">
                 <thead>
                 <tr>
                     <th th:text="|#{host.ip} / #{host.mac}|"></th>
                     <th th:text="#{host.device}"></th>
-                    <th th:text="#{column.edit}"></th>
-                    <th th:text="#{column.delete}"></th>
+                    <th th:text="#{column.edit}" sec:authorize="hasRole('EDIT_HOST')"></th>
+                    <th th:text="#{column.delete}" sec:authorize="hasRole('DELETE_HOST')"></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -45,12 +46,12 @@
                     <td th:text="${host.deviceName}"
                         th:style="${host.state == null or host.state == T(random.telegramhomebot.model.HostState).FAILED
                         ? 'color: red;' : 'color: green;'}"></td>
-                    <td>
+                    <td sec:authorize="hasRole('EDIT_HOST')">
                         <a th:href="@{/hosts/edit/{id}(id=${host.id})}" class="btn btn-primary">
                             <i class="fas fa-edit"></i>
                         </a>
                     </td>
-                    <td>
+                    <td sec:authorize="hasRole('DELETE_HOST')">
                         <a th:href="@{/hosts/delete/{id}(id=${host.id})}" class="btn btn-danger"
                            th:data-confirm-delete="|#{host.confirm.delete} '${host.deviceName}'?|"
                            onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">

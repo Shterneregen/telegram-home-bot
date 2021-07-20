@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
@@ -28,6 +28,21 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
     private String springH2ConsolePath;
 
     private final AppUserDetailsService userDetailsService;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        String[] urlsForAdmin = {
+                springH2ConsolePath + "**", "/actuator/**",
+                "/commands/edit/*", "/commands/delete/*",
+                "/hosts/edit/*", "/hosts/delete/*"
+        };
+        http
+                .authorizeRequests()
+                .antMatchers(urlsForAdmin).hasAuthority("ROLE_ADMIN")
+        ;
+
+        super.configure(http);
+    }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -59,10 +74,5 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
     @Override
     protected void configure(AuthenticationManagerBuilder auth) {
         auth.authenticationProvider(authenticationProvider());
-    }
-
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers(springH2ConsolePath + "**");
     }
 }

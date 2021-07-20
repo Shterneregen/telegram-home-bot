@@ -4,63 +4,71 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import random.telegramhomebot.auth.entities.AuthGroup;
+import random.telegramhomebot.auth.entities.Privilege;
+import random.telegramhomebot.auth.entities.Role;
 import random.telegramhomebot.auth.entities.User;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-	private final User user;
-	private final List<AuthGroup> authGroups;
+    private final User user;
 
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		if (authGroups == null) {
-			return Collections.emptySet();
-		}
-		Set<SimpleGrantedAuthority> grantedAuthorities = new HashSet<>();
-		authGroups.forEach(group -> grantedAuthorities.add(new SimpleGrantedAuthority(group.getAuthGroup())));
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return getAuthorities(user.getRoles());
+    }
 
-		return grantedAuthorities;
-	}
+    private Collection<? extends GrantedAuthority> getAuthorities(Collection<Role> roles) {
+        return getGrantedAuthorities(getPrivileges(roles));
+    }
 
-	public long getId() {
-		return user.getId();
-	}
+    private List<String> getPrivileges(Collection<Role> roles) {
+        return Stream.concat(
+                roles.stream().flatMap(role -> role.getPrivileges().stream()).map(Privilege::getName),
+                roles.stream().map(Role::getName)
+        ).collect(Collectors.toList());
+    }
 
-	@Override
-	public String getPassword() {
-		return user.getPassword();
-	}
+    private List<GrantedAuthority> getGrantedAuthorities(List<String> privileges) {
+        return privileges.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    }
 
-	@Override
-	public String getUsername() {
-		return user.getUsername();
-	}
+    public long getId() {
+        return user.getId();
+    }
 
-	@Override
-	public boolean isAccountNonExpired() {
-		return true;
-	}
+    @Override
+    public String getPassword() {
+        return user.getPassword();
+    }
 
-	@Override
-	public boolean isAccountNonLocked() {
-		return true;
-	}
+    @Override
+    public String getUsername() {
+        return user.getUsername();
+    }
 
-	@Override
-	public boolean isCredentialsNonExpired() {
-		return true;
-	}
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
-	@Override
-	public boolean isEnabled() {
-		return true;
-	}
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

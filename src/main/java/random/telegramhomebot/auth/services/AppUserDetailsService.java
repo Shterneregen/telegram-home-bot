@@ -1,6 +1,7 @@
 package random.telegramhomebot.auth.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -10,6 +11,7 @@ import random.telegramhomebot.auth.UserPrincipal;
 import random.telegramhomebot.auth.entities.User;
 import random.telegramhomebot.auth.repositories.UserRepository;
 import random.telegramhomebot.services.MessageService;
+import random.telegramhomebot.telegram.Bot;
 import random.telegramhomebot.utils.NetUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,16 +20,24 @@ import javax.servlet.http.HttpServletRequest;
 @Service
 public class AppUserDetailsService implements UserDetailsService {
 
+    private static final String AUTH_BOT_WEB_BRUTEFORCE_ALERT = "auth.bot.web.bruteforce.alert";
+
     private final UserRepository userRepository;
     private final LoginAttemptService loginAttemptService;
     private final HttpServletRequest request;
     private final MessageService messageService;
+    private final Bot bot;
+
+    @Value("${login.blocking.time.in.minutes}")
+    private int blockingTimeInMinutes;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String ip = NetUtils.getClientIp(request);
         if (loginAttemptService.isBlocked(ip)) {
-            throw new RuntimeException(messageService.getMessage(AuthErrorCodes.USER_BLOCKED.getErrorMessageCode()));
+            bot.sendMessage(messageService.getMessage(AUTH_BOT_WEB_BRUTEFORCE_ALERT, new Object[]{ip}));
+            throw new RuntimeException(messageService.getMessage(AuthErrorCodes.USER_BLOCKED.getErrorMessageCode(),
+                    new Object[]{blockingTimeInMinutes / 60}));
         }
 
         User user = userRepository.findByUsername(username);

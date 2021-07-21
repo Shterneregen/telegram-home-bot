@@ -11,7 +11,6 @@ import random.telegramhomebot.model.Host
 import random.telegramhomebot.telegram.Bot
 import random.telegramhomebot.utils.NetUtils
 import random.telegramhomebot.utils.logger
-import java.util.stream.Collectors
 
 @Profile(ProfileService.NETWORK_MONITOR)
 @Service
@@ -36,10 +35,10 @@ class DefaultHostExplorerService(
             bot.sendMessage("Unable to determine the state of the hosts")
         }
         return when {
-            (currentHosts != null && currentHosts.isNotEmpty()) -> currentHosts.stream()
-                .filter { host: Host -> host.mac != null }
-                .peek { currentHost: Host -> fillHostStoredInfo(currentHost) }
-                .sorted(NetUtils.comparingByIp()).collect(Collectors.toList())
+            (currentHosts != null && currentHosts.isNotEmpty()) -> currentHosts
+                .filter { it.mac != null }
+                .onEach { fillHostStoredInfo(it) }
+                .sortedWith(NetUtils.comparingByIp())
             else -> emptyList()
         }
     }

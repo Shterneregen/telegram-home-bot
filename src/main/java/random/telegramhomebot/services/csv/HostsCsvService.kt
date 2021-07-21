@@ -11,7 +11,6 @@ import random.telegramhomebot.utils.NetUtils
 import random.telegramhomebot.utils.logger
 import java.io.IOException
 import java.time.LocalDateTime.now
-import java.util.stream.Collectors
 import javax.servlet.http.HttpServletResponse
 
 @Service
@@ -39,10 +38,7 @@ class HostsCsvService(
     }
 
     private fun prepareHostsAfterCsvParsing(convertedHosts: List<Host>): List<Host> {
-        return convertedHosts.stream()
-            .filter { host -> validateHostFromCsv(host) }
-            .map { hostFromCsv -> prepareHostAfterCsvParsing(hostFromCsv) }
-            .collect(Collectors.toList())
+        return convertedHosts.filter { validateHostFromCsv(it) }.map { prepareHostAfterCsvParsing(it) }
     }
 
     private fun validateHostFromCsv(host: Host): Boolean {

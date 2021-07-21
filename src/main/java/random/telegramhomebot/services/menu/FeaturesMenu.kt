@@ -7,7 +7,6 @@ import random.telegramhomebot.services.FeatureSwitcherService
 import random.telegramhomebot.services.FeatureSwitcherService.Features.*
 import random.telegramhomebot.services.MessageService
 import random.telegramhomebot.telegram.Icon
-import java.util.stream.Collectors
 
 @Service
 class FeaturesMenuService(
@@ -35,14 +34,13 @@ class FeaturesMenuService(
     }
 
     fun getFeaturesMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val rowList: List<List<InlineKeyboardButton>> = getFeaturesMenuMap().entries.stream()
+        val rowList: List<List<InlineKeyboardButton>> = getFeaturesMenuMap().entries
             .map { (key, menu) ->
                 InlineKeyboardButton.builder()
                     .text("${getIcon(menu.featureMethod.get())} ${menu.buttonText}")
                     .callbackData(key).build()
             }
-            .map { a -> listOf(a) }
-            .collect(Collectors.toList())
+            .map { listOf(it) }
         return InlineKeyboardMarkup.builder().keyboard(rowList).build()
     }
 

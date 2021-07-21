@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component
 import random.telegramhomebot.model.TelegramCommand
 import random.telegramhomebot.repository.TelegramCommandRepository
 import random.telegramhomebot.utils.logger
-import java.util.stream.Collectors
 
 @Component
 class CommandsLoader(
@@ -26,9 +25,8 @@ class CommandsLoader(
         if (commandsCount == 0L) {
             log.info("Loading sample commands...")
             telegramCommandRepository.saveAll(
-                telegramCommands.entries.stream()
-                    .map { (key, value) -> TelegramCommand(key, value, true) }
-                    .collect(Collectors.toList()))
+                telegramCommands.entries.map { TelegramCommand(it.key, it.value, true) }
+            )
         }
     }
 }

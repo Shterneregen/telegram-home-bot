@@ -1,6 +1,5 @@
 package random.telegramhomebot.controllers
 
-import org.apache.commons.collections4.CollectionUtils
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -39,7 +38,7 @@ class HostCsvController(
         } else {
             try {
                 val hostsToImport = hostsCsvService.parseHostsFromCsvFile(file)
-                if (CollectionUtils.isNotEmpty(hostsToImport)) {
+                if (hostsToImport.isNotEmpty()) {
                     hostService.saveAllHosts(hostsToImport)
                 }
             } catch (e: Exception) {

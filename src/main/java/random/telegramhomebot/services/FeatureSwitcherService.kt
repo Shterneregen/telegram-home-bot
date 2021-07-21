@@ -14,8 +14,8 @@ class FeatureSwitcherService(private val repository: FeatureSwitcherRepository) 
     }
 
     fun switchFeature(featureName: String) {
-        val featureSwitcherOptional = getFeatureSwitcherByName(featureName)
-        featureSwitcherOptional?.let {
+        val featureSwitcher = getFeatureSwitcherByName(featureName)
+        featureSwitcher?.let {
             it.enabled = !it.enabled
             saveFeatureSwitcher(it)
         }

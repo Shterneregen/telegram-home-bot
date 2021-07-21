@@ -1,6 +1,5 @@
 package random.telegramhomebot.services
 
-import org.apache.commons.collections4.CollectionUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
@@ -13,8 +12,6 @@ import random.telegramhomebot.model.Command
 import random.telegramhomebot.model.TelegramCommand
 import random.telegramhomebot.repository.TelegramCommandRepository
 import random.telegramhomebot.utils.logger
-import java.util.function.Consumer
-import java.util.stream.Collectors
 
 @Service
 class CommandService(
@@ -31,24 +28,21 @@ class CommandService(
     fun getEnabledCommand(commandAlias: String?): TelegramCommand? =
         telegramCommandRepository.findByCommandAliasAndEnabled(commandAlias, true)
 
-    fun getAllEnabledCommandsAsString(): String = getAllEnabledCommands().stream()
-        .map { command: TelegramCommand? -> "${command!!.commandAlias} = ${command.command}" }
-        .collect(Collectors.joining("\n"))
+    fun getAllEnabledCommandsAsString() =
+        getAllEnabledCommands().joinToString(separator = "\n") { "${it.commandAlias} = ${it.command}" }
 
     fun executeCommandOnMachine(command: String?): String? {
-        val telegramCommand = getEnabledCommand(command)
-        if (telegramCommand != null) {
-            val commandOutput = commandRunnerService.runCommand(telegramCommand.command)
-            commandOutput.forEach(Consumer { msg: String? -> log.debug(msg) })
-            return java.lang.String.join("\n", commandOutput)
-        }
-        return null
+        val telegramCommand = getEnabledCommand(command) ?: return null
+
+        val commandOutput = commandRunnerService.runCommand(telegramCommand.command)
+        commandOutput.forEach { log.debug(it) }
+        return commandOutput.joinToString(separator = "\n")
     }
 
     fun setCommandButtons(sendMessage: SendMessage) {
         val enabledCommands = getAllEnabledCommands()
         log.debug("Enabled commands: {}", enabledCommands)
-        if (CollectionUtils.isEmpty(enabledCommands)) {
+        if (enabledCommands.isEmpty()) {
             return
         }
         sendMessage.replyMarkup = ReplyKeyboardMarkup.builder()

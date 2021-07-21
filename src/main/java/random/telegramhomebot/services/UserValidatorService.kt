@@ -1,17 +1,42 @@
 package random.telegramhomebot.services
 
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import org.telegram.telegrambots.meta.api.objects.Update
+import random.telegramhomebot.auth.services.LoginAttemptService
 import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.telegram.BotProperties
 import random.telegramhomebot.utils.logger
 
 @Profile("!${ProfileService.MOCK_BOT}")
 @Service
-class UserValidatorService(private val botProperties: BotProperties) {
+class UserValidatorService(
+    private val botProperties: BotProperties,
+    @Qualifier("botAttemptService")
+    private val botAttemptService: LoginAttemptService
+) {
     val log = logger()
 
-    fun isAllowedUser(userId: Long) = isOwner(userId) || isHomeGroupUser(userId)
+    fun checkAccessForUpdate(update: Update): Boolean {
+        if (!update.hasCallbackQuery() && (!update.hasMessage() || !update.message.hasText())) {
+            return false
+        }
+        val userId = if (update.hasCallbackQuery()) update.callbackQuery.from.id else update.message.from.id
+        if (botAttemptService.isBlocked(userId.toString())) {
+            log.debug("Bot [$userId] is still blocked")
+            return false
+        }
+
+        val allowedUser = isAllowedUser(userId)
+        when {
+            allowedUser -> botAttemptService.loginSucceeded(userId.toString())
+            else -> botAttemptService.loginFailed(userId.toString())
+        }
+        return allowedUser
+    }
+
+    private fun isAllowedUser(userId: Long) = isOwner(userId) || isHomeGroupUser(userId)
 
     private fun isOwner(userId: Long): Boolean {
         val isOwner = userId == botProperties.botOwnerId.toInt().toLong()

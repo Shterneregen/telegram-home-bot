@@ -1,6 +1,5 @@
 package random.telegramhomebot.telegram
 
-import org.apache.logging.log4j.util.Strings
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
@@ -30,20 +29,19 @@ class HomeBot(
     override fun onUpdateReceived(update: Update) {
         log.debug(update.toString())
         when {
-            !checkAccessForUpdate(update) -> sendWarnMessage(update)
+            !userValidatorService.checkAccessForUpdate(update) -> logWarnMessage(update)
             update.hasCallbackQuery() -> processCallback(update)
-            executeControlCommand(update.message) -> {
-            }
+            executeControlCommand(update.message) -> log.debug("Control command [${update.message}] was executed")
             else -> executeCommand(update.message)
         }
     }
 
-    private fun sendWarnMessage(update: Update) {
+    private fun logWarnMessage(update: Update) {
         val id: Long
-        val messageText: String
-        val userName: String
-        val firstName: String
-        val lastName: String
+        val messageText: String?
+        val userName: String?
+        val firstName: String?
+        val lastName: String?
         if (update.hasCallbackQuery()) {
             val from = update.callbackQuery.from
             id = from.id
@@ -63,23 +61,10 @@ class HomeBot(
             UNAUTHORIZED_ACCESS_MSG, arrayOf(id, messageText, userName, firstName, lastName)
         )
         log.warn(warnMessage)
-        sendMessage(warnMessage)
     }
 
-    private fun executeCommand(message: Message) {
-        val commandOutput = commandService.executeCommandOnMachine(message.text.lowercase())
-        if (commandOutput != null) {
-            sendMessage(java.lang.String.join("\n", commandOutput), message.chatId, message.messageId)
-        }
-    }
-
-    private fun checkAccessForUpdate(update: Update): Boolean {
-        if (!update.hasCallbackQuery() && (!update.hasMessage() || !update.message.hasText())) {
-            return false
-        }
-        val userId = if (update.hasCallbackQuery()) update.callbackQuery.from.id else update.message.from.id
-        return userValidatorService.isAllowedUser(userId)
-    }
+    private fun executeCommand(message: Message) = commandService.executeCommandOnMachine(message.text.lowercase())
+        ?.let { sendMessage(it, message.chatId, message.messageId) }
 
     private fun processCallback(update: Update) {
         Thread {
@@ -104,7 +89,7 @@ class HomeBot(
     override fun sendMessage(messageText: String) = sendMessage(messageText, botProperties.botOwnerId.toLong(), null)
 
     private fun sendMessage(messageText: String, chatId: Long, replyToMessageId: Int? = null) {
-        if (Strings.isBlank(messageText)) {
+        if (messageText.isBlank()) {
             log.debug("trying to send blank message")
             return
         }

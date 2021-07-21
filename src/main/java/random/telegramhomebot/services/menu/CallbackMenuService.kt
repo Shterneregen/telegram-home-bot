@@ -25,14 +25,10 @@ class CallbackMenuService(
     }
 
     fun getRequestResult(callData: String): RequestResult {
-        val menu = mainMenuService.getMainMenuMap()[callData]
-        if (menu != null) {
-            return RequestResult(menu.method.get(), mainMenuService.getMainMenuInlineKeyboardMarkup())
-        }
-        val featureMenu = featuresMenuService.getFeaturesMenuMap()[callData]
-        if (featureMenu != null) {
-            return RequestResult(featureMenu.method.get(), featuresMenuService.getFeaturesMenuInlineKeyboardMarkup())
-        }
+        mainMenuService.getMainMenuMap()[callData]
+            ?.let { return RequestResult(it.method.get(), mainMenuService.getMainMenuInlineKeyboardMarkup()) }
+        featuresMenuService.getFeaturesMenuMap()[callData]
+            ?.let { return RequestResult(it.method.get(), featuresMenuService.getFeaturesMenuInlineKeyboardMarkup()) }
         return RequestResult("No answer", null)
     }
 

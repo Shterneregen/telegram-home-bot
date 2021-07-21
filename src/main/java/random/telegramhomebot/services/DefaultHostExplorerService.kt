@@ -44,10 +44,9 @@ class DefaultHostExplorerService(
     }
 
     private fun fillHostStoredInfo(currentHost: Host) {
-        val storedHost = hostService.getHostByMac(currentHost.mac)
-        if (storedHost != null) {
-            currentHost.id = storedHost.id
-            currentHost.deviceName = storedHost.deviceName
+        hostService.getHostByMac(currentHost.mac)?.let {
+            currentHost.id = it.id
+            currentHost.deviceName = it.deviceName
         }
     }
 }

@@ -46,12 +46,10 @@ class HostsCsvService(
     }
 
     private fun prepareHostAfterCsvParsing(hostFromCsv: Host): Host {
-        val macFromCsv = hostFromCsv.mac
-        val host = hostService.getHostByMac(macFromCsv)
-        if (host != null) {
-            host.deviceName = hostFromCsv.deviceName
-            host.notes = hostFromCsv.notes
-            return host
+        hostService.getHostByMac(hostFromCsv.mac)?.let {
+            it.deviceName = hostFromCsv.deviceName
+            it.notes = hostFromCsv.notes
+            return it
         }
         hostFromCsv.state = HostState.FAILED
         return hostFromCsv

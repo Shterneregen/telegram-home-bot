@@ -8,7 +8,7 @@ plugins {
 }
 
 ext {
-    telegrambotsSpringBootStarterVersion = "5.1.1"
+    telegrambotsSpringBootStarterVersion = "5.3.0"
     thymeleafExtrasSpringsecurity5Version = "3.0.4.RELEASE"
     opencsvVersion = "5.3"
     commonsLang3Version = "3.11"

@@ -64,6 +64,7 @@ dependencies {
     runtimeOnly "org.jetbrains.kotlin:kotlin-reflect:1.5.20"
     implementation(
             "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1",
             "com.fasterxml.jackson.module:jackson-module-kotlin:2.12.4"
     )
 }

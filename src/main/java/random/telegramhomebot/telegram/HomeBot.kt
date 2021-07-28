@@ -1,5 +1,8 @@
 package random.telegramhomebot.telegram
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
@@ -37,26 +40,14 @@ class HomeBot(
     }
 
     private fun logWarnMessage(update: Update) {
-        val id: Long
-        val messageText: String?
-        val userName: String?
-        val firstName: String?
-        val lastName: String?
-        if (update.hasCallbackQuery()) {
-            val from = update.callbackQuery.from
-            id = from.id
-            userName = from.userName
-            firstName = from.firstName
-            lastName = from.lastName
-            messageText = update.callbackQuery.data
-        } else {
-            val from = update.message.from
-            id = from.id
-            userName = from.userName
-            firstName = from.firstName
-            lastName = from.lastName
-            messageText = update.message.text
+        val (from, messageText) = when {
+            update.hasCallbackQuery() -> Pair(update.callbackQuery.from, update.callbackQuery.data)
+            else -> Pair(update.message.from, update.message.text)
         }
+        val id = from.id
+        val userName = from.userName
+        val firstName = from.firstName
+        val lastName = from.lastName
         val warnMessage = messageService.getMessage(
             UNAUTHORIZED_ACCESS_MSG, arrayOf(id, messageText, userName, firstName, lastName)
         )
@@ -66,14 +57,12 @@ class HomeBot(
     private fun executeCommand(message: Message) = commandService.executeCommandOnMachine(message.text.lowercase())
         ?.let { sendMessage(it, message.chatId, message.messageId) }
 
-    private fun processCallback(update: Update) {
-        Thread {
-            try {
-                execute(callbackMenuService.processCallback(update))
-            } catch (e: TelegramApiException) {
-                log.error(e.message, e)
-            }
-        }.start()
+    private fun processCallback(update: Update) = CoroutineScope(Dispatchers.Default).launch {
+        try {
+            execute(callbackMenuService.processCallback(update))
+        } catch (e: TelegramApiException) {
+            log.error(e.message, e)
+        }
     }
 
     private fun executeControlCommand(message: Message): Boolean {

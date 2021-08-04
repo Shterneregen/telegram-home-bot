@@ -6,6 +6,14 @@
 
 <head>
     <title th:text="#{hosts}"></title>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        let _csrf_param_name = /*[[${_csrf.parameterName}]]*/ '';
+        let _csrf_token = /*[[${_csrf.token}]]*/ '';
+        /*]]>*/
+    </script>
+    <script type="text/javascript" th:src="@{/js/hosts.js}"></script>
 </head>
 
 <body>
@@ -89,53 +97,6 @@
             </div>
         </div>
     </div>
-
-    <script th:inline="javascript">
-            /*<![CDATA[*/
-
-var _csrf_param_name = /*[[${_csrf.parameterName}]]*/ '';
-var _csrf_token = /*[[${_csrf.token}]]*/ '';
-
-$(document).ready(function () {
-    $("#import-hosts-to-csv-form").on("submit", function (e) {
-        // cancel the default behavior
-        e?.preventDefault();
-        uploadCsv()
-    });
-});
-
-function uploadCsv() {
-    var form = $('#import-hosts-to-csv-form')[0];
-    var data = new FormData(form)
-
-    $("#btnSubmit").prop("disabled", true);
-    data.append(_csrf_param_name, _csrf_token)
-
-    $.ajax({
-        url: "/hosts/import",
-        type: "POST",
-        enctype: 'multipart/form-data',
-        data: data,
-        processData: false, //prevent jQuery from automatically transforming the data into a query string
-        contentType: false,
-        cache: false,
-        success: function (res) {
-            console.log(res);
-            alert('Import done!')
-            $("#btnSubmit").prop("disabled", false);
-            location.reload();
-        },
-        error: function (err) {
-            console.log(err.responseText);
-            $("#error").show().text(err.responseText);
-            $("#btnSubmit").prop("disabled", false);
-        }
-    });
-}
-            /*]]>*/
-
-
-    </script>
 
 </div>
 </body>

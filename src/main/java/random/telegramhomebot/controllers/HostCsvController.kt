@@ -1,14 +1,10 @@
 package random.telegramhomebot.controllers
 
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
-import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import random.telegramhomebot.AppConstants.Hosts.HOSTS_MAPPING
-import random.telegramhomebot.AppConstants.Hosts.REDIRECT_HOSTS
 import random.telegramhomebot.AppConstants.HostsCsv.*
 import random.telegramhomebot.services.HostService
 import random.telegramhomebot.services.csv.HostsCsvService
@@ -29,24 +25,25 @@ class HostCsvController(
         hostsCsvService.exportHostsToCsvFile(response)
     }
 
+    @ResponseBody
     @PostMapping(HOSTS_CSV_IMPORT_MAPPING)
-    fun importHostsFromCsvFile(@RequestParam(FILE_REQ_PARAM) file: MultipartFile, model: Model?): String {
+    fun importHostsFromCsvFile(
+        @RequestParam(FILE_REQ_PARAM) file: MultipartFile
+    ): ResponseEntity<String> {
         if (file.isEmpty) {
-            // TODO: impl error message
             log.error("File to import is empty!")
-            //			model.addAttribute("message", "Please select a CSV file to upload.");
-        } else {
-            try {
-                val hostsToImport = hostsCsvService.parseHostsFromCsvFile(file)
-                if (hostsToImport.isNotEmpty()) {
-                    hostService.saveAllHosts(hostsToImport)
-                }
-            } catch (e: Exception) {
-                // TODO: impl error message
-//				model.addAttribute("message", "An error occurred while processing the CSV file.");
-                log.error(e.message, e)
-            }
+            return ResponseEntity.badRequest().body("Please select a CSV file to upload.")
         }
-        return REDIRECT_HOSTS
+        return try {
+            val hostsToImport = hostsCsvService.parseHostsFromCsvFile(file)
+            if (hostsToImport.isNotEmpty()) {
+                hostService.saveAllHosts(hostsToImport)
+            }
+            ResponseEntity.ok().build()
+        } catch (e: Exception) {
+            val err = "An error occurred while processing the CSV file."
+            log.error(e.message, e)
+            ResponseEntity.badRequest().body(err)
+        }
     }
 }

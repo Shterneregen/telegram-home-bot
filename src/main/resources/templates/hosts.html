@@ -24,11 +24,6 @@
             </a>
         </div>
 
-        <!-- TODO: impl error message -->
-        <!--        <div class="alert alert-danger" role="alert" th:if="${message != null}">-->
-        <!--            <strong>Error:</strong><span th:text="${message}"></span>-->
-        <!--        </div>-->
-
         <div class="table-responsive" sec:authorize="hasRole('VIEW_HOSTS')">
             <div th:replace="fragments/paginator :: paginator(${pager})"></div>
             <table class="table table-striped">
@@ -75,7 +70,9 @@
                     </button>
                 </div>
 
-                <form id="import-hosts-to-csv-form" method="POST" th:action="@{/hosts/import}"
+                <div id="error" class="alert alert-danger col-sm-12" style="display:none">error</div>
+
+                <form id="import-hosts-to-csv-form" method="POST"
                       enctype="multipart/form-data" style="align-self: center">
                     <div class="form-group mt-3">
                         <label for="file" th:text="#{select.csv.file}"></label>
@@ -86,13 +83,60 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline pull-left" data-dismiss="modal"
                             th:text="#{btn.close}"></button>
-                    <!-- TODO: impl error handling -->
                     <button type="submit" class="btn btn-primary" form="import-hosts-to-csv-form"
-                            th:text="#{import.hosts}"></button>
+                            th:text="#{import.hosts}" id="btnSubmit"></button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script th:inline="javascript">
+            /*<![CDATA[*/
+
+var _csrf_param_name = /*[[${_csrf.parameterName}]]*/ '';
+var _csrf_token = /*[[${_csrf.token}]]*/ '';
+
+$(document).ready(function () {
+    $("#import-hosts-to-csv-form").on("submit", function (e) {
+        // cancel the default behavior
+        e?.preventDefault();
+        uploadCsv()
+    });
+});
+
+function uploadCsv() {
+    var form = $('#import-hosts-to-csv-form')[0];
+    var data = new FormData(form)
+
+    $("#btnSubmit").prop("disabled", true);
+    data.append(_csrf_param_name, _csrf_token)
+
+    $.ajax({
+        url: "/hosts/import",
+        type: "POST",
+        enctype: 'multipart/form-data',
+        data: data,
+        processData: false, //prevent jQuery from automatically transforming the data into a query string
+        contentType: false,
+        cache: false,
+        success: function (res) {
+            console.log(res);
+            alert('Import done!')
+            $("#btnSubmit").prop("disabled", false);
+            location.reload();
+        },
+        error: function (err) {
+            console.log(err.responseText);
+            $("#error").show().text(err.responseText);
+            $("#btnSubmit").prop("disabled", false);
+        }
+    });
+}
+            /*]]>*/
+
+
+    </script>
+
 </div>
 </body>
 

@@ -49,6 +49,12 @@ dependencies {
             "com.vdurmont:emoji-java:$emojiJavaVersion",
             "org.passay:passay:1.6.0"
     )
+    implementation(
+            "org.webjars:jquery:3.6.0",
+            "org.webjars:bootstrap:4.1.3",
+            "org.webjars:font-awesome:5.15.3",
+            "org.webjars:popper.js:2.9.2"
+    )
     compileOnly "org.projectlombok:lombok"
     developmentOnly "org.springframework.boot:spring-boot-devtools"
     runtimeOnly "com.h2database:h2"

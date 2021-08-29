@@ -17,3 +17,17 @@
 #time_log_table {
     height: 500px;
 }
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-inline .form-control {
+  display: inline-block;
+  width: auto;
+  vertical-align: middle;
+}
+
+label {
+  margin-bottom: 0.5rem;
+}

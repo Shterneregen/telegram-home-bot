@@ -21,14 +21,14 @@
     <div class="container">
         <div class="btn-block">
             <a href="/hosts/edit" class="btn btn-primary" sec:authorize="hasRole('ADD_HOST')">
-                <i class="fas fa-plus"><span th:text="#{add.host}" class="ml-1"></span></i>
+                <i class="fas fa-plus"><span th:text="#{add.host}" class="ms-1"></span></i>
             </a>
             <a href="/hosts/export" class="btn btn-primary" download sec:authorize="hasRole('EXPORT_CSV_HOSTS')">
-                <i class="fas fa-file-export"><span th:text="#{host.export}" class="ml-1"></span></i>
+                <i class="fas fa-file-export"><span th:text="#{host.export}" class="ms-1"></span></i>
             </a>
-            <a href="" class="btn btn-primary" data-toggle="modal" data-target="#modal-warning"
-               th:attr="data-target='#modal-warning'" sec:authorize="hasRole('IMPORT_CSV_HOSTS')">
-                <i class="fas fa-file-import"><span th:text="#{host.import}" class="ml-1"></span></i>
+            <a href="" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-warning"
+               th:attr="data-bs-target='#modal-warning'" sec:authorize="hasRole('IMPORT_CSV_HOSTS')">
+                <i class="fas fa-file-import"><span th:text="#{host.import}" class="ms-1"></span></i>
             </a>
         </div>
 
@@ -89,7 +89,7 @@
                 </form>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline pull-left" data-dismiss="modal"
+                    <button type="button" class="btn btn-outline pull-left" data-bs-dismiss="modal"
                             th:text="#{btn.close}"></button>
                     <button type="submit" class="btn btn-primary" form="import-hosts-to-csv-form"
                             th:text="#{import.hosts}" id="btnSubmit"></button>

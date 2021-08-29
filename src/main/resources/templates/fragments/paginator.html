@@ -45,8 +45,8 @@
                     </a>
                 </li>
 
-                <div class="form-group col-md-2">
-                    <select class="form-control pagination" id="pageSizeSelect"
+                <div class="form-group col-md-2 ms-2">
+                    <select class="form-control pagination ps-3" id="pageSizeSelect"
                             th:onchange="changePageAndSize(this.value)">
                         <option th:each="pageSize : ${pager.pageSizes}"
                                 th:text="${pageSize}" th:value="${pageSize}"

@@ -1,18 +1,10 @@
 plugins {
-    id "org.springframework.boot" version "2.5.2"
-    id "io.spring.dependency-management" version "1.0.11.RELEASE"
+    id "org.springframework.boot" version "$springBootVersion"
+    id "io.spring.dependency-management" version "$springDependencyVersion"
     id "java"
-    id "org.jetbrains.kotlin.jvm" version "1.5.20"
-    id "org.jetbrains.kotlin.plugin.spring" version "1.5.20"
-    id "org.jetbrains.kotlin.plugin.jpa" version "1.5.20"
-}
-
-ext {
-    telegrambotsSpringBootStarterVersion = "5.3.0"
-    thymeleafExtrasSpringsecurity5Version = "3.0.4.RELEASE"
-    opencsvVersion = "5.3"
-    commonsLang3Version = "3.11"
-    emojiJavaVersion = "5.1.1"
+    id "org.jetbrains.kotlin.jvm" version "$kotlinVersion"
+    id "org.jetbrains.kotlin.plugin.spring" version "$kotlinVersion"
+    id "org.jetbrains.kotlin.plugin.jpa" version "$kotlinVersion"
 }
 
 sourceSets {
@@ -47,14 +39,14 @@ dependencies {
             "com.opencsv:opencsv:$opencsvVersion",
             "org.apache.commons:commons-lang3:$commonsLang3Version",
             "com.vdurmont:emoji-java:$emojiJavaVersion",
-            "org.passay:passay:1.6.0"
+            "org.passay:passay:$passayVersion"
     )
     implementation(
-            "org.webjars:webjars-locator:0.41",
-            "org.webjars:jquery:3.6.0",
-            "org.webjars:bootstrap:4.1.3",
-            "org.webjars:font-awesome:5.15.3",
-            "org.webjars:popper.js:2.9.2"
+            "org.webjars:webjars-locator:$webjarsLocatorVersion",
+            "org.webjars:jquery:$jqueryVersion",
+            "org.webjars:bootstrap:$bootstrapVersion",
+            "org.webjars:font-awesome:$fontAwesomeVersion",
+            "org.webjars:popper.js:$popperJsVersion"
     )
     compileOnly "org.projectlombok:lombok"
     developmentOnly "org.springframework.boot:spring-boot-devtools"
@@ -68,11 +60,11 @@ dependencies {
             "org.springframework.security:spring-security-test"
     )
 
-    runtimeOnly "org.jetbrains.kotlin:kotlin-reflect:1.5.20"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
     implementation(
             "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
-            "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1",
-            "com.fasterxml.jackson.module:jackson-module-kotlin:2.12.4"
+            "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesCoreVersion",
+            "com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonModuleKotlinVersion"
     )
 }
 

@@ -16,6 +16,12 @@ function drawChart() {
         return;
     }
 
+    let dates = Array.from(timeLogMap).map(([key, value]) => value).flat().map(log => new Date(log.createdDate))
+    let minDate = new Date(Math.min(...dates));
+    minDate.setHours(0, 0, 0, 0);
+    let maxDate = new Date(Math.max(...dates));
+    maxDate.setHours(23, 59, 59, 999);
+
     timeLogMap.forEach((log) => {
         let deviceName = log[0]
         let logArray = log[1]
@@ -23,21 +29,19 @@ function drawChart() {
             let log = logArray[i]
             if (i === 0) {
                 let state = log.state === 'FAILED' ? 'REACHABLE' : 'FAILED';
-                let startOfDay = new Date(log.createdDate);
-                startOfDay.setHours(0, 0, 0, 0);
-                dataTable.addRow([deviceName, state, startOfDay, new Date(log.createdDate)]);
+                dataTable.addRow([deviceName, state, minDate, new Date(log.createdDate)]);
             }
+
+            let endOfInterval;
             let isLast = i === logArray.length - 1;
             if (isLast) {
                 let now = new Date()
-                let endOfDay = new Date(log.createdDate);
-                endOfDay.setHours(23, 59, 59, 999);
-                let endOfInterval = endOfDay > now ? now : endOfDay
-                dataTable.addRow([deviceName, log.state, new Date(log.createdDate), endOfInterval]);
+                endOfInterval = maxDate > now ? now : maxDate
             } else {
                 let nextLog = logArray[i + 1]
-                dataTable.addRow([deviceName, log.state, new Date(log.createdDate), new Date(nextLog.createdDate)]);
+                endOfInterval = new Date(nextLog.createdDate)
             }
+            dataTable.addRow([deviceName, log.state, new Date(log.createdDate), endOfInterval]);
         }
     });
 

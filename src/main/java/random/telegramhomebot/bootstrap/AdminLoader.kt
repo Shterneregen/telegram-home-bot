@@ -2,6 +2,7 @@ package random.telegramhomebot.bootstrap
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import random.telegramhomebot.auth.entities.Privilege
@@ -12,6 +13,7 @@ import random.telegramhomebot.auth.repositories.RoleRepository
 import random.telegramhomebot.auth.repositories.UserRepository
 import random.telegramhomebot.utils.logger
 
+@Order(1)
 @Component
 class AdminLoader(
     private val userRepository: UserRepository,
@@ -33,6 +35,7 @@ class AdminLoader(
     private lateinit var userPassword: String
 
     override fun run(vararg args: String) {
+        log.info("AdminLoader started")
         createAdminUser()
     }
 

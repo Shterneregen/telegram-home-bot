@@ -2,11 +2,13 @@ package random.telegramhomebot.bootstrap
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.CommandLineRunner
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import random.telegramhomebot.model.TelegramCommand
 import random.telegramhomebot.repository.TelegramCommandRepository
 import random.telegramhomebot.utils.logger
 
+@Order(2)
 @Component
 class CommandsLoader(
     private val telegramCommandRepository: TelegramCommandRepository,
@@ -16,6 +18,7 @@ class CommandsLoader(
     val log = logger()
 
     override fun run(vararg args: String) {
+        log.info("CommandsLoader started")
         loadSampleCommands()
     }
 

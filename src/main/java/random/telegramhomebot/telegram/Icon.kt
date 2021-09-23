@@ -6,7 +6,8 @@ enum class Icon(private val value: String) {
     PLUS(":heavy_plus_sign:"),
     MINUS(":heavy_minus_sign:"),
     CHECK(":white_check_mark:"),
-    NOT(":x:");
+    NOT(":x:"),
+    REFRESH(":arrows_counterclockwise:");
 
     fun get(): String {
         return EmojiParser.parseToUnicode(value)

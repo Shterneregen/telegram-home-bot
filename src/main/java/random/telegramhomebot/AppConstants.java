@@ -76,5 +76,6 @@ public interface AppConstants {
         String MENU_COMMAND = "/menu";
         String LAST_ACTIVITY = "/activity";
         String FEATURES = "/features";
+        String REFRESH = "/refresh";
     }
 }

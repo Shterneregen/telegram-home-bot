@@ -52,6 +52,25 @@ keytool -genkeypair -alias thb -keyalg RSA -keysize 2048 -storetype PKCS12 -keys
   file (put your `SOME_SECURE_PSW` and change others if needed)
 * Add `thb-keystore.p12` to the `Trusted Root Certification Authorities certificate` store
 
+### Launch bot in Docker
+
+```shell
+# Build the image
+docker build -t thb-image .
+
+# Create and start new container from the image
+docker run -d -p 80:8080 --network=bridge --name=thb  thb-image
+
+# Start the container
+docker start thb
+
+# Stop the running container
+docker stop thb
+
+# Show information logged by a running container
+docker logs -f thb
+```
+
 ---
 
 #### Create private chat group with chatbot (JFYI)
@@ -72,4 +91,4 @@ keytool -genkeypair -alias thb -keyalg RSA -keysize 2048 -storetype PKCS12 -keys
 
 ---
 
-Spring Boot, Spring Security, Gradle, H2, Thymeleaf, Google Charts, telegrambots-spring-boot-starter
+Spring Boot, Kotlin, Spring Security, Gradle, H2, Thymeleaf, Google Charts, telegrambots-spring-boot-starter

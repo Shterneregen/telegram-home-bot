@@ -10,8 +10,8 @@ import random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS
 import random.telegramhomebot.services.CommandService
 import random.telegramhomebot.services.HostService
 import random.telegramhomebot.services.MessageFormatService
-import random.telegramhomebot.services.MessageService
 import random.telegramhomebot.services.StateChangeService
+import random.telegramhomebot.services.menu.dto.Menu
 import random.telegramhomebot.telegram.Icon
 
 @Service
@@ -19,32 +19,29 @@ class MainMenuService(
     private val hostService: HostService,
     private val messageFormatService: MessageFormatService,
     private val commandService: CommandService,
-    private val messageService: MessageService,
     private val stateChangeService: StateChangeService,
 ) {
 
-    fun getMainMenuMap(): Map<String, Menu> {
-        return mapOf(
-            REACHABLE_HOSTS_COMMAND to Menu(messageService.getMessage("btn.hosts"))
-            { messageFormatService.getHostsState(hostService.getReachableHosts()).ifBlank { "No hosts" } },
-            SHOW_ALL_COMMANDS to Menu(messageService.getMessage("btn.commands"))
-            { commandService.getAllEnabledCommandsAsString().ifBlank { "No commands" } },
-            LAST_ACTIVITY to Menu(messageService.getMessage("btn.activity"))
-            { hostService.getLastHostTimeLogsAsString(20).ifBlank { "No activity" } },
-            REFRESH to Menu(Icon.REFRESH.get())
-            {
-                stateChangeService.checkState()
-                "Host scan started"
-            }
-        )
-    }
+    fun getMainMenuMap(): Map<String, Menu> = mapOf(
+        REACHABLE_HOSTS_COMMAND to Menu(Icon.DESKTOP_COMPUTER.get())
+        { messageFormatService.getHostsState(hostService.getReachableHosts()).ifBlank { "No hosts" } },
+        SHOW_ALL_COMMANDS to Menu(Icon.HAMMER.get())
+        { "Available commands:\n" + commandService.getAllEnabledCommandsAsString().ifBlank { "No commands" } },
+        LAST_ACTIVITY to Menu(Icon.SCROLL.get())
+        { "History:\n" + hostService.getLastHostTimeLogsAsString(20).ifBlank { "No activity" } },
+        REFRESH to Menu(Icon.REFRESH.get())
+        {
+            stateChangeService.checkState()
+            "Host scan started"
+        }
+    )
 
     fun getMainMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
         val buttons = getMainMenuMap().entries
-            .map { (key, menu) ->
+            .map { (command, menu) ->
                 InlineKeyboardButton.builder()
                     .text(menu.buttonText)
-                    .callbackData(key).build()
+                    .callbackData(command).build()
             }
         return InlineKeyboardMarkup.builder().keyboard(listOf(buttons)).build()
     }

@@ -4,8 +4,11 @@ import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
 import random.telegramhomebot.services.FeatureSwitcherService
-import random.telegramhomebot.services.FeatureSwitcherService.Features.*
+import random.telegramhomebot.services.FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION
+import random.telegramhomebot.services.FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION
+import random.telegramhomebot.services.FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION
 import random.telegramhomebot.services.MessageService
+import random.telegramhomebot.services.menu.dto.FeatureMenu
 import random.telegramhomebot.telegram.Icon
 
 @Service
@@ -14,13 +17,11 @@ class FeaturesMenuService(
     private val featureSwitcherService: FeatureSwitcherService
 ) {
 
-    fun getFeaturesMenuMap(): Map<String, FeatureMenu> {
-        return mapOf(
-            pair(NEW_HOSTS_NOTIFICATION) { featureSwitcherService.newHostsNotificationsEnabled() },
-            pair(REACHABLE_HOSTS_NOTIFICATION) { featureSwitcherService.reachableHostsNotificationsEnabled() },
-            pair(NOT_REACHABLE_HOSTS_NOTIFICATION) { featureSwitcherService.notReachableHostsNotificationsEnabled() }
-        )
-    }
+    fun getFeaturesMenuMap(): Map<String, FeatureMenu> = mapOf(
+        pair(NEW_HOSTS_NOTIFICATION) { featureSwitcherService.newHostsNotificationsEnabled() },
+        pair(REACHABLE_HOSTS_NOTIFICATION) { featureSwitcherService.reachableHostsNotificationsEnabled() },
+        pair(NOT_REACHABLE_HOSTS_NOTIFICATION) { featureSwitcherService.notReachableHostsNotificationsEnabled() }
+    )
 
     private fun pair(
         feature: FeatureSwitcherService.Features,
@@ -35,12 +36,11 @@ class FeaturesMenuService(
 
     fun getFeaturesMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
         val rowList: List<List<InlineKeyboardButton>> = getFeaturesMenuMap().entries
-            .map { (key, menu) ->
+            .map { (command, menu) ->
                 InlineKeyboardButton.builder()
                     .text("${getIcon(menu.featureMethod.get())} ${menu.buttonText}")
-                    .callbackData(key).build()
-            }
-            .map { listOf(it) }
+                    .callbackData(command).build()
+            }.map { listOf(it) }
         return InlineKeyboardMarkup.builder().keyboard(rowList).build()
     }
 

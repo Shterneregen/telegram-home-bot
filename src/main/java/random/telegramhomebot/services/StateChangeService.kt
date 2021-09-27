@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import org.apache.commons.lang3.SystemUtils
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import random.telegramhomebot.AppConstants
+import random.telegramhomebot.AppConstants.Messages.NEW_HOSTS_MSG
+import random.telegramhomebot.AppConstants.Messages.REACHABLE_HOSTS_MSG
+import random.telegramhomebot.AppConstants.Messages.UNREACHABLE_HOSTS_MSG
 import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.model.Host
 import random.telegramhomebot.utils.Utils
@@ -37,9 +39,7 @@ class StateChangeService(
         var result = ""
         val storedHosts = hostService.getAllHosts()
         if (storedHosts.isEmpty()) {
-            result = messageFormatService.formHostsListTable(
-                messageService.getMessage(AppConstants.Messages.NEW_HOSTS_MSG), currentHosts
-            )
+            result = messageFormatService.formHostsListTable(getMessage(NEW_HOSTS_MSG), currentHosts)
         }
         var newHosts: List<Host>? = null
         var reachableHosts: List<Host>? = null
@@ -66,18 +66,17 @@ class StateChangeService(
         notReachableHosts: List<Host>
     ): String {
         val hostsMessagesMap: MutableMap<String, List<Host>> = LinkedHashMap()
-        if (featureSwitcherService.newHostsNotificationsEnabled()) {
-            hostsMessagesMap[messageService.getMessage(AppConstants.Messages.NEW_HOSTS_MSG)] = newHosts
-        }
-        if (featureSwitcherService.reachableHostsNotificationsEnabled()) {
-            hostsMessagesMap[messageService.getMessage(AppConstants.Messages.REACHABLE_HOSTS_MSG)] = reachableHosts
-        }
-        if (featureSwitcherService.notReachableHostsNotificationsEnabled()) {
-            hostsMessagesMap[messageService.getMessage(AppConstants.Messages.UNREACHABLE_HOSTS_MSG)] = notReachableHosts
-        }
+        if (featureSwitcherService.newHostsNotificationsEnabled())
+            hostsMessagesMap[getMessage(NEW_HOSTS_MSG)] = newHosts
+        if (featureSwitcherService.reachableHostsNotificationsEnabled())
+            hostsMessagesMap[getMessage(REACHABLE_HOSTS_MSG)] = reachableHosts
+        if (featureSwitcherService.notReachableHostsNotificationsEnabled())
+            hostsMessagesMap[getMessage(UNREACHABLE_HOSTS_MSG)] = notReachableHosts
         return when {
             hostsMessagesMap.isNotEmpty() -> messageFormatService.formHostsListTable(hostsMessagesMap)
             else -> ""
         }
     }
+
+    private fun getMessage(code: String) = messageService.getMessage(code)
 }

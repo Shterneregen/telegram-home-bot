@@ -1,4 +1,4 @@
-package random.telegramhomebot.services.menu
+package random.telegramhomebot.services.menu.dto
 
 import java.util.function.Supplier
 

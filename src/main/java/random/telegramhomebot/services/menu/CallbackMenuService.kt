@@ -24,19 +24,19 @@ class CallbackMenuService(
             .build()
     }
 
-    fun getRequestResult(callData: String): RequestResult {
-        mainMenuService.getMainMenuMap()[callData]
+    fun getRequestResult(command: String): RequestResult {
+        mainMenuService.getMainMenuMap()[command]
             ?.let { return RequestResult(it.method.get(), mainMenuService.getMainMenuInlineKeyboardMarkup()) }
-        featuresMenuService.getFeaturesMenuMap()[callData]
+        featuresMenuService.getFeaturesMenuMap()[command]
             ?.let { return RequestResult(it.method.get(), featuresMenuService.getFeaturesMenuInlineKeyboardMarkup()) }
-        return RequestResult("No answer", null)
+        return RequestResult("No answer")
     }
 
     fun getMenuForCommand(message: Message): SendMessage? {
         val chatId = message.chatId
         return when (message.text) {
             BotCommands.MENU_COMMAND -> getInlineKeyBoardMessage(
-                chatId, "Options", mainMenuService.getMainMenuInlineKeyboardMarkup()
+                chatId, "Main menu", mainMenuService.getMainMenuInlineKeyboardMarkup()
             )
             BotCommands.FEATURES -> getInlineKeyBoardMessage(
                 chatId, "Features Settings", featuresMenuService.getFeaturesMenuInlineKeyboardMarkup()

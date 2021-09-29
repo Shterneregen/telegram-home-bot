@@ -20,9 +20,11 @@ class MainMenuService(
     private val messageFormatService: MessageFormatService,
     private val commandService: CommandService,
     private val stateChangeService: StateChangeService,
-) {
+) : MenuService {
+    override val menuCommand = "/menu"
+    override val menuText = "Main Menu"
 
-    fun getMainMenuMap(): Map<String, Menu> = mapOf(
+    override fun getMenuMap(): Map<String, Menu> = mapOf(
         REACHABLE_HOSTS_COMMAND to Menu(Icon.DESKTOP_COMPUTER.get())
         { messageFormatService.getHostsState(hostService.getReachableHosts()).ifBlank { "No hosts" } },
         SHOW_ALL_COMMANDS to Menu(Icon.HAMMER.get())
@@ -36,13 +38,12 @@ class MainMenuService(
         }
     )
 
-    fun getMainMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val buttons = getMainMenuMap().entries
-            .map { (command, menu) ->
-                InlineKeyboardButton.builder()
-                    .text(menu.buttonText)
-                    .callbackData(command).build()
-            }
+    override fun getMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
+        val buttons = getMenuMap().entries.map { (command, menu) ->
+            InlineKeyboardButton.builder()
+                .text(menu.buttonText)
+                .callbackData(command).build()
+        }
         return InlineKeyboardMarkup.builder().keyboard(listOf(buttons)).build()
     }
 }

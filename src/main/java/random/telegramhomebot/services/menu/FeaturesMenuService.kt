@@ -15,13 +15,25 @@ import random.telegramhomebot.telegram.Icon
 class FeaturesMenuService(
     private val messageService: MessageService,
     private val featureSwitcherService: FeatureSwitcherService
-) {
+) : MenuService {
+    override val menuCommand = "/features"
+    override val menuText = "Features Setting"
 
-    fun getFeaturesMenuMap(): Map<String, FeatureMenu> = mapOf(
+    override fun getMenuMap(): Map<String, FeatureMenu> = mapOf(
         pair(NEW_HOSTS_NOTIFICATION) { featureSwitcherService.newHostsNotificationsEnabled() },
         pair(REACHABLE_HOSTS_NOTIFICATION) { featureSwitcherService.reachableHostsNotificationsEnabled() },
         pair(NOT_REACHABLE_HOSTS_NOTIFICATION) { featureSwitcherService.notReachableHostsNotificationsEnabled() }
     )
+
+    override fun getMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
+        val rowList: List<List<InlineKeyboardButton>> = getMenuMap().entries
+            .map { (command, menu) ->
+                InlineKeyboardButton.builder()
+                    .text("${getIcon(menu.featureMethod.get())} ${menu.buttonText}")
+                    .callbackData(command).build()
+            }.map { listOf(it) }
+        return InlineKeyboardMarkup.builder().keyboard(rowList).build()
+    }
 
     private fun pair(
         feature: FeatureSwitcherService.Features,
@@ -32,16 +44,6 @@ class FeaturesMenuService(
             featureSwitcherService.switchFeature(feature.name)
             "Feature \"$message\" toggled"
         }, checkFunction)
-    }
-
-    fun getFeaturesMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val rowList: List<List<InlineKeyboardButton>> = getFeaturesMenuMap().entries
-            .map { (command, menu) ->
-                InlineKeyboardButton.builder()
-                    .text("${getIcon(menu.featureMethod.get())} ${menu.buttonText}")
-                    .callbackData(command).build()
-            }.map { listOf(it) }
-        return InlineKeyboardMarkup.builder().keyboard(rowList).build()
     }
 
     private fun getIcon(flag: Boolean) = if (flag) Icon.CHECK.get() else Icon.NOT.get()

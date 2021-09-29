@@ -6,13 +6,9 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
-import random.telegramhomebot.AppConstants.BotCommands
 
 @Service
-class CallbackMenuService(
-    private val mainMenuService: MainMenuService,
-    private val featuresMenuService: FeaturesMenuService
-) {
+class CallbackMenuService(private val menuServices: List<MenuService>) {
 
     fun processCallback(update: Update): EditMessageText {
         val requestResult = getRequestResult(update.callbackQuery.data)
@@ -25,27 +21,16 @@ class CallbackMenuService(
     }
 
     fun getRequestResult(command: String): RequestResult {
-        mainMenuService.getMainMenuMap()[command]
-            ?.let { return RequestResult(it.method.get(), mainMenuService.getMainMenuInlineKeyboardMarkup()) }
-        featuresMenuService.getFeaturesMenuMap()[command]
-            ?.let { return RequestResult(it.method.get(), featuresMenuService.getFeaturesMenuInlineKeyboardMarkup()) }
+        for (menuService in menuServices) {
+            menuService.getMenuMap()[command]
+                ?.let { return RequestResult(it.method.get(), menuService.getMenuInlineKeyboardMarkup()) }
+        }
         return RequestResult("No answer")
     }
 
-    fun getMenuForCommand(message: Message): SendMessage? {
-        val chatId = message.chatId
-        return when (message.text) {
-            BotCommands.MENU_COMMAND -> getInlineKeyBoardMessage(
-                chatId, "Main menu", mainMenuService.getMainMenuInlineKeyboardMarkup()
-            )
-            BotCommands.FEATURES -> getInlineKeyBoardMessage(
-                chatId, "Features Settings", featuresMenuService.getFeaturesMenuInlineKeyboardMarkup()
-            )
-            else -> {
-                null
-            }
-        }
-    }
+    fun getMenuForCommand(message: Message): SendMessage? =
+        menuServices.find { message.text.equals(it.menuCommand) }
+            ?.let { getInlineKeyBoardMessage(message.chatId, it.menuText, it.getMenuInlineKeyboardMarkup()) }
 
     private fun getInlineKeyBoardMessage(chatId: Long, text: String, inlineKeyboardMarkup: InlineKeyboardMarkup)
             : SendMessage = SendMessage.builder()

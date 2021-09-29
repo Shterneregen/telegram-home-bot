@@ -10,4 +10,7 @@ interface HostRepository : JpaRepository<Host, UUID> {
 
     @Query(value = "SELECT h FROM Host h WHERE h.state <> random.telegramhomebot.model.HostState.FAILED")
     fun findReachableHosts(): List<Host>
+
+    @Query(value = "SELECT h FROM Host h WHERE h.wakeOnLanEnabled=true")
+    fun findWakeOnLanEnabledHosts(): List<Host>
 }

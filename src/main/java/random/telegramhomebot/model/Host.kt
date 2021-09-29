@@ -42,7 +42,8 @@ class Host(
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "host", cascade = [CascadeType.REMOVE])
     var timeLogs: List<HostTimeLog>? = null,
 
-    var notes: String? = null
+    var notes: String? = null,
+    var wakeOnLanEnabled: Boolean? = false
 ) {
     constructor(mac: String, deviceName: String, notes: String)
             : this(null, null, null, mac, null, deviceName, null, notes)

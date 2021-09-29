@@ -38,6 +38,7 @@ class HostService(
     fun deleteHostById(id: UUID) = hostRepository.deleteById(id)
     fun saveHost(host: Host): Host = hostRepository.save(host)
     fun getReachableHosts(): List<Host> = hostRepository.findReachableHosts()
+    fun getWakeOnLanEnableHosts(): List<Host> = hostRepository.findWakeOnLanEnabledHosts()
     fun count() = hostRepository.count()
 
     fun getNewHosts(storedHosts: List<Host?>, currentHosts: List<Host>): List<Host> {

@@ -16,7 +16,7 @@ import javax.annotation.Resource
 internal class HostRepositoryTest {
 
     @Resource
-    private val repository: HostRepository? = null
+    private lateinit var repository: HostRepository
     private lateinit var host: Host
 
     @BeforeEach
@@ -26,27 +26,27 @@ internal class HostRepositoryTest {
 
     @AfterEach
     fun tearDown() {
-        repository!!.deleteAll()
+        repository.deleteAll()
     }
 
     @Test
-    fun shouldSaveHost() {
-        repository!!.save(host)
+    fun `should save host`() {
+        repository.save(host)
         val fetchedHost = repository.findHostByMac(host.mac)
         Assertions.assertEquals(MAC, fetchedHost?.mac)
     }
 
     @Test
-    fun shouldReturnHostFromAll() {
-        repository!!.save(host)
+    fun `should return all hosts`() {
+        repository.save(host)
         val hosts = repository.findAll()
         Assertions.assertEquals(MAC, hosts[0]?.mac)
     }
 
     @Test
-    fun shouldDeleteHost() {
-        repository!!.save(host)
-        repository.deleteById(host.id)
+    fun `should delete host`() {
+        repository.save(host)
+        repository.deleteById(host.id!!)
         val optional = repository.findHostByMac(MAC)
         Assertions.assertEquals(null, optional)
     }

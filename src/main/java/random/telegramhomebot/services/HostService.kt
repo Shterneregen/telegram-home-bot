@@ -5,16 +5,14 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
-import random.telegramhomebot.AppConstants
 import random.telegramhomebot.model.Host
-import random.telegramhomebot.model.HostState
+import random.telegramhomebot.model.HostState.FAILED
 import random.telegramhomebot.model.HostTimeLog
 import random.telegramhomebot.repository.HostRepository
 import random.telegramhomebot.repository.HostTimeLogRepository
 import random.telegramhomebot.utils.NetUtils
 import random.telegramhomebot.utils.logger
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
 import java.util.*
 
 @Service
@@ -42,11 +40,8 @@ class HostService(
     fun count() = hostRepository.count()
 
     fun getNewHosts(storedHosts: List<Host?>, currentHosts: List<Host>): List<Host> {
-        val newHostNameStub =
-            String.format("[NEW DEVICE] %s", LocalDateTime.now().format(AppConstants.DATE_TIME_FORMATTER))
         return currentHosts
-            .filter { currentHost -> storedHosts.none { other -> currentHost == other } }
-            .onEach { it.deviceName = newHostNameStub }
+            .filter { currentHost -> storedHosts.none { currentHost == it } }
             .sortedWith(NetUtils.comparingByIp())
     }
 
@@ -60,7 +55,7 @@ class HostService(
     fun getHostsThatBecameNotReachable(storedHosts: List<Host>, currentHosts: List<Host>): List<Host> {
         val hostsFailedStream1 = storedHosts
             .filter { reachableBecameNotFound(currentHosts, it) }
-            .onEach { it.state = HostState.FAILED }
+            .onEach { it.state = FAILED }
         val hostsFailedStream2 = currentHosts.filter { reachableBecameNotReachable(storedHosts, it) }
         return hostsFailedStream1 + hostsFailedStream2
     }
@@ -98,14 +93,14 @@ class HostService(
         "${TIME_DATE_FORMAT.format(log.createdDate)} \t ${log.state} \t\t ${log.host.deviceName}"
 
     private fun isReachable(storedHosts: List<Host>, currentHost: Host) =
-        HostState.FAILED != currentHost.state
-                && storedHosts.any { storedHost -> storedHost == currentHost && HostState.FAILED == storedHost.state }
+        FAILED != currentHost.state
+                && storedHosts.any { storedHost -> storedHost == currentHost && FAILED == storedHost.state }
 
     private fun reachableBecameNotFound(currentHosts: List<Host>, storedHost: Host) =
-        HostState.FAILED != storedHost.state && currentHosts.none { storedHost == it }
+        FAILED != storedHost.state && currentHosts.none { storedHost == it }
 
     private fun reachableBecameNotReachable(storedHosts: List<Host>, currentHost: Host) =
-        HostState.FAILED == currentHost.state && storedHosts.any { it == currentHost && HostState.FAILED != it.state }
+        FAILED == currentHost.state && storedHosts.any { it == currentHost && FAILED != it.state }
 
     companion object {
         private val TIME_DATE_FORMAT = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")

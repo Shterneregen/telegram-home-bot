@@ -33,10 +33,7 @@ class CommandService(
 
     fun executeCommandOnMachine(command: String?): String? {
         val telegramCommand = getEnabledCommand(command) ?: return null
-
-        val commandOutput = commandRunnerService.runCommand(telegramCommand.command)
-        commandOutput.forEach { log.debug(it) }
-        return commandOutput.joinToString(separator = "\n")
+        return commandRunnerService.runCommand(telegramCommand.command)
     }
 
     fun setCommandButtons(sendMessage: SendMessage) {

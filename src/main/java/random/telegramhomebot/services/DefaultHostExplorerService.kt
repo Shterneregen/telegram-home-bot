@@ -28,7 +28,7 @@ class DefaultHostExplorerService(
     override fun getCurrentHosts(): List<Host> {
         val hostsJson = commandRunnerService.runCommand(stateChangeCommand)
         val currentHosts: List<JsonHost>? =
-            objectMapper.readValue(hostsJson[0], object : TypeReference<List<JsonHost>>() {})
+            objectMapper.readValue(hostsJson, object : TypeReference<List<JsonHost>>() {})
 
         return when {
             (currentHosts != null && currentHosts.isNotEmpty()) -> currentHosts

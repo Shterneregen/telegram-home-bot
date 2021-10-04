@@ -7,10 +7,10 @@ import random.telegramhomebot.AppConstants.BotCommands.LAST_ACTIVITY
 import random.telegramhomebot.AppConstants.BotCommands.REACHABLE_HOSTS_COMMAND
 import random.telegramhomebot.AppConstants.BotCommands.REFRESH
 import random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS
+import random.telegramhomebot.events.scan.ScanHostsEventPublisher
 import random.telegramhomebot.services.CommandService
 import random.telegramhomebot.services.HostService
 import random.telegramhomebot.services.MessageFormatService
-import random.telegramhomebot.services.StateChangeService
 import random.telegramhomebot.services.menu.dto.Menu
 import random.telegramhomebot.telegram.Icon
 
@@ -19,7 +19,7 @@ class MainMenuService(
     private val hostService: HostService,
     private val messageFormatService: MessageFormatService,
     private val commandService: CommandService,
-    private val stateChangeService: StateChangeService,
+    private val scanHostsEventPublisher: ScanHostsEventPublisher
 ) : MenuService {
     override val menuCommand = "/menu"
     override val menuText = "Main Menu"
@@ -33,7 +33,7 @@ class MainMenuService(
         { "History:\n" + hostService.getLastHostTimeLogsAsString(20).ifBlank { "No activity" } },
         REFRESH to Menu(Icon.REFRESH.get())
         {
-            stateChangeService.checkState()
+            scanHostsEventPublisher.publishEvent()
             "Host scan started"
         }
     )

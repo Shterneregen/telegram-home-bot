@@ -5,22 +5,17 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import random.telegramhomebot.config.ProfileService
-import random.telegramhomebot.services.StateChangeService
-import random.telegramhomebot.telegram.Bot
+import random.telegramhomebot.events.scan.ScanHostsEventPublisher
 
 @Profile(ProfileService.NETWORK_MONITOR)
 @Service
 class StateChangeScheduler(
-    private val stateChangeService: StateChangeService,
-    private val bot: Bot
+    private val scanHostsEventPublisher: ScanHostsEventPublisher
 ) {
 
     @Async
     @Scheduled(fixedRateString = "\${state.change.scheduled.time}", initialDelay = 20000)
     fun checkState() {
-        val checkState = stateChangeService.checkState()
-        if (checkState.isNotBlank()) {
-            bot.sendMessage(checkState)
-        }
+        scanHostsEventPublisher.publishEvent()
     }
 }

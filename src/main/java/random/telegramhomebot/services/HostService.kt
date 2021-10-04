@@ -2,7 +2,6 @@ package random.telegramhomebot.services
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import random.telegramhomebot.model.Host
@@ -13,7 +12,8 @@ import random.telegramhomebot.repository.HostTimeLogRepository
 import random.telegramhomebot.utils.NetUtils
 import random.telegramhomebot.utils.logger
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 
 @Service
 class HostService(
@@ -61,9 +61,7 @@ class HostService(
     }
 
     fun saveTimeLogForHosts(hosts: List<Host>) {
-        if (hosts.isEmpty()) {
-            return
-        }
+        if (hosts.isEmpty()) return
         val timeLogs = hosts.map { HostTimeLog(it, it.state!!) }
         hostTimeLogRepository.saveAll(timeLogs)
     }
@@ -76,21 +74,20 @@ class HostService(
     }
 
     private fun getLastHostTimeLogs(logCount: Int): List<HostTimeLog> {
-        val page: Pageable = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate")
+        val page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate")
         return hostTimeLogRepository.findAll(page).sortedWith(Comparator.comparing(HostTimeLog::createdDate))
     }
 
     fun getLastHostTimeLogsForHost(host: Host?, logCount: Int): List<HostTimeLog> {
-        val page: Pageable = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate")
+        val page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate")
         return hostTimeLogRepository.findHostTimeLogByHost(page, host)
             .sortedWith(Comparator.comparing(HostTimeLog::createdDate))
     }
 
     fun getLastHostTimeLogsAsString(logCount: Int): String =
-        getLastHostTimeLogs(logCount).joinToString(separator = "\n") { convertTimeLog(it) }
+        getLastHostTimeLogs(logCount).joinToString(separator = "\n") { it.toShow() }
 
-    private fun convertTimeLog(log: HostTimeLog) =
-        "${TIME_DATE_FORMAT.format(log.createdDate)} \t ${log.state} \t\t ${log.host.deviceName}"
+    private fun HostTimeLog.toShow() = "${TIME_DATE_FORMAT.format(createdDate)} \t $state \t\t ${host.deviceName}"
 
     private fun isReachable(storedHosts: List<Host>, currentHost: Host) =
         FAILED != currentHost.state
@@ -103,6 +100,6 @@ class HostService(
         FAILED == currentHost.state && storedHosts.any { it == currentHost && FAILED != it.state }
 
     companion object {
-        private val TIME_DATE_FORMAT = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+        private val TIME_DATE_FORMAT = SimpleDateFormat("dd/MM/yy HH:mm")
     }
 }

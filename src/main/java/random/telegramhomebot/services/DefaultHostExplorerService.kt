@@ -9,7 +9,6 @@ import random.telegramhomebot.AppConstants
 import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.model.Host
 import random.telegramhomebot.model.JsonHost
-import random.telegramhomebot.utils.NetUtils
 import random.telegramhomebot.utils.logger
 import java.time.LocalDateTime
 
@@ -26,24 +25,23 @@ class DefaultHostExplorerService(
     private lateinit var stateChangeCommand: String
 
     override fun getCurrentHosts(): List<Host> {
-        val hostsJson = commandRunnerService.runCommand(stateChangeCommand)
-        val currentHosts: List<JsonHost>? =
-            objectMapper.readValue(hostsJson, object : TypeReference<List<JsonHost>>() {})
-
-        return when {
-            (currentHosts != null && currentHosts.isNotEmpty()) -> currentHosts
-                .filter { it.mac != null }
-                .map { jsonHost ->
-                    val host = hostService.getHostByMac(jsonHost.mac)
-                    host?.also {
-                        it.ip = jsonHost.ip
-                        it.hostInterface = jsonHost.hostInterface
-                        it.state = jsonHost.state
-                    } ?: Host(jsonHost.ip, jsonHost.hostInterface, jsonHost.mac, jsonHost.state, getNewHostName())
-                }.sortedWith(NetUtils.comparingByIp())
-            else -> emptyList()
-        }
+        val jsonHostsString = commandRunnerService.runCommand(stateChangeCommand)
+        val jsonHosts: List<JsonHost>? =
+            objectMapper.readValue(jsonHostsString, object : TypeReference<List<JsonHost>>() {})
+        return convertToEntities(jsonHosts)
     }
+
+    private fun convertToEntities(jsonHosts: List<JsonHost>?): List<Host> {
+        if (jsonHosts == null || jsonHosts.isEmpty()) return emptyList()
+        return jsonHosts.filter { it.mac != null }.map { it.toEntity() }
+    }
+
+    private fun JsonHost.toEntity() =
+        hostService.getHostByMac(mac)?.also {
+            it.ip = ip
+            it.hostInterface = hostInterface
+            it.state = state
+        } ?: Host(ip, hostInterface, mac, state, getNewHostName())
 
     private fun getNewHostName() = "[NEW DEVICE] ${LocalDateTime.now().format(AppConstants.DATE_TIME_FORMATTER)}"
 }

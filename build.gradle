@@ -42,7 +42,7 @@ dependencies {
             "org.telegram:telegrambots-spring-boot-starter:$telegrambotsSpringBootStarterVersion",
             "com.opencsv:opencsv:$opencsvVersion",
             "org.apache.commons:commons-lang3:$commonsLang3Version",
-            "com.vdurmont:emoji-java:$emojiJavaVersion",
+            "com.kcthota:emoji4j:$emoji4jVersion",
             "org.passay:passay:$passayVersion"
     )
     implementation(

@@ -88,7 +88,8 @@ class HostService(
     fun getLastHostTimeLogsAsString(logCount: Int): String =
         getLastHostTimeLogs(logCount).joinToString(separator = "\n") { it.toShow() }
 
-    private fun HostTimeLog.toShow() = "${TIME_DATE_FORMAT.format(createdDate)} \t $state \t\t ${host.deviceName}"
+    private fun HostTimeLog.toShow() =
+        "${TIME_DATE_FORMAT.format(createdDate)}\t ${state.getIcon()}\t ${host.deviceName}"
 
     private fun isReachable(storedHosts: List<Host>, currentHost: Host) =
         FAILED != currentHost.state

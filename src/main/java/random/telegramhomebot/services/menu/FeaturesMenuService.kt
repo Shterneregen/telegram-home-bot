@@ -7,8 +7,8 @@ import random.telegramhomebot.services.FeatureSwitcherService
 import random.telegramhomebot.services.FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION
 import random.telegramhomebot.services.FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION
 import random.telegramhomebot.services.FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION
-import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.services.menu.dto.FeatureMenu
+import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.telegram.Icon
 
 @Service
@@ -29,7 +29,7 @@ class FeaturesMenuService(
         val rowList: List<List<InlineKeyboardButton>> = getMenuMap().entries
             .map { (command, menu) ->
                 InlineKeyboardButton.builder()
-                    .text("${getIcon(menu.featureMethod.get())} ${menu.buttonText}")
+                    .text("${Icon.isChecked(menu.featureMethod.get())} ${menu.buttonText}")
                     .callbackData(command).build()
             }.map { listOf(it) }
         return InlineKeyboardMarkup.builder().keyboard(rowList).build()
@@ -45,6 +45,4 @@ class FeaturesMenuService(
             "Feature \"$message\" toggled"
         }, checkFunction)
     }
-
-    private fun getIcon(flag: Boolean) = if (flag) Icon.CHECK.get() else Icon.NOT.get()
 }

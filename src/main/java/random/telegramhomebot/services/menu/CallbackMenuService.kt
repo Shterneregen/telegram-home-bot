@@ -38,6 +38,6 @@ class CallbackMenuService(private val menuServices: List<MenuService>) {
         .text(text)
         .replyMarkup(inlineKeyboardMarkup)
         .build()
-}
 
-class RequestResult(var answer: String, var inlineKeyboardMarkup: InlineKeyboardMarkup? = null)
+    class RequestResult(var answer: String, var inlineKeyboardMarkup: InlineKeyboardMarkup? = null)
+}

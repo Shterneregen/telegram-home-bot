@@ -1,7 +1,7 @@
 package random.telegramhomebot.services.csv
 
 import org.springframework.stereotype.Component
-import random.telegramhomebot.model.Host
+import random.telegramhomebot.db.model.Host
 import java.util.*
 
 @Component

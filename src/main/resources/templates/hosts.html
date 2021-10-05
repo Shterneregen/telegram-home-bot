@@ -47,7 +47,7 @@
                 <tr th:each="host : ${hosts}">
                     <td th:text="|${#strings.isEmpty(host.ip) ? 'NONE' : host.ip} / ${host.mac}|"></td>
                     <td th:text="${host.deviceName}"
-                        th:style="${host.state == null or host.state == T(random.telegramhomebot.model.HostState).FAILED
+                        th:style="${host.state == null or host.state == T(random.telegramhomebot.db.model.HostState).FAILED
                         ? 'color: red;' : 'color: green;'}"></td>
                     <td sec:authorize="hasRole('EDIT_HOST')">
                         <a th:href="@{/hosts/edit/{id}(id=${host.id})}" class="btn btn-primary">

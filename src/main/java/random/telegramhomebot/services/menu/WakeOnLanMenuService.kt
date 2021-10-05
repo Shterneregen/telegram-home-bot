@@ -3,7 +3,7 @@ package random.telegramhomebot.services.menu
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
-import random.telegramhomebot.services.HostService
+import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.services.WakeOnLanService
 import random.telegramhomebot.services.menu.dto.Menu
 

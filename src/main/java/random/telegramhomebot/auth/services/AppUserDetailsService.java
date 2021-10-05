@@ -10,7 +10,7 @@ import random.telegramhomebot.auth.AuthErrorCodes;
 import random.telegramhomebot.auth.UserPrincipal;
 import random.telegramhomebot.auth.entities.User;
 import random.telegramhomebot.auth.repositories.UserRepository;
-import random.telegramhomebot.services.MessageService;
+import random.telegramhomebot.services.messages.MessageService;
 import random.telegramhomebot.utils.NetUtils;
 
 import javax.servlet.http.HttpServletRequest;

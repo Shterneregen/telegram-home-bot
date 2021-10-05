@@ -16,7 +16,7 @@ import random.telegramhomebot.auth.dao.PasswordDto;
 import random.telegramhomebot.auth.entities.User;
 import random.telegramhomebot.auth.exceptinos.InvalidOldPasswordException;
 import random.telegramhomebot.auth.services.UserService;
-import random.telegramhomebot.services.MessageService;
+import random.telegramhomebot.services.messages.MessageService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;

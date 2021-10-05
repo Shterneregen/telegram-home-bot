@@ -8,9 +8,9 @@ import random.telegramhomebot.AppConstants.BotCommands.REACHABLE_HOSTS_COMMAND
 import random.telegramhomebot.AppConstants.BotCommands.REFRESH
 import random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS
 import random.telegramhomebot.events.scan.ScanHostsEventPublisher
-import random.telegramhomebot.services.CommandService
-import random.telegramhomebot.services.HostService
-import random.telegramhomebot.services.MessageFormatService
+import random.telegramhomebot.services.commands.CommandService
+import random.telegramhomebot.services.hosts.HostService
+import random.telegramhomebot.services.messages.MessageFormatService
 import random.telegramhomebot.services.menu.dto.Menu
 import random.telegramhomebot.telegram.Icon
 

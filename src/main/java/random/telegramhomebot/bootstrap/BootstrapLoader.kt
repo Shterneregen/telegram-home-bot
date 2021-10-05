@@ -4,7 +4,7 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import random.telegramhomebot.AppConstants
-import random.telegramhomebot.services.MessageService
+import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.telegram.Bot
 import random.telegramhomebot.utils.logger
 

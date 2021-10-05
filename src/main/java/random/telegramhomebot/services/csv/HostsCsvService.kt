@@ -4,9 +4,9 @@ import com.opencsv.exceptions.CsvFieldAssignmentException
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER
-import random.telegramhomebot.model.Host
-import random.telegramhomebot.model.HostState
-import random.telegramhomebot.services.HostService
+import random.telegramhomebot.db.model.Host
+import random.telegramhomebot.db.model.HostState
+import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.utils.NetUtils
 import random.telegramhomebot.utils.logger
 import java.io.IOException

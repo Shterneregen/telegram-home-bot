@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.CommandLineRunner
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
-import random.telegramhomebot.model.TelegramCommand
-import random.telegramhomebot.repository.TelegramCommandRepository
+import random.telegramhomebot.db.model.TelegramCommand
+import random.telegramhomebot.db.repository.TelegramCommandRepository
 import random.telegramhomebot.utils.logger
 
 @Order(2)

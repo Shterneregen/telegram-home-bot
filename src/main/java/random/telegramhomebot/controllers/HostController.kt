@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import random.telegramhomebot.AppConstants
 import random.telegramhomebot.AppConstants.Hosts.*
 import random.telegramhomebot.AppConstants.Redirects.ERROR_404_REDIRECT
-import random.telegramhomebot.model.Host
-import random.telegramhomebot.services.HostService
+import random.telegramhomebot.db.model.Host
+import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.utils.pagination.PagerHelper
 import java.util.*
 import javax.servlet.http.HttpServletRequest

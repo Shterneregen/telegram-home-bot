@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import random.telegramhomebot.AppConstants.Commands.*
 import random.telegramhomebot.AppConstants.Redirects.ERROR_404_REDIRECT
-import random.telegramhomebot.model.TelegramCommand
-import random.telegramhomebot.repository.TelegramCommandRepository
+import random.telegramhomebot.db.model.TelegramCommand
+import random.telegramhomebot.db.repository.TelegramCommandRepository
 import java.util.*
 
 @Controller

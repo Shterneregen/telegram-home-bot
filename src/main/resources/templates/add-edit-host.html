@@ -38,7 +38,7 @@
                                 <label for="state" class="col-form-label" th:text="#{host.state}"></label>
                                 <select id="state" name="state" class="form-control" th:field="*{state}">
                                     <option th:value="null"></option>
-                                    <option th:each="state : ${T(random.telegramhomebot.model.HostState).values()}"
+                                    <option th:each="state : ${T(random.telegramhomebot.db.model.HostState).values()}"
                                             th:value="${state}" th:text="${state.name()}"></option>
                                 </select>
                             </div>

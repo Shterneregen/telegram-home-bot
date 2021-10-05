@@ -1,6 +1,6 @@
 package random.telegramhomebot.utils
 
-import random.telegramhomebot.model.Host
+import random.telegramhomebot.db.model.Host
 import java.util.regex.Pattern
 import javax.servlet.http.HttpServletRequest
 

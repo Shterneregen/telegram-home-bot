@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import random.telegramhomebot.AppConstants.Hosts
 import random.telegramhomebot.AppConstants.HostsTimeLog.*
-import random.telegramhomebot.model.HostTimeLog
-import random.telegramhomebot.model.TimeLogDto
-import random.telegramhomebot.repository.HostTimeLogRepository
-import random.telegramhomebot.services.TimeLogConverter
+import random.telegramhomebot.db.model.HostTimeLog
+import random.telegramhomebot.db.dto.TimeLogDto
+import random.telegramhomebot.db.repository.HostTimeLogRepository
+import random.telegramhomebot.services.hosts.TimeLogConverter
 import random.telegramhomebot.utils.logger
 import java.sql.Timestamp.valueOf
 import java.time.LocalDate

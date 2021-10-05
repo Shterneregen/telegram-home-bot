@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import random.telegramhomebot.config.ProfileService
-import random.telegramhomebot.services.CommandRunnerService
+import random.telegramhomebot.services.commands.CommandRunnerService
 import random.telegramhomebot.utils.logger
 
 @Profile(ProfileService.NETWORK_MONITOR)

@@ -1,8 +1,8 @@
 package random.telegramhomebot.services
 
 import org.springframework.stereotype.Service
-import random.telegramhomebot.model.FeatureSwitcher
-import random.telegramhomebot.repository.FeatureSwitcherRepository
+import random.telegramhomebot.db.model.FeatureSwitcher
+import random.telegramhomebot.db.repository.FeatureSwitcherRepository
 
 @Service
 class FeatureSwitcherService(private val repository: FeatureSwitcherRepository) {

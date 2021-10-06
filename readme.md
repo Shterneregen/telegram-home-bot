@@ -26,16 +26,19 @@ credentials into the application.properties without using env variables)
 ### [Installation as an init.d Service](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#deployment-initd-service)
 
 * `gradlew clean bootJar`
-* copy a jar file to SOME_LINUX_FOLDER on linux machine
+* Copy a jar file to SOME_LINUX_FOLDER on linux machine
 
 * On linux machine:
-    * `sudo mkdir /var/telegram` (create a folder for jar file)
-    * `sudo cp /SOME_LINUX_FOLDER/thb.jar /var/telegram/thb.jar` (copy jar to the folder)
-    * `sudo ln -s /var/telegram/thb.jar /etc/init.d/thb` (create symlink the jar to init.d)
-    * `sudo chmod +x /var/telegram/thb.jar` (make thb.jar executable)
-    * `sudo systemctl daemon-reload` (reload systemd manager configuration)
-    * `sudo service thb start` (start bot as a service)
-    * `update-rc.d thb defaults` (autostart)
+
+```shell
+sudo mkdir /var/telegram # create a folder for jar file
+sudo cp /SOME_LINUX_FOLDER/thb.jar /var/telegram/thb.jar # copy jar to the folder
+sudo ln -s /var/telegram/thb.jar /etc/init.d/thb # create symlink the jar to init.d
+sudo chmod +x /var/telegram/thb.jar # make thb.jar executable
+sudo systemctl daemon-reload # reload systemd manager configuration
+sudo service thb start # start bot as a service
+update-rc.d thb defaults # autostart
+```
 
 ### Enable HTTPS
 
@@ -69,6 +72,24 @@ docker stop thb
 
 # Show information logged by a running container
 docker logs -f thb
+```
+
+### Launch SonarQube in Docker
+
+- Run SonarQube container
+
+```shell
+docker run -d --name sonarqube -p 9000:9000 -p 9092:9092 sonarqube
+```
+
+- Browse http://127.0.0.1:9000. Initial credentials: `admin / admin`
+- Change password
+- Create project with name `thb`
+- Create project token
+- Run `sonarqube` task
+
+```shell
+gradlew sonarqube -Dsonar.projectKey=thb -Dsonar.host.url=http://127.0.0.1:9000 -Dsonar.login=PROJECT_TOKEN
 ```
 
 ---

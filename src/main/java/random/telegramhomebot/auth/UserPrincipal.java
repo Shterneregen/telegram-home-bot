@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import random.telegramhomebot.auth.entities.Privilege;
-import random.telegramhomebot.auth.entities.Role;
-import random.telegramhomebot.auth.entities.User;
+import random.telegramhomebot.auth.db.entities.Privilege;
+import random.telegramhomebot.auth.db.entities.Role;
+import random.telegramhomebot.auth.db.entities.User;
 
 import java.util.Collection;
 import java.util.List;

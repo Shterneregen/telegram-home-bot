@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import random.telegramhomebot.auth.dao.GenericResponse;
+import random.telegramhomebot.auth.dto.GenericResponse;
 import random.telegramhomebot.auth.exceptinos.InvalidOldPasswordException;
 import random.telegramhomebot.services.messages.MessageService;
 

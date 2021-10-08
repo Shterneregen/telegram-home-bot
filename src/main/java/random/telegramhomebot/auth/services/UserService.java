@@ -1,6 +1,6 @@
 package random.telegramhomebot.auth.services;
 
-import random.telegramhomebot.auth.entities.User;
+import random.telegramhomebot.auth.db.entities.User;
 
 import java.util.Optional;
 

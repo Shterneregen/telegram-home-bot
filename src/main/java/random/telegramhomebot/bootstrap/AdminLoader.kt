@@ -5,12 +5,14 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import random.telegramhomebot.auth.entities.Privilege
-import random.telegramhomebot.auth.entities.Role
-import random.telegramhomebot.auth.entities.User
-import random.telegramhomebot.auth.repositories.PrivilegeRepository
-import random.telegramhomebot.auth.repositories.RoleRepository
-import random.telegramhomebot.auth.repositories.UserRepository
+import random.telegramhomebot.auth.db.entities.Privilege
+import random.telegramhomebot.auth.db.entities.Role
+import random.telegramhomebot.auth.db.entities.User
+import random.telegramhomebot.auth.db.repositories.PrivilegeRepository
+import random.telegramhomebot.auth.db.repositories.RoleRepository
+import random.telegramhomebot.auth.db.repositories.UserRepository
+import random.telegramhomebot.auth.enums.AuthRole
+import random.telegramhomebot.auth.enums.Privileges
 import random.telegramhomebot.utils.logger
 
 @Order(1)
@@ -20,7 +22,7 @@ class AdminLoader(
     private val roleRepository: RoleRepository,
     private val privilegeRepository: PrivilegeRepository
 ) : CommandLineRunner {
-    val log = logger()
+    private val log = logger()
 
     @Value("\${default.admin.login}")
     private lateinit var adminLogin: String
@@ -40,20 +42,20 @@ class AdminLoader(
     }
 
     private fun createAdminUser() {
-        val viewCommands = createPrivilegeIfNotFound("VIEW_COMMANDS")
-        val addCommand = createPrivilegeIfNotFound("ADD_COMMAND")
-        val editCommand = createPrivilegeIfNotFound("EDIT_COMMAND")
-        val deleteCommand = createPrivilegeIfNotFound("DELETE_COMMAND")
+        val viewCommands = createPrivilegeIfNotFound(Privileges.VIEW_COMMANDS.name)
+        val addCommand = createPrivilegeIfNotFound(Privileges.ADD_COMMAND.name)
+        val editCommand = createPrivilegeIfNotFound(Privileges.EDIT_COMMAND.name)
+        val deleteCommand = createPrivilegeIfNotFound(Privileges.DELETE_COMMAND.name)
 
-        val viewHosts = createPrivilegeIfNotFound("VIEW_HOSTS")
-        val importCsvHosts = createPrivilegeIfNotFound("IMPORT_CSV_HOSTS")
-        val exportCsvHosts = createPrivilegeIfNotFound("EXPORT_CSV_HOSTS")
-        val addHost = createPrivilegeIfNotFound("ADD_HOST")
-        val editHost = createPrivilegeIfNotFound("EDIT_HOST")
-        val deleteHost = createPrivilegeIfNotFound("DELETE_HOST")
+        val viewHosts = createPrivilegeIfNotFound(Privileges.VIEW_HOSTS.name)
+        val importCsvHosts = createPrivilegeIfNotFound(Privileges.IMPORT_CSV_HOSTS.name)
+        val exportCsvHosts = createPrivilegeIfNotFound(Privileges.EXPORT_CSV_HOSTS.name)
+        val addHost = createPrivilegeIfNotFound(Privileges.ADD_HOST.name)
+        val editHost = createPrivilegeIfNotFound(Privileges.EDIT_HOST.name)
+        val deleteHost = createPrivilegeIfNotFound(Privileges.DELETE_HOST.name)
 
         val adminRole = createRoleIfNotFound(
-            "ROLE_ADMIN",
+            AuthRole.ADMIN.name,
             listOf(
                 viewCommands, addCommand, editCommand, deleteCommand,
                 viewHosts, importCsvHosts, exportCsvHosts, addHost, editHost, deleteHost
@@ -62,7 +64,7 @@ class AdminLoader(
         createUserIfNotFound(adminLogin, adminPassword, "", "", "", listOf(adminRole))
 
         val userRole = createRoleIfNotFound(
-            "ROLE_USER",
+            AuthRole.USER.name,
             listOf(viewCommands, viewHosts)
         )
         createUserIfNotFound(userLogin, userPassword, "", "", "", listOf(userRole))

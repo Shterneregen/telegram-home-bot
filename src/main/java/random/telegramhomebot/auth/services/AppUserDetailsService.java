@@ -6,10 +6,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import random.telegramhomebot.auth.AuthErrorCodes;
 import random.telegramhomebot.auth.UserPrincipal;
-import random.telegramhomebot.auth.entities.User;
-import random.telegramhomebot.auth.repositories.UserRepository;
+import random.telegramhomebot.auth.db.entities.User;
+import random.telegramhomebot.auth.db.repositories.UserRepository;
+import random.telegramhomebot.auth.enums.AuthErrorCode;
 import random.telegramhomebot.services.messages.MessageService;
 import random.telegramhomebot.utils.NetUtils;
 
@@ -31,7 +31,7 @@ public class AppUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String ip = NetUtils.getClientIp(request);
         if (loginAttemptService.isBlocked(ip)) {
-            throw new RuntimeException(messageService.getMessage(AuthErrorCodes.USER_BLOCKED.getErrorMessageCode(),
+            throw new RuntimeException(messageService.getMessage(AuthErrorCode.USER_BLOCKED.getMessageCode(),
                     new Object[]{blockingTimeInMinutes / 60}));
         }
 

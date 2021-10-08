@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import random.telegramhomebot.auth.UserPrincipal;
-import random.telegramhomebot.auth.dao.GenericResponse;
-import random.telegramhomebot.auth.dao.PasswordDto;
-import random.telegramhomebot.auth.entities.User;
+import random.telegramhomebot.auth.db.entities.User;
+import random.telegramhomebot.auth.dto.GenericResponse;
+import random.telegramhomebot.auth.dto.PasswordDto;
 import random.telegramhomebot.auth.exceptinos.InvalidOldPasswordException;
 import random.telegramhomebot.auth.services.UserService;
 import random.telegramhomebot.services.messages.MessageService;
@@ -46,7 +46,7 @@ public class ChangePasswordController {
     public GenericResponse changeUserPassword(@Valid PasswordDto passwordDto) {
         UserPrincipal userPrincipal
                 = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        final User user = userService.getUserByID(userPrincipal.getId()).get();
+        final User user = userService.getUserByID(userPrincipal.getId()).orElseThrow();
         if (!userService.checkIfValidOldPassword(user, passwordDto.getOldPassword())) {
             throw new InvalidOldPasswordException();
         }

@@ -15,12 +15,13 @@ import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.context.request.RequestContextListener;
+import random.telegramhomebot.auth.enums.AuthRole;
 import random.telegramhomebot.auth.services.AppUserDetailsService;
 
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
-public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Value("${bcrypt.rounds}")
     private int bcryptRounds;
@@ -38,7 +39,7 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
         };
         http
                 .authorizeRequests()
-                .antMatchers(urlsForAdmin).hasAuthority("ROLE_ADMIN")
+                .antMatchers(urlsForAdmin).hasAuthority(AuthRole.ADMIN.getName())
         ;
 
         super.configure(http);
@@ -62,7 +63,7 @@ public class ApplicationSecurityConfiguration extends WebSecurityConfigurerAdapt
     public GrantedAuthoritiesMapper authoritiesMapper() {
         SimpleAuthorityMapper authorityMapper = new SimpleAuthorityMapper();
         authorityMapper.setConvertToUpperCase(true);
-        authorityMapper.setDefaultAuthority(AuthGroups.USER.getAuthGroup());
+        authorityMapper.setDefaultAuthority(AuthRole.USER.getName());
         return authorityMapper;
     }
 

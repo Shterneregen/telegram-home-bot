@@ -1,4 +1,4 @@
-package random.telegramhomebot.auth.dao;
+package random.telegramhomebot.auth.dto;
 
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;

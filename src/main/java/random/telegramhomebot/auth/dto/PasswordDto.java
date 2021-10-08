@@ -1,4 +1,4 @@
-package random.telegramhomebot.auth.dao;
+package random.telegramhomebot.auth.dto;
 
 import lombok.Data;
 import random.telegramhomebot.auth.validation.ValidPassword;

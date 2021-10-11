@@ -1,22 +1,20 @@
-package random.telegramhomebot.auth.listeners;
+package random.telegramhomebot.auth.listeners
 
-import org.springframework.context.ApplicationListener;
-import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
-import org.springframework.stereotype.Component;
-import random.telegramhomebot.auth.services.LoginAttemptService;
-
-import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.ApplicationListener
+import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent
+import org.springframework.security.web.authentication.WebAuthenticationDetails
+import org.springframework.stereotype.Component
+import random.telegramhomebot.auth.services.LoginAttemptService
 
 @Component
-public class AuthenticationFailureListener implements ApplicationListener<AuthenticationFailureBadCredentialsEvent> {
+class AuthenticationFailureListener(
+    @Qualifier("loginAttemptService")
+    private val loginAttemptService: LoginAttemptService
+) : ApplicationListener<AuthenticationFailureBadCredentialsEvent> {
 
-    @Resource
-    private LoginAttemptService loginAttemptService;
-
-    public void onApplicationEvent(AuthenticationFailureBadCredentialsEvent e) {
-        WebAuthenticationDetails auth = (WebAuthenticationDetails) e.getAuthentication().getDetails();
-
-        loginAttemptService.loginFailed(auth.getRemoteAddress());
+    override fun onApplicationEvent(e: AuthenticationFailureBadCredentialsEvent) {
+        val auth = e.authentication.details as WebAuthenticationDetails
+        loginAttemptService.loginFailed(auth.remoteAddress)
     }
 }

@@ -1,26 +1,20 @@
-package random.telegramhomebot.auth.validation;
+package random.telegramhomebot.auth.validation
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import javax.validation.Constraint
+import javax.validation.Payload
+import kotlin.reflect.KClass
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-@Documented
-@Constraint(validatedBy = PasswordConstraintValidator.class)
-@Target({ TYPE, FIELD, ANNOTATION_TYPE })
-@Retention(RUNTIME)
-public @interface ValidPassword {
-
-    String message() default "Invalid Password";
-
-    Class<?>[] groups() default {};
-
-    Class<? extends Payload>[] payload() default {};
-
-}
+@MustBeDocumented
+@Constraint(validatedBy = [PasswordConstraintValidator::class])
+@Target(
+    AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.CLASS,
+    AnnotationTarget.FIELD,
+    AnnotationTarget.ANNOTATION_CLASS
+)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class ValidPassword(
+    val message: String = "Invalid Password",
+    val groups: Array<KClass<*>> = [],
+    val payload: Array<KClass<out Payload>> = []
+)

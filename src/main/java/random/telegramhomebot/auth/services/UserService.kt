@@ -1,13 +1,9 @@
-package random.telegramhomebot.auth.services;
+package random.telegramhomebot.auth.services
 
-import random.telegramhomebot.auth.db.entities.User;
+import random.telegramhomebot.auth.db.entities.User
 
-import java.util.Optional;
-
-public interface UserService {
-    Optional<User> getUserByID(long id);
-
-    void changeUserPassword(User user, String password);
-
-    boolean checkIfValidOldPassword(User user, String oldPassword);
+interface UserService {
+    fun getUserByID(id: Long): User?
+    fun changeUserPassword(user: User, password: String)
+    fun checkIfValidOldPassword(user: User, oldPassword: String): Boolean
 }

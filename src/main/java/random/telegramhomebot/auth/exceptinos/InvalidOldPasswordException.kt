@@ -1,23 +1,12 @@
-package random.telegramhomebot.auth.exceptinos;
+package random.telegramhomebot.auth.exceptinos
 
-public final class InvalidOldPasswordException extends RuntimeException {
+class InvalidOldPasswordException : RuntimeException {
+    constructor() : super()
+    constructor(message: String?, cause: Throwable?) : super(message, cause)
+    constructor(message: String?) : super(message)
+    constructor(cause: Throwable?) : super(cause)
 
-    private static final long serialVersionUID = -8725338681447417728L;
-
-    public InvalidOldPasswordException() {
-        super();
+    companion object {
+        private const val serialVersionUID = -8725338681447417728L
     }
-
-    public InvalidOldPasswordException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
-
-    public InvalidOldPasswordException(final String message) {
-        super(message);
-    }
-
-    public InvalidOldPasswordException(final Throwable cause) {
-        super(cause);
-    }
-
 }

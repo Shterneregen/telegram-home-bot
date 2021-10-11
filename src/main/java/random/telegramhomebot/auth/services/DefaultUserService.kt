@@ -1,38 +1,25 @@
-package random.telegramhomebot.auth.services;
+package random.telegramhomebot.auth.services
 
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import random.telegramhomebot.auth.db.entities.User;
-import random.telegramhomebot.auth.db.repositories.UserRepository;
-
-import javax.transaction.Transactional;
-import java.util.Optional;
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.stereotype.Service
+import random.telegramhomebot.auth.db.entities.User
+import random.telegramhomebot.auth.db.repositories.UserRepository
+import javax.transaction.Transactional
 
 @Service
 @Transactional
-public class DefaultUserService implements UserService {
+class DefaultUserService(
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder
+) : UserService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    override fun getUserByID(id: Long): User? = userRepository.findById(id).orElse(null)
 
-    public DefaultUserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    override fun changeUserPassword(user: User, password: String) {
+        user.password = passwordEncoder.encode(password)
+        userRepository.save(user)
     }
 
-    @Override
-    public Optional<User> getUserByID(final long id) {
-        return userRepository.findById(id);
-    }
-
-    @Override
-    public void changeUserPassword(final User user, final String password) {
-        user.setPassword(passwordEncoder.encode(password));
-        userRepository.save(user);
-    }
-
-    @Override
-    public boolean checkIfValidOldPassword(final User user, final String oldPassword) {
-        return passwordEncoder.matches(oldPassword, user.getPassword());
-    }
+    override fun checkIfValidOldPassword(user: User, oldPassword: String) =
+        passwordEncoder.matches(oldPassword, user.password)
 }

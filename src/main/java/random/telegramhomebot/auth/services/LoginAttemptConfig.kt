@@ -1,24 +1,21 @@
-package random.telegramhomebot.auth.services;
+package random.telegramhomebot.auth.services
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
 @Configuration
-public class LoginAttemptConfig {
+class LoginAttemptConfig {
 
-    @Value("${login.blocking.time.in.minutes}")
-    private int blockingTimeInMinutes;
-    @Value("${login.max.attempts.before.block}")
-    private int maxAttempts;
+    @Value("\${login.blocking.time.in.minutes}")
+    private val blockingTimeInMinutes = 0
 
-    @Bean
-    public LoginAttemptService loginAttemptService() {
-        return new LoginAttemptService(blockingTimeInMinutes, maxAttempts);
-    }
+    @Value("\${login.max.attempts.before.block}")
+    private val maxAttempts = 0
 
     @Bean
-    public LoginAttemptService botAttemptService() {
-        return new LoginAttemptService(blockingTimeInMinutes, maxAttempts);
-    }
+    fun loginAttemptService() = LoginAttemptService(blockingTimeInMinutes, maxAttempts)
+
+    @Bean
+    fun botAttemptService() = LoginAttemptService(blockingTimeInMinutes, maxAttempts)
 }

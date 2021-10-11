@@ -1,76 +1,27 @@
-package random.telegramhomebot.auth;
+package random.telegramhomebot.auth
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import random.telegramhomebot.auth.db.entities.Privilege;
-import random.telegramhomebot.auth.db.entities.Role;
-import random.telegramhomebot.auth.db.entities.User;
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails
+import random.telegramhomebot.auth.db.entities.Role
+import random.telegramhomebot.auth.db.entities.User
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+class UserPrincipal(private val user: User) : UserDetails {
 
-public class UserPrincipal implements UserDetails {
+    val id: Long
+        get() = user.id ?: throw RuntimeException("Cannot get user id")
 
-    private final User user;
+    override fun getAuthorities(): List<GrantedAuthority> = getAuthorities(user.roles ?: emptyList())
 
-    public UserPrincipal(User user) {
-        this.user = user;
-    }
+    private fun getAuthorities(roles: List<Role>) = getGrantedAuthorities(getPrivileges(roles))
+    private fun getGrantedAuthorities(privileges: List<String>) = privileges.map { SimpleGrantedAuthority(it) }
+    private fun getPrivileges(roles: Collection<Role>): List<String> =
+        roles.flatMap { it.privileges }.map { it.name } + roles.map { it.name }
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return getAuthorities(user.getRoles());
-    }
-
-    private Collection<? extends GrantedAuthority> getAuthorities(Collection<Role> roles) {
-        return getGrantedAuthorities(getPrivileges(roles));
-    }
-
-    private List<String> getPrivileges(Collection<Role> roles) {
-        return Stream.concat(
-                roles.stream().flatMap(role -> role.getPrivileges().stream()).map(Privilege::getName),
-                roles.stream().map(Role::getName)
-        ).collect(Collectors.toList());
-    }
-
-    private List<GrantedAuthority> getGrantedAuthorities(List<String> privileges) {
-        return privileges.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-    }
-
-    public long getId() {
-        return user.getId();
-    }
-
-    @Override
-    public String getPassword() {
-        return user.getPassword();
-    }
-
-    @Override
-    public String getUsername() {
-        return user.getUsername();
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    override fun getPassword() = user.password
+    override fun getUsername() = user.username
+    override fun isAccountNonExpired() = true
+    override fun isAccountNonLocked() = true
+    override fun isCredentialsNonExpired() = true
+    override fun isEnabled() = true
 }

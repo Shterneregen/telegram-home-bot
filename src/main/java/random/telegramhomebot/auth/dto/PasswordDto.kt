@@ -1,34 +1,11 @@
-package random.telegramhomebot.auth.dto;
+package random.telegramhomebot.auth.dto
 
-import random.telegramhomebot.auth.validation.ValidPassword;
+import random.telegramhomebot.auth.validation.ValidPassword
 
-public class PasswordDto {
-    private String oldPassword;
-    private String token;
+class PasswordDto(
+    var oldPassword: String,
     @ValidPassword
-    private String newPassword;
-
-    public String getOldPassword() {
-        return oldPassword;
-    }
-
-    public void setOldPassword(String oldPassword) {
-        this.oldPassword = oldPassword;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
+    var newPassword: String
+) {
+    var token: String? = null
 }

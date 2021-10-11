@@ -55,7 +55,7 @@ class AdminLoader(
         val deleteHost = createPrivilegeIfNotFound(Privileges.DELETE_HOST.name)
 
         val adminRole = createRoleIfNotFound(
-            AuthRole.ADMIN.name,
+            AuthRole.ROLE_ADMIN.name,
             listOf(
                 viewCommands, addCommand, editCommand, deleteCommand,
                 viewHosts, importCsvHosts, exportCsvHosts, addHost, editHost, deleteHost
@@ -63,15 +63,12 @@ class AdminLoader(
         )
         createUserIfNotFound(adminLogin, adminPassword, "", "", "", listOf(adminRole))
 
-        val userRole = createRoleIfNotFound(
-            AuthRole.USER.name,
-            listOf(viewCommands, viewHosts)
-        )
+        val userRole = createRoleIfNotFound(AuthRole.ROLE_USER.name, listOf(viewCommands, viewHosts))
         createUserIfNotFound(userLogin, userPassword, "", "", "", listOf(userRole))
     }
 
     @Transactional
-    fun createPrivilegeIfNotFound(name: String): Privilege? {
+    fun createPrivilegeIfNotFound(name: String): Privilege {
         var privilege: Privilege? = privilegeRepository.findByName(name)
         if (privilege == null) {
             privilege = Privilege(name)
@@ -81,19 +78,19 @@ class AdminLoader(
     }
 
     @Transactional
-    fun createRoleIfNotFound(name: String?, privileges: Collection<Privilege?>?): Role? {
-        val role: Role = roleRepository.findByName(name) ?: Role(name, privileges)
+    fun createRoleIfNotFound(name: String, privileges: List<Privilege>): Role {
+        val role = roleRepository.findByName(name) ?: Role(name, privileges)
         return roleRepository.save(role)
     }
 
     @Transactional
     fun createUserIfNotFound(
         username: String,
-        password: String?,
+        password: String,
         email: String?,
         firstName: String?,
         lastName: String?,
-        roles: Collection<Role?>
+        roles: List<Role>
     ): User? {
         val user: User = userRepository.findByUsername(username)
             ?: User(username, password, firstName, lastName, email, true)

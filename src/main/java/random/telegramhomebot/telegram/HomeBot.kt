@@ -10,8 +10,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
-import random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_MSG
 import random.telegramhomebot.config.ProfileService
+import random.telegramhomebot.const.AppConstants.UNAUTHORIZED_ACCESS_MSG
 import random.telegramhomebot.services.UserValidatorService
 import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.services.menu.CallbackMenuService

@@ -1,91 +1,38 @@
-package random.telegramhomebot.utils.pagination;
+package random.telegramhomebot.utils.pagination
 
-public class PagerModel {
+class PagerModel(
+    var totalPages: Int,
+    var currentPage: Int,
+    var pageSize: Int,
+    var pageSizeCookieName: String,
+    var pageSizes: IntArray,
+    private var buttonsToShow: Int,
+    var mapping: String
+) {
+    var startPage = 0
+    var endPage = 0
 
-    private int buttonsToShow;
-    private int startPage;
-    private int endPage;
-    private int totalPages;
-    private int currentPage;
-    private int pageSize;
-    private int[] pageSizes;
-    private String mapping;
-    private String pageSizeCookieName;
-
-    public PagerModel(int totalPages, int currentPage, int pageSize, String pageSizeCookieName, int[] pageSizes, int buttonsToShow, String mapping) {
-        this.totalPages = totalPages == 0 ? ++totalPages : totalPages;
-        this.currentPage = currentPage;
-        this.pageSize = pageSize;
-        this.pageSizeCookieName = pageSizeCookieName;
-        this.pageSizes = pageSizes;
-        this.mapping = mapping;
-        setButtonsToShow(buttonsToShow);
-
-        int halfPagesToShow = this.buttonsToShow / 2;
+    init {
+        if (buttonsToShow % 2 == 0) throw IllegalArgumentException("Must be an odd value!")
+        totalPages = if (totalPages == 0) ++totalPages else totalPages
+        val halfPagesToShow = this.buttonsToShow / 2
         if (totalPages <= this.buttonsToShow) {
-            startPage = 1;
-            endPage = this.totalPages;
+            startPage = 1
+            endPage = totalPages
         } else if (currentPage - halfPagesToShow <= 0) {
-            startPage = 1;
-            endPage = buttonsToShow;
+            startPage = 1
+            endPage = buttonsToShow
         } else if (currentPage + halfPagesToShow == totalPages) {
-            startPage = currentPage - halfPagesToShow;
-            endPage = totalPages;
+            startPage = currentPage - halfPagesToShow
+            endPage = totalPages
         } else if (currentPage + halfPagesToShow > totalPages) {
-            startPage = totalPages - buttonsToShow + 1;
-            endPage = totalPages;
+            startPage = totalPages - buttonsToShow + 1
+            endPage = totalPages
         } else {
-            startPage = currentPage - halfPagesToShow;
-            endPage = currentPage + halfPagesToShow;
+            startPage = currentPage - halfPagesToShow
+            endPage = currentPage + halfPagesToShow
         }
     }
 
-    public void setButtonsToShow(int buttonsToShow) {
-        if (buttonsToShow % 2 != 0) {
-            this.buttonsToShow = buttonsToShow;
-        } else {
-            throw new IllegalArgumentException("Must be an odd value!");
-        }
-    }
-
-    public int getButtonsToShow() {
-        return buttonsToShow;
-    }
-
-    public int getStartPage() {
-        return startPage;
-    }
-
-    public int getEndPage() {
-        return endPage;
-    }
-
-    public int getTotalPages() {
-        return totalPages;
-    }
-
-    public int getCurrentPage() {
-        return currentPage;
-    }
-
-    public int getPageSize() {
-        return pageSize;
-    }
-
-    public int[] getPageSizes() {
-        return pageSizes;
-    }
-
-    public String getMapping() {
-        return mapping;
-    }
-
-    public String getPageSizeCookieName() {
-        return pageSizeCookieName;
-    }
-
-    @Override
-    public String toString() {
-        return "Pager [startPage=" + startPage + ", endPage=" + endPage + "]";
-    }
+    override fun toString() = "Pager [startPage=$startPage, endPage=$endPage]"
 }

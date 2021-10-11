@@ -8,20 +8,20 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import random.telegramhomebot.AppConstants
-import random.telegramhomebot.AppConstants.Hosts.ADD_EDIT_HOST_VIEW
-import random.telegramhomebot.AppConstants.Hosts.DELETE_HOST_MAPPING
-import random.telegramhomebot.AppConstants.Hosts.EDIT_HOST_BY_ID_MAPPING
-import random.telegramhomebot.AppConstants.Hosts.EDIT_HOST_MAPPING
-import random.telegramhomebot.AppConstants.Hosts.HOSTS_MAPPING
-import random.telegramhomebot.AppConstants.Hosts.HOSTS_MODEL_ATTR
-import random.telegramhomebot.AppConstants.Hosts.HOSTS_VIEW
-import random.telegramhomebot.AppConstants.Hosts.HOST_ID_PATH_VAR
-import random.telegramhomebot.AppConstants.Hosts.HOST_MAC_FIELD
-import random.telegramhomebot.AppConstants.Hosts.HOST_MODEL_ATTR
-import random.telegramhomebot.AppConstants.Hosts.REDIRECT_HOSTS
-import random.telegramhomebot.AppConstants.Hosts.SAVE_HOST_MAPPING
-import random.telegramhomebot.AppConstants.Redirects.ERROR_404_REDIRECT
+import random.telegramhomebot.const.AppConstants.ADD_EDIT_HOST_VIEW
+import random.telegramhomebot.const.AppConstants.DELETE_HOST_MAPPING
+import random.telegramhomebot.const.AppConstants.EDIT_HOST_BY_ID_MAPPING
+import random.telegramhomebot.const.AppConstants.EDIT_HOST_MAPPING
+import random.telegramhomebot.const.AppConstants.ERROR_404_REDIRECT
+import random.telegramhomebot.const.AppConstants.HOSTS_MAPPING
+import random.telegramhomebot.const.AppConstants.HOSTS_MODEL_ATTR
+import random.telegramhomebot.const.AppConstants.HOSTS_VIEW
+import random.telegramhomebot.const.AppConstants.HOST_ID_PATH_VAR
+import random.telegramhomebot.const.AppConstants.HOST_MAC_FIELD
+import random.telegramhomebot.const.AppConstants.HOST_MAC_NOT_UNIQUE_MSG
+import random.telegramhomebot.const.AppConstants.HOST_MODEL_ATTR
+import random.telegramhomebot.const.AppConstants.REDIRECT_HOSTS
+import random.telegramhomebot.const.AppConstants.SAVE_HOST_MAPPING
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.utils.pagination.PagerHelper
@@ -92,7 +92,7 @@ class HostController(private val hostService: HostService) {
         val saveNewHostWithExistingMac = storedHost != null && host.id == null
         val editStoredHostMacToExisting = storedHost != null && storedHost.id != host.id
         if (saveNewHostWithExistingMac || editStoredHostMacToExisting) {
-            bindingResult.rejectValue(HOST_MAC_FIELD, AppConstants.Messages.HOST_MAC_NOT_UNIQUE_MSG)
+            bindingResult.rejectValue(HOST_MAC_FIELD, HOST_MAC_NOT_UNIQUE_MSG)
             return ADD_EDIT_HOST_VIEW
         }
         hostService.saveHost(host)

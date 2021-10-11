@@ -3,10 +3,10 @@ package random.telegramhomebot.services.menu
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
-import random.telegramhomebot.AppConstants.BotCommands.LAST_ACTIVITY
-import random.telegramhomebot.AppConstants.BotCommands.REACHABLE_HOSTS_COMMAND
-import random.telegramhomebot.AppConstants.BotCommands.REFRESH
-import random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS
+import random.telegramhomebot.const.AppConstants.LAST_ACTIVITY
+import random.telegramhomebot.const.AppConstants.REACHABLE_HOSTS_COMMAND
+import random.telegramhomebot.const.AppConstants.REFRESH
+import random.telegramhomebot.const.AppConstants.SHOW_ALL_COMMANDS
 import random.telegramhomebot.events.scan.ScanHostsEventPublisher
 import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.services.hosts.HostService

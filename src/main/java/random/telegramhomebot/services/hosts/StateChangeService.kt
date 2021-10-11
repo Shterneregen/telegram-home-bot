@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import org.apache.commons.lang3.SystemUtils
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import random.telegramhomebot.AppConstants.Messages.NEW_HOSTS_MSG
-import random.telegramhomebot.AppConstants.Messages.REACHABLE_HOSTS_MSG
-import random.telegramhomebot.AppConstants.Messages.UNREACHABLE_HOSTS_MSG
 import random.telegramhomebot.config.ProfileService
+import random.telegramhomebot.const.AppConstants.NEW_HOSTS_MSG
+import random.telegramhomebot.const.AppConstants.REACHABLE_HOSTS_MSG
+import random.telegramhomebot.const.AppConstants.UNREACHABLE_HOSTS_MSG
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.services.FeatureSwitcherService
 import random.telegramhomebot.services.messages.MessageFormatService

@@ -3,7 +3,7 @@ package random.telegramhomebot.services.csv
 import com.opencsv.exceptions.CsvFieldAssignmentException
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
-import random.telegramhomebot.AppConstants.DATE_TIME_FORMATTER
+import random.telegramhomebot.const.AppConstants.DATE_TIME_FORMATTER
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.db.model.HostState
 import random.telegramhomebot.services.hosts.HostService
@@ -21,7 +21,7 @@ class HostsCsvService(
     val log = logger()
 
     @Throws(IOException::class)
-    fun parseHostsFromCsvFile(file: MultipartFile?): List<Host> {
+    fun parseHostsFromCsvFile(file: MultipartFile): List<Host> {
         val csvToBeanHosts = getBeansFromFile(file)
         val convertedHosts = hostCsvConverter.convertCsvRowsToHosts(csvToBeanHosts)
         val parsedHosts = prepareHostsAfterCsvParsing(convertedHosts)
@@ -30,7 +30,7 @@ class HostsCsvService(
     }
 
     @Throws(CsvFieldAssignmentException::class, IOException::class)
-    fun exportHostsToCsvFile(response: HttpServletResponse?) {
+    fun exportHostsToCsvFile(response: HttpServletResponse) {
         exportBeansToCsvFile(
             response, hostCsvConverter.convertHostListToCsvRows(hostService.getAllHosts()),
             String.format(CSV_FILENAME_PATTERN, now().format(DATE_TIME_FORMATTER))

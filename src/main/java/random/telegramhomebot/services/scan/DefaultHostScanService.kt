@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import random.telegramhomebot.AppConstants
 import random.telegramhomebot.config.ProfileService
+import random.telegramhomebot.const.AppConstants
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.services.commands.CommandRunnerService
 import random.telegramhomebot.services.hosts.HostExplorerService

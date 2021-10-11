@@ -1,8 +1,8 @@
 package random.telegramhomebot.services.messages
 
 import org.springframework.stereotype.Service
-import random.telegramhomebot.AppConstants.Messages.REACHABLE_HOSTS_MSG
-import random.telegramhomebot.AppConstants.Messages.UNREACHABLE_HOSTS_MSG
+import random.telegramhomebot.const.AppConstants.REACHABLE_HOSTS_MSG
+import random.telegramhomebot.const.AppConstants.UNREACHABLE_HOSTS_MSG
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.db.model.HostState
 import random.telegramhomebot.utils.NetUtils

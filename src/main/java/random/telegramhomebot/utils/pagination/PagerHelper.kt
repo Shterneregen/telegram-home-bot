@@ -1,37 +1,43 @@
-package random.telegramhomebot.utils.pagination;
+package random.telegramhomebot.utils.pagination
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.ui.Model;
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.ui.Model
+import javax.servlet.http.Cookie
+import javax.servlet.http.HttpServletRequest
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
+object PagerHelper {
 
-public class PagerHelper {
+    private const val BUTTONS_TO_SHOW = 5
+    private val PAGE_SIZES = intArrayOf(5, 10, 15, 20, 50, 100)
+    private const val PAGER_ATTR = "pager"
 
-    private static final int BUTTONS_TO_SHOW = 5;
-    private static final int[] PAGE_SIZES = {5, 10, 15, 20, 50, 100};
-    private static final String PAGER_ATTR = "pager";
-
-    public static PageRequest getPageable(
-            Integer pageSize, Integer currentPage, String sortBy, String direction,
-            String currentPageCookieName, HttpServletRequest request) {
-        Cookie pageSizeCookie = getCookie(currentPageCookieName, request);
-        int evalPageSize = pageSizeCookie != null ? Integer.parseInt(pageSizeCookie.getValue()) : pageSize;
-        return PageRequest.of(currentPage - 1, evalPageSize, Sort.by(Sort.Direction.fromString(direction), sortBy));
+    fun getPageable(
+        pageSize: Int,
+        currentPage: Int,
+        sortBy: String?,
+        direction: String,
+        pageCookieName: String,
+        request: HttpServletRequest?
+    ): PageRequest {
+        val cookiePageSize = getCookie(pageCookieName, request)?.value?.toInt() ?: pageSize
+        return PageRequest.of(currentPage - 1, cookiePageSize, Sort.by(Sort.Direction.fromString(direction), sortBy))
     }
 
-    public static void prepareModelForPager(
-            Model model, int totalPages, int currentPage, int pageSize, String pageSizeCookieName, String mapping) {
-        model.addAttribute(PAGER_ATTR,
-                new PagerModel(totalPages, currentPage + 1, pageSize, pageSizeCookieName,
-                        PAGE_SIZES, BUTTONS_TO_SHOW, mapping));
+    fun prepareModelForPager(
+        model: Model,
+        totalPages: Int,
+        currentPage: Int,
+        pageSize: Int,
+        pageSizeCookieName: String,
+        mapping: String
+    ) {
+        model.addAttribute(
+            PAGER_ATTR,
+            PagerModel(totalPages, currentPage + 1, pageSize, pageSizeCookieName, PAGE_SIZES, BUTTONS_TO_SHOW, mapping)
+        )
     }
 
-    private static Cookie getCookie(String cookieName, HttpServletRequest request) {
-        return Arrays.stream(request.getCookies())
-                .filter(cookie -> cookieName.equalsIgnoreCase(cookie.getName()))
-                .findFirst().orElse(null);
-    }
+    private fun getCookie(cookieName: String, request: HttpServletRequest?): Cookie? =
+        request?.cookies?.firstOrNull { cookieName.equals(it?.name, ignoreCase = true) }
 }

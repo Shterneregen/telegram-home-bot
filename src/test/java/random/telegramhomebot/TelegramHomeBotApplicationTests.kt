@@ -1,15 +1,14 @@
-package random.telegramhomebot;
+package random.telegramhomebot
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import random.telegramhomebot.config.ProfileService;
+import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
+import random.telegramhomebot.config.ProfileService
 
 @ActiveProfiles(ProfileService.MOCK_BOT)
 @SpringBootTest
-class TelegramHomeBotApplicationTests {
-
+internal class TelegramHomeBotApplicationTests {
     @Test
-    void contextLoads() {
+    fun contextLoads() {
     }
 }

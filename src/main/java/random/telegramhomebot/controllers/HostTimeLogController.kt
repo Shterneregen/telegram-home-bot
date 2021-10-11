@@ -5,15 +5,15 @@ import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import random.telegramhomebot.AppConstants.Hosts
-import random.telegramhomebot.AppConstants.HostsTimeLog.DEFAULT_DATE_VALUE_NOW
-import random.telegramhomebot.AppConstants.HostsTimeLog.END_DATE_MODEL_ATTR
-import random.telegramhomebot.AppConstants.HostsTimeLog.END_DATE_REQ_PARAM
-import random.telegramhomebot.AppConstants.HostsTimeLog.START_DATE_MODEL_ATTR
-import random.telegramhomebot.AppConstants.HostsTimeLog.START_DATE_REQ_PARAM
-import random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAPPING
-import random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAP_MODEL_ATTR
-import random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_VIEW
+import random.telegramhomebot.const.AppConstants.DEFAULT_DATE_VALUE_NOW
+import random.telegramhomebot.const.AppConstants.END_DATE_MODEL_ATTR
+import random.telegramhomebot.const.AppConstants.END_DATE_REQ_PARAM
+import random.telegramhomebot.const.AppConstants.HOSTS_MAPPING
+import random.telegramhomebot.const.AppConstants.START_DATE_MODEL_ATTR
+import random.telegramhomebot.const.AppConstants.START_DATE_REQ_PARAM
+import random.telegramhomebot.const.AppConstants.TIME_LOG_MAPPING
+import random.telegramhomebot.const.AppConstants.TIME_LOG_MAP_MODEL_ATTR
+import random.telegramhomebot.const.AppConstants.TIME_LOG_VIEW
 import random.telegramhomebot.db.dto.TimeLogDto
 import random.telegramhomebot.db.model.HostTimeLog
 import random.telegramhomebot.db.repository.HostTimeLogRepository
@@ -24,7 +24,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 @Controller
-@RequestMapping(Hosts.HOSTS_MAPPING)
+@RequestMapping(HOSTS_MAPPING)
 class HostTimeLogController(
     private val hostTimeLogRepository: HostTimeLogRepository,
     private val timeLogConverter: TimeLogConverter

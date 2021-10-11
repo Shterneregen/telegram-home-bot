@@ -1,6 +1,5 @@
 package random.telegramhomebot.auth;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +17,6 @@ import org.springframework.web.context.request.RequestContextListener;
 import random.telegramhomebot.auth.enums.AuthRole;
 import random.telegramhomebot.auth.services.AppUserDetailsService;
 
-@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
@@ -29,6 +27,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private String springH2ConsolePath;
 
     private final AppUserDetailsService userDetailsService;
+
+    public SecurityConfiguration(AppUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {

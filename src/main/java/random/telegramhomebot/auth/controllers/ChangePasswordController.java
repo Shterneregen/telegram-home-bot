@@ -1,7 +1,5 @@
 package random.telegramhomebot.auth.controllers;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -22,13 +20,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.Optional;
 
-@Slf4j
-@RequiredArgsConstructor
 @Controller
 public class ChangePasswordController {
 
     private final MessageService messageService;
     private final UserService userService;
+
+    public ChangePasswordController(MessageService messageService, UserService userService) {
+        this.messageService = messageService;
+        this.userService = userService;
+    }
 
     @GetMapping("/updatePassword")
     public ModelAndView updatePassword(
@@ -53,5 +54,4 @@ public class ChangePasswordController {
         userService.changeUserPassword(user, passwordDto.getNewPassword());
         return new GenericResponse(messageService.getMessage("message.updatePasswordSuc"));
     }
-
 }

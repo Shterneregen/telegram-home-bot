@@ -1,6 +1,5 @@
 package random.telegramhomebot.auth.services;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,7 +14,6 @@ import random.telegramhomebot.utils.NetUtils;
 
 import javax.servlet.http.HttpServletRequest;
 
-@RequiredArgsConstructor
 @Service
 public class AppUserDetailsService implements UserDetailsService {
 
@@ -23,6 +21,15 @@ public class AppUserDetailsService implements UserDetailsService {
     private final LoginAttemptService loginAttemptService;
     private final HttpServletRequest request;
     private final MessageService messageService;
+
+    public AppUserDetailsService(
+            UserRepository userRepository, LoginAttemptService loginAttemptService, HttpServletRequest request,
+            MessageService messageService) {
+        this.userRepository = userRepository;
+        this.loginAttemptService = loginAttemptService;
+        this.request = request;
+        this.messageService = messageService;
+    }
 
     @Value("${login.blocking.time.in.minutes}")
     private int blockingTimeInMinutes;

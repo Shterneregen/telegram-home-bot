@@ -1,6 +1,5 @@
 package random.telegramhomebot.auth.controllers;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +14,14 @@ import random.telegramhomebot.auth.dto.GenericResponse;
 import random.telegramhomebot.auth.exceptinos.InvalidOldPasswordException;
 import random.telegramhomebot.services.messages.MessageService;
 
-@RequiredArgsConstructor
 @ControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final MessageService messageService;
+
+    public RestResponseEntityExceptionHandler(MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     // 400
     @Override

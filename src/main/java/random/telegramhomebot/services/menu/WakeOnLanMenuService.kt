@@ -3,8 +3,8 @@ package random.telegramhomebot.services.menu
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
-import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.services.WakeOnLanService
+import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.services.menu.dto.Menu
 
 @Service
@@ -18,8 +18,7 @@ class WakeOnLanMenuService(
     override fun getMenuMap(): Map<String, Menu> {
         return hostService.getWakeOnLanEnableHosts()
             .associate {
-                "$menuCommand${it.id}" to Menu(it.deviceName ?: it.mac!!)
-                {
+                "$menuCommand${it.id}" to Menu(it.deviceName ?: it.mac!!) {
                     wakeOnLanService.wakeOnLan(it.mac)
                     "Host '${it.deviceName}' start request sent"
                 }

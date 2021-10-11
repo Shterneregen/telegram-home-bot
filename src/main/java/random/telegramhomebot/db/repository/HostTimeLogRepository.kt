@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.db.model.HostTimeLog
 import java.sql.Timestamp
-import java.util.*
+import java.util.UUID
 
 interface HostTimeLogRepository : JpaRepository<HostTimeLog, UUID?> {
     fun findByCreatedDateBetween(startDate: Timestamp, endDay: Timestamp?): List<HostTimeLog>

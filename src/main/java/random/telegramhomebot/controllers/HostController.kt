@@ -9,12 +9,23 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import random.telegramhomebot.AppConstants
-import random.telegramhomebot.AppConstants.Hosts.*
+import random.telegramhomebot.AppConstants.Hosts.ADD_EDIT_HOST_VIEW
+import random.telegramhomebot.AppConstants.Hosts.DELETE_HOST_MAPPING
+import random.telegramhomebot.AppConstants.Hosts.EDIT_HOST_BY_ID_MAPPING
+import random.telegramhomebot.AppConstants.Hosts.EDIT_HOST_MAPPING
+import random.telegramhomebot.AppConstants.Hosts.HOSTS_MAPPING
+import random.telegramhomebot.AppConstants.Hosts.HOSTS_MODEL_ATTR
+import random.telegramhomebot.AppConstants.Hosts.HOSTS_VIEW
+import random.telegramhomebot.AppConstants.Hosts.HOST_ID_PATH_VAR
+import random.telegramhomebot.AppConstants.Hosts.HOST_MAC_FIELD
+import random.telegramhomebot.AppConstants.Hosts.HOST_MODEL_ATTR
+import random.telegramhomebot.AppConstants.Hosts.REDIRECT_HOSTS
+import random.telegramhomebot.AppConstants.Hosts.SAVE_HOST_MAPPING
 import random.telegramhomebot.AppConstants.Redirects.ERROR_404_REDIRECT
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.utils.pagination.PagerHelper
-import java.util.*
+import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 import javax.validation.Valid
 
@@ -37,7 +48,8 @@ class HostController(private val hostService: HostService) {
         @RequestParam("page") currentPage: Int?,
         @RequestParam("sortBy") sortBy: String?,
         @RequestParam("direction") direction: String?,
-        model: Model, request: HttpServletRequest?
+        model: Model,
+        request: HttpServletRequest?
     ): String {
         val pageSizeCookieName = "hostsPageSize"
         val pageable = PagerHelper.getPageable(

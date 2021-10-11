@@ -5,7 +5,9 @@ import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import random.telegramhomebot.db.model.FeatureSwitcher
 import random.telegramhomebot.db.repository.FeatureSwitcherRepository
-import random.telegramhomebot.services.FeatureSwitcherService.Features.*
+import random.telegramhomebot.services.FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION
+import random.telegramhomebot.services.FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION
+import random.telegramhomebot.services.FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION
 import random.telegramhomebot.utils.logger
 
 @Order(3)

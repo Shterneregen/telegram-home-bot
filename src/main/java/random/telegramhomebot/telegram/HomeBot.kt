@@ -12,10 +12,10 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import random.telegramhomebot.AppConstants.Messages.UNAUTHORIZED_ACCESS_MSG
 import random.telegramhomebot.config.ProfileService
-import random.telegramhomebot.services.commands.CommandService
-import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.services.UserValidatorService
+import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.services.menu.CallbackMenuService
+import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.utils.logger
 
 @Profile("!${ProfileService.MOCK_BOT}")

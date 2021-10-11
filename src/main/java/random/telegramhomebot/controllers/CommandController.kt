@@ -5,11 +5,21 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import random.telegramhomebot.AppConstants.Commands.*
+import random.telegramhomebot.AppConstants.Commands.ADD_EDIT_COMMAND_VIEW
+import random.telegramhomebot.AppConstants.Commands.COMMANDS_MAPPING
+import random.telegramhomebot.AppConstants.Commands.COMMANDS_MODEL_ATTR
+import random.telegramhomebot.AppConstants.Commands.COMMANDS_VIEW
+import random.telegramhomebot.AppConstants.Commands.COMMAND_ID_PATH_VAR
+import random.telegramhomebot.AppConstants.Commands.COMMAND_MODEL_ATTR
+import random.telegramhomebot.AppConstants.Commands.DELETE_COMMAND_MAPPING
+import random.telegramhomebot.AppConstants.Commands.EDIT_COMMAND_BY_ID_MAPPING
+import random.telegramhomebot.AppConstants.Commands.EDIT_COMMAND_MAPPING
+import random.telegramhomebot.AppConstants.Commands.REDIRECT_COMMANDS
+import random.telegramhomebot.AppConstants.Commands.SAVE_COMMAND_MAPPING
 import random.telegramhomebot.AppConstants.Redirects.ERROR_404_REDIRECT
 import random.telegramhomebot.db.model.TelegramCommand
 import random.telegramhomebot.db.repository.TelegramCommandRepository
-import java.util.*
+import java.util.UUID
 
 @Controller
 @RequestMapping(COMMANDS_MAPPING)

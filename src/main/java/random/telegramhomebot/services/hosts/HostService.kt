@@ -29,7 +29,7 @@ class HostService(
 
     fun saveAllHosts(hosts: List<Host>) {
         hostRepository.saveAll(hosts)
-        //		hostRepository.flush();
+        // 		hostRepository.flush();
     }
 
     fun getHostByMac(mac: String?): Host? = hostRepository.findHostByMac(mac)
@@ -92,8 +92,7 @@ class HostService(
         "${TIME_DATE_FORMAT.format(createdDate)}\t ${state.getIcon()}\t ${host.deviceName}"
 
     private fun isReachable(storedHosts: List<Host>, currentHost: Host) =
-        FAILED != currentHost.state
-                && storedHosts.any { storedHost -> storedHost == currentHost && FAILED == storedHost.state }
+        FAILED != currentHost.state && storedHosts.any { storedHost -> storedHost == currentHost && FAILED == storedHost.state }
 
     private fun reachableBecameNotFound(currentHosts: List<Host>, storedHost: Host) =
         FAILED != storedHost.state && currentHosts.none { storedHost == it }

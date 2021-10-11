@@ -2,7 +2,7 @@ package random.telegramhomebot.services.csv
 
 import org.springframework.stereotype.Component
 import random.telegramhomebot.db.model.Host
-import java.util.*
+import java.util.Base64
 
 @Component
 class HostCsvConverter {

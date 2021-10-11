@@ -10,8 +10,8 @@ import random.telegramhomebot.AppConstants.BotCommands.SHOW_ALL_COMMANDS
 import random.telegramhomebot.events.scan.ScanHostsEventPublisher
 import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.services.hosts.HostService
-import random.telegramhomebot.services.messages.MessageFormatService
 import random.telegramhomebot.services.menu.dto.Menu
+import random.telegramhomebot.services.messages.MessageFormatService
 import random.telegramhomebot.telegram.Icon
 
 @Service
@@ -25,14 +25,16 @@ class MainMenuService(
     override val menuText = "Main Menu"
 
     override fun getMenuMap(): Map<String, Menu> = mapOf(
-        REACHABLE_HOSTS_COMMAND to Menu(Icon.DESKTOP_COMPUTER.get())
-        { messageFormatService.getHostsState(hostService.getReachableHosts()).ifBlank { "No hosts" } },
-        SHOW_ALL_COMMANDS to Menu(Icon.HAMMER.get())
-        { "Available commands:\n" + commandService.getAllEnabledCommandsAsString().ifBlank { "No commands" } },
-        LAST_ACTIVITY to Menu(Icon.SCROLL.get())
-        { "History:\n" + hostService.getLastHostTimeLogsAsString(20).ifBlank { "No activity" } },
-        REFRESH to Menu(Icon.REFRESH.get())
-        {
+        REACHABLE_HOSTS_COMMAND to Menu(Icon.DESKTOP_COMPUTER.get()) {
+            messageFormatService.getHostsState(hostService.getReachableHosts()).ifBlank { "No hosts" }
+        },
+        SHOW_ALL_COMMANDS to Menu(Icon.HAMMER.get()) {
+            "Available commands:\n" + commandService.getAllEnabledCommandsAsString().ifBlank { "No commands" }
+        },
+        LAST_ACTIVITY to Menu(Icon.SCROLL.get()) {
+            "History:\n" + hostService.getLastHostTimeLogsAsString(20).ifBlank { "No activity" }
+        },
+        REFRESH to Menu(Icon.REFRESH.get()) {
             scanHostsEventPublisher.publishEvent()
             "Host scan started"
         }

@@ -2,7 +2,7 @@ package random.telegramhomebot.db.model
 
 import org.hibernate.annotations.GenericGenerator
 import org.hibernate.annotations.Type
-import java.util.*
+import java.util.UUID
 import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -43,11 +43,11 @@ class Host(
     var notes: String? = null,
     var wakeOnLanEnabled: Boolean? = false
 ) {
-    constructor(mac: String, deviceName: String, notes: String)
-            : this(null, null, null, mac, null, deviceName, null, notes)
+    constructor(mac: String, deviceName: String, notes: String) :
+        this(null, null, null, mac, null, deviceName, null, notes)
 
-    constructor(ip: String?, hostInterface: String?, mac: String?, state: HostState?, deviceName: String)
-            : this(null, ip, hostInterface, mac, state, deviceName, null, null)
+    constructor(ip: String?, hostInterface: String?, mac: String?, state: HostState?, deviceName: String) :
+        this(null, ip, hostInterface, mac, state, deviceName, null, null)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

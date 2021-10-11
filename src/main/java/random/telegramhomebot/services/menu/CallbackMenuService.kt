@@ -32,12 +32,16 @@ class CallbackMenuService(private val menuServices: List<MenuService>) {
         menuServices.find { message.text.equals(it.menuCommand) }
             ?.let { getInlineKeyBoardMessage(message.chatId, it.menuText, it.getMenuInlineKeyboardMarkup()) }
 
-    private fun getInlineKeyBoardMessage(chatId: Long, text: String, inlineKeyboardMarkup: InlineKeyboardMarkup)
-            : SendMessage = SendMessage.builder()
-        .chatId(chatId.toString())
-        .text(text)
-        .replyMarkup(inlineKeyboardMarkup)
-        .build()
+    private fun getInlineKeyBoardMessage(
+        chatId: Long,
+        text: String,
+        inlineKeyboardMarkup: InlineKeyboardMarkup
+    ): SendMessage =
+        SendMessage.builder()
+            .chatId(chatId.toString())
+            .text(text)
+            .replyMarkup(inlineKeyboardMarkup)
+            .build()
 
     class RequestResult(var answer: String, var inlineKeyboardMarkup: InlineKeyboardMarkup? = null)
 }

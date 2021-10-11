@@ -1,9 +1,9 @@
 package random.telegramhomebot.services.hosts
 
 import org.springframework.stereotype.Service
+import random.telegramhomebot.db.dto.TimeLogDto
 import random.telegramhomebot.db.model.HostState
 import random.telegramhomebot.db.model.HostTimeLog
-import random.telegramhomebot.db.dto.TimeLogDto
 
 @Service
 class TimeLogConverter {

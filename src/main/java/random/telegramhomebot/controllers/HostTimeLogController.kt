@@ -6,9 +6,16 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import random.telegramhomebot.AppConstants.Hosts
-import random.telegramhomebot.AppConstants.HostsTimeLog.*
-import random.telegramhomebot.db.model.HostTimeLog
+import random.telegramhomebot.AppConstants.HostsTimeLog.DEFAULT_DATE_VALUE_NOW
+import random.telegramhomebot.AppConstants.HostsTimeLog.END_DATE_MODEL_ATTR
+import random.telegramhomebot.AppConstants.HostsTimeLog.END_DATE_REQ_PARAM
+import random.telegramhomebot.AppConstants.HostsTimeLog.START_DATE_MODEL_ATTR
+import random.telegramhomebot.AppConstants.HostsTimeLog.START_DATE_REQ_PARAM
+import random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAPPING
+import random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_MAP_MODEL_ATTR
+import random.telegramhomebot.AppConstants.HostsTimeLog.TIME_LOG_VIEW
 import random.telegramhomebot.db.dto.TimeLogDto
+import random.telegramhomebot.db.model.HostTimeLog
 import random.telegramhomebot.db.repository.HostTimeLogRepository
 import random.telegramhomebot.services.hosts.TimeLogConverter
 import random.telegramhomebot.utils.logger
@@ -43,5 +50,4 @@ class HostTimeLogController(
 
     private fun getTimeLogDtoMap(logs: List<HostTimeLog>): Map<String, List<TimeLogDto>> =
         logs.groupBy({ it.host.deviceName ?: it.host.mac ?: "" }, { timeLogConverter.convertToDto(it) }).toSortedMap()
-
 }

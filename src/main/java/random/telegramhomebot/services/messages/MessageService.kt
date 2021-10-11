@@ -4,7 +4,7 @@ import org.springframework.context.MessageSource
 import org.springframework.lang.Nullable
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.LocaleResolver
-import java.util.*
+import java.util.Locale
 import javax.servlet.http.HttpServletRequest
 
 @Service

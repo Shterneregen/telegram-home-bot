@@ -20,7 +20,7 @@ class WakeOnLanMenuService(
             .associate {
                 "$menuCommand${it.id}" to Menu(it.deviceName ?: it.mac!!) {
                     wakeOnLanService.wakeOnLan(it.mac)
-                    "Host '${it.deviceName}' start request sent"
+                    "Wake-up request sent to '${it.deviceName}'"
                 }
             }
     }

@@ -3,9 +3,11 @@ package random.telegramhomebot.services.menu
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
+import random.telegramhomebot.const.AppConstants.DATE_TIME_FORMATTER
 import random.telegramhomebot.services.WakeOnLanService
 import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.services.menu.dto.Menu
+import java.time.LocalDateTime.now
 
 @Service
 class WakeOnLanMenuService(
@@ -20,7 +22,7 @@ class WakeOnLanMenuService(
             .associate {
                 "$menuCommand${it.id}" to Menu(it.deviceName ?: it.mac!!) {
                     wakeOnLanService.wakeOnLan(it.mac)
-                    "Wake-up request sent to '${it.deviceName}'"
+                    "Wake-up request sent to '${it.deviceName}' [${now().format(DATE_TIME_FORMATTER)}]"
                 }
             }
     }
@@ -29,7 +31,7 @@ class WakeOnLanMenuService(
         val rowList: List<List<InlineKeyboardButton>> = getMenuMap().entries
             .map { (command, menu) ->
                 InlineKeyboardButton.builder()
-                    .text("Start '${menu.buttonText}'")
+                    .text("Wake-up '${menu.buttonText}'")
                     .callbackData(command).build()
             }.map { listOf(it) }
         return InlineKeyboardMarkup.builder().keyboard(rowList).build()

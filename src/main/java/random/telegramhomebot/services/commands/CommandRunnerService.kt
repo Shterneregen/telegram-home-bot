@@ -10,9 +10,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 class CommandRunnerService {
     private val log = logger()
 
-    fun runCommand(command: String): String = runCommand(command, UTF_8.name())
-
-    fun runCommand(command: String, encoding: String): String {
+    fun runCommand(command: String, encoding: String = UTF_8.name()): String {
         log.debug("Command to run: [{}]", command)
         return try {
             val process: Process = Runtime.getRuntime().exec(command)

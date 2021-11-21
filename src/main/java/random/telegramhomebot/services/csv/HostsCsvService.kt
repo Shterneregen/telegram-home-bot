@@ -37,8 +37,8 @@ class HostsCsvService(
         )
     }
 
-    private fun prepareHostsAfterCsvParsing(convertedHosts: List<Host>): List<Host> {
-        return convertedHosts.filter { validateHostFromCsv(it) }.map { prepareHostAfterCsvParsing(it) }
+    private fun prepareHostsAfterCsvParsing(hosts: List<Host>): List<Host> {
+        return hosts.filter { validateHostFromCsv(it) }.map { prepareHostAfterCsvParsing(it) }
     }
 
     private fun validateHostFromCsv(host: Host): Boolean {

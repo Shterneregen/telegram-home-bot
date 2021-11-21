@@ -19,12 +19,12 @@ abstract class CsvService<T> {
     @Throws(IOException::class)
     fun getBeansFromFile(file: MultipartFile): List<T> {
         BufferedReader(InputStreamReader(file.inputStream)).use { reader ->
-            val build = CsvToBeanBuilder<T>(reader)
-                .withType(genericTypeClass)
+            return CsvToBeanBuilder<T>(reader)
+                .withType(defineGenericTypeClass())
                 .withIgnoreLeadingWhiteSpace(true)
                 .withIgnoreEmptyLine(true)
                 .build()
-            return build.parse()
+                .parse()
         }
     }
 
@@ -37,21 +37,20 @@ abstract class CsvService<T> {
 
     @Throws(CsvDataTypeMismatchException::class, CsvRequiredFieldEmptyException::class)
     private fun write(printWriter: PrintWriter, beans: List<T>) {
-        val writer = StatefulBeanToCsvBuilder<T>(printWriter)
+        StatefulBeanToCsvBuilder<T>(printWriter)
             .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
             .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
             .withOrderedResults(false)
             .build()
-        writer.write(beans)
+            .write(beans)
     }
 
-    private val genericTypeClass: Class<T>
-        get() = try {
-            val className = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0].typeName
-            Class.forName(className) as Class<T>
-        } catch (e: Exception) {
-            throw IllegalStateException("Class is not parametrized with generic type! Please use extends <> ")
-        }
+    private fun defineGenericTypeClass(): Class<T> = try {
+        val className = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0].typeName
+        Class.forName(className) as Class<T>
+    } catch (e: Exception) {
+        throw IllegalStateException("Class is not parametrized with generic type! Please use extends <> ")
+    }
 
     companion object {
         private const val CSV_CONTENT_TYPE = "text/csv"

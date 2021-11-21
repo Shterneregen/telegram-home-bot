@@ -53,18 +53,17 @@ class CommandService(
     private fun getKeyboardRows(commands: List<Command>, buttonsInRow: Int): List<KeyboardRow> {
         val keyboardRowList: MutableList<KeyboardRow> = ArrayList()
         var keyboardRow = KeyboardRow()
-        var i = 0
-        var j = 0
-        while (i < commands.size) {
-            if (i % buttonsInRow == 0) {
-                j++
+
+        for (i in commands.indices) {
+            val newRow = i % buttonsInRow == 0
+            if (newRow) {
                 keyboardRow = KeyboardRow()
             }
             keyboardRow.add(KeyboardButton(commands[i].getButtonName()))
-            if (buttonsInRow * j - 1 == i || i == commands.size - 1) {
+            val lastInRow = (i + 1) % buttonsInRow == 0 || i == commands.size - 1
+            if (lastInRow) {
                 keyboardRowList.add(keyboardRow)
             }
-            i++
         }
         return keyboardRowList
     }

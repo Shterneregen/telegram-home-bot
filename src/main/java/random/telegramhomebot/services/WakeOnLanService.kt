@@ -47,8 +47,8 @@ class WakeOnLanService {
             // The Synchronization Stream is defined as 6 bytes of FFh
             for (i in 0 until syncStreamSize) bytes[i] = 0xff.toByte()
             // The Target MAC block contains 16 duplications of the IEEE address of the target, with no breaks or interruptions
-            for (item in numbersOfBytesInMac.until(bytes.size).step(macBytes.size))
-                System.arraycopy(macBytes, 0, bytes, item, macBytes.size)
+            for (destPos in syncStreamSize.until(bytes.size).step(macBytes.size))
+                System.arraycopy(macBytes, 0, bytes, destPos, macBytes.size)
         }
     }
 
@@ -56,8 +56,8 @@ class WakeOnLanService {
         val hex: List<String> = mac.split(":", "-")
         if (hex.size != numbersOfBytesInMac) throw IllegalArgumentException("Invalid MAC address")
 
-        return ByteArray(numbersOfBytesInMac).also { bytes ->
-            for (i in 0 until numbersOfBytesInMac) bytes[i] = hex[i].toInt(radix = 16).toByte()
+        return ByteArray(hex.size).also { bytes ->
+            for (i in hex.indices) bytes[i] = hex[i].toInt(radix = 16).toByte()
         }
     }
 }

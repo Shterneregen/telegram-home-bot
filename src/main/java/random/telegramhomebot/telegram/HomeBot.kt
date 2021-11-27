@@ -1,11 +1,13 @@
 package random.telegramhomebot.telegram
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -30,7 +32,9 @@ class HomeBot(
     val log = logger()
 
     override fun onUpdateReceived(update: Update) {
-        log.debug(update.toString())
+        if (log.isDebugEnabled) {
+            log.info(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(update))
+        }
         when {
             !userValidatorService.checkAccessForUpdate(update) -> logWarnMessage(update)
             update.hasCallbackQuery() -> processCallback(update)
@@ -59,6 +63,7 @@ class HomeBot(
 
     private fun processCallback(update: Update) = CoroutineScope(Dispatchers.Default).launch {
         try {
+            execute(AnswerCallbackQuery.builder().callbackQueryId(update.callbackQuery.id).build())
             execute(callbackMenuService.processCallback(update))
         } catch (e: TelegramApiException) {
             log.error(e.message, e)

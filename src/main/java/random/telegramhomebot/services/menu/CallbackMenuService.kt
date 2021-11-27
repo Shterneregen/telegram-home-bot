@@ -11,22 +11,22 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 class CallbackMenuService(private val menuServices: List<MenuService>) {
 
     fun processCallback(update: Update): EditMessageText {
-        val requestResult = getRequestResult(update.callbackQuery.data)
-        return EditMessageText.builder()
-            .chatId(update.callbackQuery.message.chatId.toString())
-            .messageId(update.callbackQuery.message.messageId)
-            .replyMarkup(requestResult.inlineKeyboardMarkup)
-            .text(requestResult.answer)
-            .build()
+        val callbackQuery = update.callbackQuery
+        return getRequestResult(callbackQuery.data).let { requestResult ->
+            EditMessageText.builder()
+                .chatId(callbackQuery.message.chatId.toString())
+                .messageId(callbackQuery.message.messageId)
+                .replyMarkup(requestResult.inlineKeyboardMarkup)
+                .text(requestResult.answer)
+                .build()
+        }
     }
 
-    fun getRequestResult(command: String): RequestResult {
-        for (menuService in menuServices) {
+    fun getRequestResult(command: String): RequestResult =
+        menuServices.find { it.getMenuMap()[command] != null }?.let { menuService ->
             menuService.getMenuMap()[command]
-                ?.let { return RequestResult(it.method.get(), menuService.getMenuInlineKeyboardMarkup()) }
-        }
-        return RequestResult("No answer")
-    }
+                ?.let { menu -> RequestResult(menu.method.get(), menuService.getMenuInlineKeyboardMarkup()) }
+        } ?: RequestResult("No answer")
 
     fun getMenuForCommand(message: Message): SendMessage? =
         menuServices.find { message.text.equals(it.menuCommand) }
@@ -41,6 +41,7 @@ class CallbackMenuService(private val menuServices: List<MenuService>) {
             .chatId(chatId.toString())
             .text(text)
             .replyMarkup(inlineKeyboardMarkup)
+            .allowSendingWithoutReply(true)
             .build()
 
     class RequestResult(var answer: String, var inlineKeyboardMarkup: InlineKeyboardMarkup? = null)

@@ -33,11 +33,11 @@ class HomeBot(
 
     override fun onUpdateReceived(update: Update) {
         if (log.isDebugEnabled) {
-            log.info(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(update))
+            log.debug(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(update))
         }
         when {
             !userValidatorService.checkAccessForUpdate(update) -> logWarnMessage(update)
-            update.hasCallbackQuery() -> processCallback(update)
+            update.hasCallbackQuery() -> handleCallback(update)
             executeControlCommand(update.message) -> log.debug("Control command [${update.message}] was executed")
             else -> executeCommand(update.message)
         }
@@ -61,19 +61,31 @@ class HomeBot(
     private fun executeCommand(message: Message) = commandService.executeCommandOnMachine(message.text.lowercase())
         ?.let { sendMessage(it, message.chatId, message.messageId) }
 
-    private fun processCallback(update: Update) = CoroutineScope(Dispatchers.Default).launch {
+    private fun handleCallback(update: Update) = CoroutineScope(Dispatchers.Default).launch {
         try {
-            execute(AnswerCallbackQuery.builder().callbackQueryId(update.callbackQuery.id).build())
-            execute(callbackMenuService.processCallback(update))
-        } catch (e: TelegramApiException) {
+            executeAsync(callbackMenuService.handleCallback(update))
+                .thenApply {
+                    // https://core.telegram.org/bots/api#callbackquery
+                    // NOTE: After the user presses a callback button, Telegram clients will display a progress bar
+                    // until you call answerCallbackQuery.
+                    // It is, therefore, necessary to react by calling answerCallbackQuery even if no notification
+                    // to the user is needed (e.g., without specifying any of the optional parameters).
+                    executeAsync(AnswerCallbackQuery.builder().callbackQueryId(update.callbackQuery.id).build())
+                }
+        } catch (e: Exception) {
             log.error(e.message, e)
+            executeAsync(
+                AnswerCallbackQuery.builder().callbackQueryId(update.callbackQuery.id)
+                    .text("${Icon.WARNING.get()} Unexpected error occurred!")
+                    .build()
+            )
         }
     }
 
     private fun executeControlCommand(message: Message): Boolean {
         val menuForCommand = callbackMenuService.getMenuForCommand(message) ?: return false
         try {
-            execute(menuForCommand)
+            executeAsync(menuForCommand)
         } catch (e: TelegramApiException) {
             log.error(e.message, e)
         }
@@ -91,10 +103,10 @@ class HomeBot(
             .chatId(chatId.toString())
             .text(messageText)
             .replyToMessageId(replyToMessageId)
+            .replyMarkup(commandService.createReplyMarkupCommandButtons())
             .build()
-        commandService.setCommandButtons(message)
         try {
-            execute(message)
+            executeAsync(message)
             log.debug("Message to send: {}", message)
         } catch (e: TelegramApiException) {
             log.error(e.message, e)

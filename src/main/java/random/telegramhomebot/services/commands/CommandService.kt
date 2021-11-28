@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
@@ -36,13 +35,13 @@ class CommandService(
         return commandRunnerService.runCommand(telegramCommand.command)
     }
 
-    fun setCommandButtons(sendMessage: SendMessage) {
+    fun createReplyMarkupCommandButtons(): ReplyKeyboardMarkup? {
         val enabledCommands = getAllEnabledCommands()
         log.debug("Enabled commands: {}", enabledCommands)
         if (enabledCommands.isEmpty()) {
-            return
+            return null
         }
-        sendMessage.replyMarkup = ReplyKeyboardMarkup.builder()
+        return ReplyKeyboardMarkup.builder()
             .selective(true)
             .resizeKeyboard(true)
             .oneTimeKeyboard(false)

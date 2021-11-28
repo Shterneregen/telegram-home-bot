@@ -14,7 +14,8 @@ enum class Icon(private val value: String) {
     GREEN_CIRCLE("green_circle"),
     YELLOW_CIRCLE("yellow_circle"),
     RED_CIRCLE("red_circle"),
-    WHITE_CIRCLE("white_circle")
+    WHITE_CIRCLE("white_circle"),
+    WARNING("warning")
     ;
 
     fun get(): String = EmojiUtils.getEmoji(value)?.emoji ?: value

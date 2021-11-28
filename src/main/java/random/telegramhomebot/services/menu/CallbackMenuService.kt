@@ -10,7 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 @Service
 class CallbackMenuService(private val menuServices: List<MenuService>) {
 
-    fun processCallback(update: Update): EditMessageText {
+    fun handleCallback(update: Update): EditMessageText {
         val callbackQuery = update.callbackQuery
         return getRequestResult(callbackQuery.data).let { requestResult ->
             EditMessageText.builder()

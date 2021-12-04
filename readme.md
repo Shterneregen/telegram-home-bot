@@ -11,24 +11,52 @@ Can be used for home automation on Raspberry Pi
 - Wake-up selected hosts via WOL technology sending magic packet using Telegram client
 - Provide weather info for chosen places using OpenWeatherMap API via Telegram client
 
-To use this project set environment variables for TELEGRAM_BOT_CHAT_ID, TELEGRAM_TOKEN and TELEGRAM_BOT_NAME.  
-Actually, when I'm using THB as a Linux service, I just put the properties files next to the jar file and also set the
-Telegram credentials into the application.properties without using env variables
+## How to set up the project
 
 ### Create telegram chatbot
 
-* start a chat with __@BotFather__
-* use message __/newbot__
-* set bot name (TELEGRAM_BOT_NAME)
-* set unique bot username (ends with _bot or Bot)
-* get __token__ from the final message (TELEGRAM_TOKEN)
-* start conversation with bot
-* retrieve __chat_id__, call https://api.telegram.org/bot[YOUR_TOKEN]/getUpdates (TELEGRAM_BOT_CHAT_ID)
+* Start a chat with **@BotFather**
+* Use message **/newbot**
+* Set bot name (and use it as **telegram.bot-owner-id**)
+* Set unique bot username (ends with _bot or Bot)
+* Get **token** from the final message (and use it as **telegram.token**)
+* Start conversation with bot
+* Retrieve **chat_id**, call https://api.telegram.org/bot[YOUR_TOKEN]/getUpdates (and use it as **telegram.bot-name**)
 
-1. Periodically calls a command (_state.change.command_) to check network changes and in case of state changes sends a
-   message to telegram bot (only to TELEGRAM_BOT_CHAT_ID)
-2. You can add any commands in [commands.properties](src/main/resources/commands.properties). These commands work for
-   TELEGRAM_BOT_CHAT_ID and users from __home.group.user.ids__ list
+### Enable network monitor
+
+- Set `network-monitor.enabled` to `true`
+- You can add/edit hosts on http://127.0.0.1:9988/hosts page
+- Hosts availability changes is on http://127.0.0.1:9988/hosts page
+
+#### What does network monitor do?
+
+1. Periodically calls a command (**state.change.command**) to check network changes
+2. Chatbot notifies about hosts appearances/disappearances **telegram.bot-owner-id** user and users
+
+### Run commands on chatbot machine
+
+1. You can add any initial commands that will be available to run
+   in [commands.properties](src/main/resources/commands.properties)
+2. Besides, you can add/edit commands on http://127.0.0.1:9988/commands
+
+### Enable Weather menu
+
+- Set `openweather.enabled` property to `true`
+- Generate you API key on https://home.openweathermap.org/api_keys page
+- Set the API key above as `openweather.appid` property
+- Add locations where you want to know weather on page `/weather` page (http://127.0.0.1:9988/weather)
+    - Don't add city ID with lat & lon in the same time, use them separately
+    - City ID could be found in [city.list.json.gz](http://bulk.openweathermap.org/sample/city.list.json.gz)
+      or [city.list.min.json.gz](http://bulk.openweathermap.org/sample/city.list.min.json.gz)
+- After starting the app you can reach the Weather menu using `/weather` command via Telegram client
+- Useful links
+    - [Current weather data](https://openweathermap.org/current)
+    - [Index of /sample/](http://bulk.openweathermap.org/sample/)
+
+---
+
+## Additional information
 
 ### [Installation as an init.d Service](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#deployment-initd-service)
 
@@ -47,19 +75,8 @@ sudo service thb start # start bot as a service
 update-rc.d thb defaults # autostart
 ```
 
-### Enable Weather menu
-
-- Set `openweather.enabled` property to `true`
-- Generate you API key on https://home.openweathermap.org/api_keys page
-- Set the API key above as `openweather.appid` property
-- Add locations where you want to know weather on page `/weather` page (http://127.0.0.1:9988/weather)
-    - Don't add city ID with lat & lon in the same time, use them separately
-    - City ID could be found in [city.list.json.gz](http://bulk.openweathermap.org/sample/city.list.json.gz)
-      or [city.list.min.json.gz](http://bulk.openweathermap.org/sample/city.list.min.json.gz)
-- After starting the app you can reach the Weather menu using `/weather` command via Telegram client
-- Useful links
-    - [Current weather data](https://openweathermap.org/current)
-    - [Index of /sample/](http://bulk.openweathermap.org/sample/)
+* When I'm using THB as a Linux service, I just put the properties files next to the jar file and also set the Telegram
+  credentials into the application.properties without using env variables
 
 ### Enable HTTPS
 

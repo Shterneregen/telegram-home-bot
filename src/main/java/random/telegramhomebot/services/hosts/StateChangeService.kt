@@ -2,9 +2,8 @@ package random.telegramhomebot.services.hosts
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import org.apache.commons.lang3.SystemUtils
-import org.springframework.context.annotation.Profile
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.const.AppConstants.NEW_HOSTS_MSG
 import random.telegramhomebot.const.AppConstants.REACHABLE_HOSTS_MSG
 import random.telegramhomebot.const.AppConstants.UNREACHABLE_HOSTS_MSG
@@ -15,7 +14,7 @@ import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.utils.Utils
 import random.telegramhomebot.utils.logger
 
-@Profile(ProfileService.NETWORK_MONITOR)
+@ConditionalOnProperty(prefix = "network-monitor", value = ["enabled"], havingValue = "true")
 @Service
 class StateChangeService(
     private val messageFormatService: MessageFormatService,

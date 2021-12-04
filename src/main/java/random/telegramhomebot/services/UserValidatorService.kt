@@ -1,15 +1,14 @@
 package random.telegramhomebot.services
 
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Profile
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.Update
 import random.telegramhomebot.auth.services.LoginAttemptService
-import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.telegram.BotProperties
 import random.telegramhomebot.utils.logger
 
-@Profile("!${ProfileService.MOCK_BOT}")
+@ConditionalOnProperty(prefix = "mock-bot", value = ["enabled"], havingValue = "false")
 @Service
 class UserValidatorService(
     private val botProperties: BotProperties,

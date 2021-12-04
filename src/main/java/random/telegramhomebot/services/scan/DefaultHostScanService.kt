@@ -3,9 +3,8 @@ package random.telegramhomebot.services.scan
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.const.AppConstants
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.services.commands.CommandRunnerService
@@ -15,7 +14,7 @@ import random.telegramhomebot.services.scan.model.JsonHost
 import random.telegramhomebot.utils.logger
 import java.time.LocalDateTime
 
-@Profile(ProfileService.NETWORK_MONITOR)
+@ConditionalOnProperty(prefix = "network-monitor", value = ["enabled"], havingValue = "true")
 @Service
 class DefaultHostScanService(
     private val commandRunnerService: CommandRunnerService,

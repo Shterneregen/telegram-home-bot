@@ -1,8 +1,7 @@
 package random.telegramhomebot.telegram
 
-import org.springframework.context.annotation.Profile
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.utils.logger
 import java.io.IOException
 import java.net.http.HttpClient
@@ -12,7 +11,7 @@ import java.time.Duration
 import javax.ws.rs.core.UriBuilder
 
 @Deprecated(message = "This class is not used. It's here to remind you how to use a bot without a library")
-@Profile("!${ProfileService.MOCK_BOT}")
+@ConditionalOnProperty(prefix = "mock-bot", value = ["enabled"], havingValue = "false")
 @Service
 class TelegramNotifier(private val botProperties: BotProperties) {
     val log = logger()

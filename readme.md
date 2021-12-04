@@ -48,10 +48,18 @@ update-rc.d thb defaults # autostart
 ```
 
 ### Enable Weather menu
+
 - Set `openweather.enabled` property to `true`
 - Generate you API key on https://home.openweathermap.org/api_keys page
 - Set the API key above as `openweather.appid` property
-- After restarting the app you can reach the Weather menu using `/weather` command via Telegram client
+- Add locations where you want to know weather on page `/weather` page (http://127.0.0.1:9988/weather)
+    - Don't add city ID with lat & lon in the same time, use them separately
+    - City ID could be found in [city.list.json.gz](http://bulk.openweathermap.org/sample/city.list.json.gz)
+      or [city.list.min.json.gz](http://bulk.openweathermap.org/sample/city.list.min.json.gz)
+- After starting the app you can reach the Weather menu using `/weather` command via Telegram client
+- Useful links
+    - [Current weather data](https://openweathermap.org/current)
+    - [Index of /sample/](http://bulk.openweathermap.org/sample/)
 
 ### Enable HTTPS
 

@@ -2,15 +2,14 @@ package random.telegramhomebot.scheduling
 
 import org.apache.commons.lang3.SystemUtils
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.services.commands.CommandRunnerService
 import random.telegramhomebot.utils.logger
 
-@Profile(ProfileService.NETWORK_MONITOR)
+@ConditionalOnProperty(prefix = "network-monitor", value = ["enabled"], havingValue = "true")
 @Service
 class BroadcastPingScheduler(private val commandRunnerService: CommandRunnerService) {
     val log = logger()

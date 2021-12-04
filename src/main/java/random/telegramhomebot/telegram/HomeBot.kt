@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.springframework.context.annotation.Profile
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
@@ -12,7 +12,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
-import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.const.AppConstants.UNAUTHORIZED_ACCESS_MSG
 import random.telegramhomebot.services.UserValidatorService
 import random.telegramhomebot.services.commands.CommandService
@@ -20,7 +19,7 @@ import random.telegramhomebot.services.menu.CallbackMenuService
 import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.utils.logger
 
-@Profile("!${ProfileService.MOCK_BOT}")
+@ConditionalOnProperty(prefix = "mock-bot", value = ["enabled"], havingValue = "false")
 @Component
 class HomeBot(
     private val userValidatorService: UserValidatorService,

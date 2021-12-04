@@ -1,11 +1,10 @@
 package random.telegramhomebot.telegram
 
-import org.springframework.context.annotation.Profile
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
-import random.telegramhomebot.config.ProfileService
 import random.telegramhomebot.utils.logger
 
-@Profile(ProfileService.MOCK_BOT)
+@ConditionalOnProperty(prefix = "mock-bot", value = ["enabled"], havingValue = "true")
 @Component
 class MockBot : Bot {
     val log = logger()

@@ -4,9 +4,16 @@
 
 Can be used for home automation on Raspberry Pi
 
+## What can this bot do?
+
+- Monitor local network and notify about hosts appearances/disappearances via Telegram client
+- Run commands on target machine from Telegram client
+- Wake-up selected hosts via WOL technology sending magic packet using Telegram client
+- Provide weather info for chosen places using OpenWeatherMap API via Telegram client
+
 To use this project set environment variables for TELEGRAM_BOT_CHAT_ID, TELEGRAM_TOKEN and TELEGRAM_BOT_NAME.  
-(Actually, using THB as a Linux service, I just put the properties files next to the jar file and also set the telegram
-credentials into the application.properties without using env variables)
+Actually, when I'm using THB as a Linux service, I just put the properties files next to the jar file and also set the
+Telegram credentials into the application.properties without using env variables
 
 ### Create telegram chatbot
 
@@ -39,6 +46,12 @@ sudo systemctl daemon-reload # reload systemd manager configuration
 sudo service thb start # start bot as a service
 update-rc.d thb defaults # autostart
 ```
+
+### Enable Weather menu
+- Set `openweather.enabled` property to `true`
+- Generate you API key on https://home.openweathermap.org/api_keys page
+- Set the API key above as `openweather.appid` property
+- After restarting the app you can reach the Weather menu using `/weather` command via Telegram client
 
 ### Enable HTTPS
 
@@ -112,4 +125,4 @@ gradlew sonarqube -Dsonar.projectKey=thb -Dsonar.host.url=http://127.0.0.1:9000 
 
 ---
 
-Spring Boot, Kotlin, Spring Security, Gradle, H2, Thymeleaf, Google Charts, telegrambots-spring-boot-starter
+Kotlin, Spring (Boot/Security/WebFlux), Gradle, H2, Thymeleaf, Google Charts, telegrambots-spring-boot-starter

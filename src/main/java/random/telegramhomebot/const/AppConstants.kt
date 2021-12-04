@@ -39,7 +39,7 @@ object AppConstants {
     const val EDIT_COMMAND_BY_ID_MAPPING = "/edit/{id}"
     const val DELETE_COMMAND_MAPPING = "/delete/{id}"
     const val SAVE_COMMAND_MAPPING = "/save-command"
-    const val REDIRECT_COMMANDS = "redirect:" + COMMANDS_MAPPING
+    const val REDIRECT_COMMANDS = "redirect:$COMMANDS_MAPPING"
     const val ADD_EDIT_COMMAND_VIEW = "add-edit-command"
     const val COMMANDS_VIEW = "commands"
     const val COMMANDS_MODEL_ATTR = "commands"

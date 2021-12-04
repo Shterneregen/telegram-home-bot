@@ -1,5 +1,7 @@
 package random.telegramhomebot.openweather
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 class WeatherResponse(
     var coord: Coord,
     var weather: List<Weather>,
@@ -20,9 +22,12 @@ class Coord(var lon: Double, var lat: Double)
 class Weather(var id: Int, var main: String, var description: String, var icon: String)
 class Main(
     var temp: Float,
-    var feels_like: Float,
-    var temp_min: Float,
-    var temp_max: Float,
+    @field:JsonProperty("feels_like")
+    var feelsLike: Float,
+    @field:JsonProperty("temp_min")
+    var tempMin: Float,
+    @field:JsonProperty("temp_max")
+    var tempMax: Float,
     var pressure: Int,
     var humidity: Int
 )

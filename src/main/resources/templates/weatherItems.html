@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <title th:text="#{weather.title}"></title>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="container">
+        <div class="btn-block">
+            <a href="/weather/edit" class="btn btn-primary">
+                <i class="fas fa-plus"><span th:text="#{add.weatherItem}" class="ms-1"></span></i>
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th th:text="#{weatherItem.cityName}"></th>
+                    <th th:text="#{weatherItem.cityId}"></th>
+                    <th th:text="#{weatherItem.lat}"></th>
+                    <th th:text="#{weatherItem.lon}"></th>
+                    <th th:text="#{column.edit}"></th>
+                    <th th:text="#{column.delete}"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="weatherItem : ${weatherItems}">
+                    <td th:text="${weatherItem.cityName}"></td>
+                    <td th:text="${weatherItem.cityId}"></td>
+                    <td th:text="${weatherItem.lat}"></td>
+                    <td th:text="${weatherItem.lon}"></td>
+                    <td>
+                        <a th:href="@{/weather/edit/{id}(id=${weatherItem.id})}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a th:href="@{/weather/delete/{id}(id=${weatherItem.id})}" class="btn btn-danger"
+                           th:data-confirm-delete="|#{weatherItem.confirm.delete} '${weatherItem.cityName}'?|"
+                           onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

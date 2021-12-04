@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+      th:with="title=${weatherItem.id} ? #{edit.weatherItem} : #{add.weatherItem}">
+
+<head>
+    <title th:text="${title}"></title>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="container">
+        <h3 th:text="${title}"></h3>
+        <div class="card card-body">
+            <form action="#" th:action="@{/weather/save}" th:object="${weatherItem}" method="post">
+
+                <div class="form-group">
+                    <label for="cityName" th:text="#{weatherItem.cityName}"></label>
+                    <input type="text" th:field="*{cityName}" class="form-control"
+                           id="cityName" th:placeholder="#{weatherItem.cityName}"/>
+                </div>
+                <div class="form-group">
+                    <label for="cityId" th:text="#{weatherItem.cityId}"></label>
+                    <input type="text" th:field="*{cityId}" class="form-control"
+                           id="cityId" th:placeholder="#{weatherItem.cityId}"/>
+                </div>
+                <div class="form-group">
+                    <label for="lat" th:text="#{weatherItem.lat}"></label>
+                    <input type="text" th:field="*{lat}" class="form-control"
+                           id="lat" th:placeholder="#{weatherItem.lat}"/>
+                </div>
+                <div class="form-group">
+                    <label for="lon" th:text="#{weatherItem.lon}"></label>
+                    <input type="text" th:field="*{lon}" class="form-control"
+                           id="lon" th:placeholder="#{weatherItem.lon}"/>
+                </div>
+
+                <input type="submit" class="btn btn-primary" th:value="#{btn.submit}">
+
+                <input type="hidden" id="id" th:field="*{id}">
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

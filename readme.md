@@ -17,11 +17,11 @@ Can be used for home automation on Raspberry Pi
 
 * Start a chat with **@BotFather**
 * Use message **/newbot**
-* Set bot name (and use it as **telegram.bot-owner-id**)
-* Set unique bot username (ends with _bot or Bot)
+* Set unique bot name (ends with `_bot` or `Bot`, use it as **telegram.bot-name**)
 * Get **token** from the final message (and use it as **telegram.token**)
 * Start conversation with bot
-* Retrieve **chat_id**, call https://api.telegram.org/bot[YOUR_TOKEN]/getUpdates (and use it as **telegram.bot-name**)
+* Retrieve **chat_id**, call https://api.telegram.org/bot[YOUR_TOKEN]/getUpdates
+  (and use it as **telegram.bot-owner-id**)
 
 ### Enable network monitor
 
@@ -32,7 +32,7 @@ Can be used for home automation on Raspberry Pi
 #### What does network monitor do?
 
 1. Periodically calls a command (**state.change.command**) to check network changes
-2. Chatbot notifies about hosts appearances/disappearances **telegram.bot-owner-id** user and users
+2. Chatbot notifies about hosts appearances/disappearances **telegram.bot-owner-id** user
 
 ### Run commands on chatbot machine
 

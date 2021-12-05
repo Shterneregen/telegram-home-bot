@@ -1,10 +1,10 @@
-package random.telegramhomebot.services.menu
+package random.telegramhomebot.telegram.menu
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import random.telegramhomebot.openweather.WeatherService
 import random.telegramhomebot.openweather.db.WeatherItemRepository
-import random.telegramhomebot.services.menu.dto.Menu
+import random.telegramhomebot.telegram.menu.dto.Menu
 
 @ConditionalOnProperty(prefix = "openweather", value = ["enabled"], havingValue = "true")
 @Service

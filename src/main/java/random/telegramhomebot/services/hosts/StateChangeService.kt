@@ -73,10 +73,7 @@ class StateChangeService(
             hostsMessagesMap[getMessage(REACHABLE_HOSTS_MSG)] = reachableHosts
         if (featureSwitcherService.notReachableHostsNotificationsEnabled())
             hostsMessagesMap[getMessage(UNREACHABLE_HOSTS_MSG)] = notReachableHosts
-        return when {
-            hostsMessagesMap.isNotEmpty() -> messageFormatService.formHostsListTable(hostsMessagesMap)
-            else -> ""
-        }
+        return if (hostsMessagesMap.isNotEmpty()) messageFormatService.formHostsListTable(hostsMessagesMap) else ""
     }
 
     private fun getMessage(code: String) = messageService.getMessage(code)

@@ -15,7 +15,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import random.telegramhomebot.const.AppConstants.UNAUTHORIZED_ACCESS_MSG
 import random.telegramhomebot.services.UserValidatorService
 import random.telegramhomebot.services.commands.CommandService
-import random.telegramhomebot.services.menu.CallbackMenuService
+import random.telegramhomebot.telegram.menu.CallbackMenuService
 import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.utils.logger
 
@@ -37,8 +37,8 @@ class HomeBot(
         when {
             !userValidatorService.checkAccessForUpdate(update) -> logWarnMessage(update)
             update.hasCallbackQuery() -> handleCallback(update)
-            executeControlCommand(update.message) -> log.debug("Control command [${update.message}] was executed")
-            else -> executeCommand(update.message)
+            getMenuForCommand(update.message) -> log.debug("[${update.message}] command was executed")
+            else -> executeCommandOnMachine(update.message)
         }
     }
 
@@ -57,8 +57,9 @@ class HomeBot(
         log.warn(warnMessage)
     }
 
-    private fun executeCommand(message: Message) = commandService.executeCommandOnMachine(message.text.lowercase())
-        ?.let { sendMessage(it, message.chatId, message.messageId) }
+    private fun executeCommandOnMachine(message: Message) =
+        commandService.executeCommandOnMachine(message.text.lowercase())
+            ?.let { sendMessage(it, message.chatId, message.messageId) }
 
     private fun handleCallback(update: Update) = CoroutineScope(Dispatchers.Default).launch {
         try {
@@ -81,7 +82,7 @@ class HomeBot(
         }
     }
 
-    private fun executeControlCommand(message: Message): Boolean {
+    private fun getMenuForCommand(message: Message): Boolean {
         val menuForCommand = callbackMenuService.getMenuForCommand(message) ?: return false
         try {
             executeAsync(menuForCommand)

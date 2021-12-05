@@ -23,7 +23,7 @@ class UserValidatorService(
         }
         val userId = if (update.hasCallbackQuery()) update.callbackQuery.from.id else update.message.from.id
         if (botAttemptService.isBlocked(userId.toString())) {
-            log.debug("Bot [$userId] is still blocked")
+            log.debug("User [$userId] is still blocked")
             return false
         }
 
@@ -38,7 +38,7 @@ class UserValidatorService(
     private fun isAllowedUser(userId: Long) = isOwner(userId) || isHomeGroupUser(userId)
 
     private fun isOwner(userId: Long): Boolean {
-        val isOwner = userId == botProperties.botOwnerId.toInt().toLong()
+        val isOwner = userId == botProperties.botOwnerId.toLong()
         log.debug("Is owner: {}", isOwner)
         return isOwner
     }

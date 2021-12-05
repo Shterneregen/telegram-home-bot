@@ -1,10 +1,10 @@
-package random.telegramhomebot.services.menu
+package random.telegramhomebot.telegram.menu
 
 import org.springframework.stereotype.Service
 import random.telegramhomebot.const.AppConstants.DATE_TIME_FORMATTER
 import random.telegramhomebot.services.WakeOnLanService
 import random.telegramhomebot.services.hosts.HostService
-import random.telegramhomebot.services.menu.dto.Menu
+import random.telegramhomebot.telegram.menu.dto.Menu
 import java.time.LocalDateTime.now
 
 @Service

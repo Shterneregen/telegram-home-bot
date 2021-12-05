@@ -1,4 +1,4 @@
-package random.telegramhomebot.services.menu
+package random.telegramhomebot.telegram.menu
 
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
@@ -23,7 +23,7 @@ class CallbackMenuService(private val menuServices: List<MenuService>) {
     }
 
     fun getRequestResult(command: String): RequestResult =
-        menuServices.find { it.getMenuMap()[command] != null }?.let { menuService ->
+        menuServices.find { it.getMenuMap().containsKey(command) }?.let { menuService ->
             menuService.getMenuMap()[command]
                 ?.let { menu -> RequestResult(menu.method.get(), menuService.getMenuInlineKeyboardMarkup()) }
         } ?: RequestResult("No answer")

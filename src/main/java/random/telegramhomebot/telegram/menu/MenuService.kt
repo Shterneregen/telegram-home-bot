@@ -1,8 +1,8 @@
-package random.telegramhomebot.services.menu
+package random.telegramhomebot.telegram.menu
 
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
-import random.telegramhomebot.services.menu.dto.Menu
+import random.telegramhomebot.telegram.menu.dto.Menu
 
 interface MenuService {
     val menuCommand: String

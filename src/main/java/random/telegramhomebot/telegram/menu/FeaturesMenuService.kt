@@ -1,9 +1,9 @@
-package random.telegramhomebot.services.menu
+package random.telegramhomebot.telegram.menu
 
 import org.springframework.stereotype.Service
 import random.telegramhomebot.services.FeatureSwitcherService
 import random.telegramhomebot.services.FeatureSwitcherService.Features.*
-import random.telegramhomebot.services.menu.dto.Menu
+import random.telegramhomebot.telegram.menu.dto.Menu
 import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.telegram.Icon
 

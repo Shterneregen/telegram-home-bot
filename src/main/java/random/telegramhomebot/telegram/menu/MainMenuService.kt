@@ -1,4 +1,4 @@
-package random.telegramhomebot.services.menu
+package random.telegramhomebot.telegram.menu
 
 import org.springframework.stereotype.Service
 import random.telegramhomebot.const.AppConstants.LAST_ACTIVITY
@@ -8,7 +8,7 @@ import random.telegramhomebot.const.AppConstants.SHOW_ALL_COMMANDS
 import random.telegramhomebot.events.scan.ScanHostsEventPublisher
 import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.services.hosts.HostService
-import random.telegramhomebot.services.menu.dto.Menu
+import random.telegramhomebot.telegram.menu.dto.Menu
 import random.telegramhomebot.services.messages.MessageFormatService
 import random.telegramhomebot.telegram.Icon
 

@@ -1,8 +1,6 @@
 package random.telegramhomebot.services.menu
 
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
 import random.telegramhomebot.const.AppConstants.LAST_ACTIVITY
 import random.telegramhomebot.const.AppConstants.REACHABLE_HOSTS_COMMAND
 import random.telegramhomebot.const.AppConstants.REFRESH
@@ -40,12 +38,5 @@ class MainMenuService(
         }
     )
 
-    override fun getMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val buttons = getMenuMap().entries.map { (command, menu) ->
-            InlineKeyboardButton.builder()
-                .text(menu.buttonText)
-                .callbackData(command).build()
-        }
-        return InlineKeyboardMarkup.builder().keyboard(listOf(buttons)).build()
-    }
+    override fun getMenuInlineKeyboardMarkup() = getDefaultHorizontalMenuInlineKeyboardMarkup()
 }

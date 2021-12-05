@@ -1,13 +1,9 @@
 package random.telegramhomebot.services.menu
 
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
 import random.telegramhomebot.services.FeatureSwitcherService
-import random.telegramhomebot.services.FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION
-import random.telegramhomebot.services.FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION
-import random.telegramhomebot.services.FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION
-import random.telegramhomebot.services.menu.dto.FeatureMenu
+import random.telegramhomebot.services.FeatureSwitcherService.Features.*
+import random.telegramhomebot.services.menu.dto.Menu
 import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.telegram.Icon
 
@@ -19,30 +15,22 @@ class FeaturesMenuService(
     override val menuCommand = "/features"
     override val menuText = "Features Setting"
 
-    override fun getMenuMap(): Map<String, FeatureMenu> = mapOf(
+    override fun getMenuMap(): Map<String, Menu> = mapOf(
         pair(NEW_HOSTS_NOTIFICATION) { featureSwitcherService.newHostsNotificationsEnabled() },
         pair(REACHABLE_HOSTS_NOTIFICATION) { featureSwitcherService.reachableHostsNotificationsEnabled() },
         pair(NOT_REACHABLE_HOSTS_NOTIFICATION) { featureSwitcherService.notReachableHostsNotificationsEnabled() }
     )
 
-    override fun getMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val rowList: List<List<InlineKeyboardButton>> = getMenuMap().entries
-            .map { (command, menu) ->
-                InlineKeyboardButton.builder()
-                    .text("${Icon.isChecked(menu.featureMethod.get())} ${menu.buttonText}")
-                    .callbackData(command).build()
-            }.map { listOf(it) }
-        return InlineKeyboardMarkup.builder().keyboard(rowList).build()
-    }
+    override fun getMenuInlineKeyboardMarkup() = getDefaultVerticalMenuInlineKeyboardMarkup()
 
     private fun pair(
         feature: FeatureSwitcherService.Features,
         checkFunction: () -> Boolean
-    ): Pair<String, FeatureMenu> {
+    ): Pair<String, Menu> {
         val message = messageService.getMessage(feature.messageCode)
-        return feature.command to FeatureMenu(message, {
+        return feature.command to Menu("${Icon.isChecked(checkFunction.invoke())} $message") {
             featureSwitcherService.switchFeature(feature.name)
             "Feature \"$message\" toggled"
-        }, checkFunction)
+        }
     }
 }

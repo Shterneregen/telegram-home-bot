@@ -2,8 +2,6 @@ package random.telegramhomebot.services.menu
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
 import random.telegramhomebot.openweather.WeatherService
 import random.telegramhomebot.openweather.db.WeatherItemRepository
 import random.telegramhomebot.services.menu.dto.Menu
@@ -39,13 +37,5 @@ class WeatherMenuService(
         return mapByCode + mapByCoordinates
     }
 
-    override fun getMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val rowList: List<List<InlineKeyboardButton>> = getMenuMap().entries
-            .map { (command, menu) ->
-                InlineKeyboardButton.builder()
-                    .text(menu.buttonText)
-                    .callbackData(command).build()
-            }.map { listOf(it) }
-        return InlineKeyboardMarkup.builder().keyboard(rowList).build()
-    }
+    override fun getMenuInlineKeyboardMarkup() = getDefaultVerticalMenuInlineKeyboardMarkup()
 }

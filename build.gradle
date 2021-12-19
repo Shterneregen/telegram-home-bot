@@ -5,6 +5,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "$kotlinVersion"
     id "org.jetbrains.kotlin.plugin.spring" version "$kotlinVersion"
     id "org.jetbrains.kotlin.plugin.jpa" version "$kotlinVersion"
+    id "org.jetbrains.kotlin.kapt" version "$kotlinVersion"
     id "jacoco"
     id "org.sonarqube" version "$sonarqubeVersion"
 }
@@ -76,6 +77,7 @@ dependencies {
             "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesCoreVersion",
             "com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonModuleKotlinVersion"
     )
+    kapt "org.springframework.boot:spring-boot-configuration-processor"
 
     ktlint("com.pinterest:ktlint:$ktlintVersion") {
         attributes {

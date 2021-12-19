@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import random.telegramhomebot.const.AppConstants
 import random.telegramhomebot.openweather.db.WeatherItem
 import random.telegramhomebot.openweather.db.WeatherItemRepository
-import java.util.*
+import java.util.UUID
 
 @ConditionalOnProperty(prefix = "openweather", value = ["enabled"], havingValue = "true")
 @Controller

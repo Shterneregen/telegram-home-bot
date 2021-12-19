@@ -2,10 +2,12 @@ package random.telegramhomebot.telegram.menu
 
 import org.springframework.stereotype.Service
 import random.telegramhomebot.services.FeatureSwitcherService
-import random.telegramhomebot.services.FeatureSwitcherService.Features.*
-import random.telegramhomebot.telegram.menu.dto.Menu
+import random.telegramhomebot.services.FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION
+import random.telegramhomebot.services.FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION
+import random.telegramhomebot.services.FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION
 import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.telegram.Icon
+import random.telegramhomebot.telegram.menu.dto.Menu
 
 @Service
 class FeaturesMenuService(

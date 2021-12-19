@@ -3,7 +3,7 @@ package random.telegramhomebot.openweather
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.util.UriBuilder
 import reactor.core.publisher.Mono
-import java.util.*
+import java.util.Optional.ofNullable
 
 class WeatherService(private val weatherWebClient: WebClient, private val properties: OpenWeatherProperties) {
 
@@ -15,11 +15,11 @@ class WeatherService(private val weatherWebClient: WebClient, private val proper
         return weatherWebClient.get()
             .uri { uriBuilder: UriBuilder ->
                 uriBuilder.path("/weather")
-                    .queryParamIfPresent("id", Optional.ofNullable(cityId))
-                    .queryParamIfPresent("lat", Optional.ofNullable(lat))
-                    .queryParamIfPresent("lon", Optional.ofNullable(lon))
-                    .queryParamIfPresent("appid", Optional.ofNullable(properties.appid))
-                    .queryParamIfPresent("units", Optional.ofNullable(Units.METRIC.code))
+                    .queryParamIfPresent("id", ofNullable(cityId))
+                    .queryParamIfPresent("lat", ofNullable(lat))
+                    .queryParamIfPresent("lon", ofNullable(lon))
+                    .queryParamIfPresent("appid", ofNullable(properties.appid))
+                    .queryParamIfPresent("units", ofNullable(Units.METRIC.code))
                     .build()
             }
             .retrieve()

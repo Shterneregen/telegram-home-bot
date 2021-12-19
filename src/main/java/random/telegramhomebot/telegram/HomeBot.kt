@@ -15,8 +15,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import random.telegramhomebot.const.AppConstants.UNAUTHORIZED_ACCESS_MSG
 import random.telegramhomebot.services.UserValidatorService
 import random.telegramhomebot.services.commands.CommandService
-import random.telegramhomebot.telegram.menu.CallbackMenuService
 import random.telegramhomebot.services.messages.MessageService
+import random.telegramhomebot.telegram.menu.CallbackMenuService
 import random.telegramhomebot.utils.logger
 
 @ConditionalOnProperty(prefix = "mock-bot", value = ["enabled"], havingValue = "false")

@@ -8,9 +8,9 @@ import random.telegramhomebot.const.AppConstants.SHOW_ALL_COMMANDS
 import random.telegramhomebot.events.scan.ScanHostsEventPublisher
 import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.services.hosts.HostService
-import random.telegramhomebot.telegram.menu.dto.Menu
 import random.telegramhomebot.services.messages.MessageFormatService
 import random.telegramhomebot.telegram.Icon
+import random.telegramhomebot.telegram.menu.dto.Menu
 
 @Service
 class MainMenuService(

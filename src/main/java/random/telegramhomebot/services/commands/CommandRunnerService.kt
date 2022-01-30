@@ -23,6 +23,9 @@ class CommandRunnerService {
     }
 
     fun ping(ip: String) {
+        if (ip == null || ip.isBlank()) {
+            return
+        }
         runCommand(String.format("ping -c 4 %s", ip))
         log.debug("ping {}", ip)
     }

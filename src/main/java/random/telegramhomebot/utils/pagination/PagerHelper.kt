@@ -1,10 +1,14 @@
 package random.telegramhomebot.utils.pagination
 
+import io.netty.handler.codec.http.cookie.Cookie
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.ui.Model
-import javax.servlet.http.Cookie
-import javax.servlet.http.HttpServletRequest
+import reactor.netty.http.client.HttpClientRequest
+import kotlin.streams.toList
+
+// import javax.servlet.http.Cookie
+// import javax.servlet.http.HttpServletRequest
 
 object PagerHelper {
 
@@ -18,9 +22,9 @@ object PagerHelper {
         sortBy: String?,
         direction: String,
         pageCookieName: String,
-        request: HttpServletRequest?
+        request: HttpClientRequest?
     ): PageRequest {
-        val cookiePageSize = getCookie(pageCookieName, request)?.value?.toInt() ?: pageSize
+        val cookiePageSize = getCookie(pageCookieName, request)?.value()?.toInt() ?: pageSize
         return PageRequest.of(currentPage - 1, cookiePageSize, Sort.by(Sort.Direction.fromString(direction), sortBy))
     }
 
@@ -38,6 +42,10 @@ object PagerHelper {
         )
     }
 
-    private fun getCookie(cookieName: String, request: HttpServletRequest?): Cookie? =
-        request?.cookies?.firstOrNull { cookieName.equals(it?.name, ignoreCase = true) }
+    private fun getCookie(cookieName: String, request: HttpClientRequest?): Cookie? {
+        return request?.cookies()?.values?.stream()?.flatMap { it.stream() }?.toList()
+            ?.firstOrNull { cookieName.equals(it?.name(), ignoreCase = true) }
+//        return request?.cookies()?.values?.flatMap { cookies: MutableSet<Cookie>? ->  cookies?.asSequence()}
+//            ?.firstOrNull { cookieName.equals(it?.name(), ignoreCase = true) }
+    }
 }

@@ -11,6 +11,9 @@ import random.telegramhomebot.db.model.Command
 import random.telegramhomebot.db.model.TelegramCommand
 import random.telegramhomebot.db.repository.TelegramCommandRepository
 import random.telegramhomebot.utils.logger
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import java.time.Duration.ofSeconds
 
 @Service
 class CommandService(
@@ -22,21 +25,22 @@ class CommandService(
     @Value("\${buttons.in.row}")
     private val buttonsInRow = 0
 
-    fun getAllEnabledCommands(): List<TelegramCommand> = telegramCommandRepository.findAllEnabled()
+    fun getAllEnabledCommands(): Flux<TelegramCommand> = telegramCommandRepository.findAllEnabled()
 
-    fun getEnabledCommand(commandAlias: String?): TelegramCommand? =
+    fun getEnabledCommand(commandAlias: String?): Mono<TelegramCommand> =
         telegramCommandRepository.findByCommandAliasAndEnabled(commandAlias, true)
 
     fun getAllEnabledCommandsAsString() =
-        getAllEnabledCommands().joinToString(separator = "\n") { "${it.commandAlias} = ${it.command}" }
+        getAllEnabledCommands().collectList().block(ofSeconds(10))
+            ?.joinToString(separator = "\n") { "${it.commandAlias} = ${it.command}" }
 
     fun executeCommandOnMachine(command: String?): String? {
-        val telegramCommand = getEnabledCommand(command) ?: return null
+        val telegramCommand = getEnabledCommand(command).block(ofSeconds(10)) ?: return null
         return commandRunnerService.runCommand(telegramCommand.command)
     }
 
     fun createReplyMarkupCommandButtons(): ReplyKeyboardMarkup? {
-        val enabledCommands = getAllEnabledCommands()
+        val enabledCommands = getAllEnabledCommands().collectList().block(ofSeconds(10))
         log.debug("Enabled commands: {}", enabledCommands)
         if (enabledCommands.isEmpty()) {
             return null
@@ -68,5 +72,7 @@ class CommandService(
     }
 
     override fun health(): Health =
-        if (telegramCommandRepository.findAll().size > 0) Health.up().build() else Health.down().build()
+        if (telegramCommandRepository.findAll().collectList().block(ofSeconds(10)).size > 0)
+            Health.up().build()
+        else Health.down().build()
 }

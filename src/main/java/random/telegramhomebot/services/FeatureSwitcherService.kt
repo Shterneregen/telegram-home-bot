@@ -14,8 +14,7 @@ class FeatureSwitcherService(private val repository: FeatureSwitcherRepository) 
     }
 
     fun switchFeature(featureName: String) {
-        val featureSwitcher = getFeatureSwitcherByName(featureName)
-        featureSwitcher?.let {
+        getFeatureSwitcherByName(featureName).block()?.let {
             it.enabled = !it.enabled
             saveFeatureSwitcher(it)
         }
@@ -27,5 +26,6 @@ class FeatureSwitcherService(private val repository: FeatureSwitcherRepository) 
 
     private fun saveFeatureSwitcher(featureSwitcher: FeatureSwitcher) = repository.save(featureSwitcher)
     private fun getFeatureSwitcherByName(featureName: String) = repository.findFeatureSwitcherByName(featureName)
-    private fun isFeatureEnabled(featureName: Features) = getFeatureSwitcherByName(featureName.name)?.enabled ?: false
+    private fun isFeatureEnabled(featureName: Features) =
+        getFeatureSwitcherByName(featureName.name).block()?.enabled ?: false
 }

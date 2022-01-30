@@ -16,14 +16,14 @@ class WeatherItemLoader(private val weatherItemRepository: WeatherItemRepository
 
     override fun run(vararg args: String) {
         log.info("Filling weather items table...")
-        val weatherItemsCount = weatherItemRepository.count()
+        val weatherItemsCount = weatherItemRepository.count().block()
         if (weatherItemsCount == 0L) {
             weatherItemRepository.saveAll(
                 listOf(
                     WeatherItem("SPb", "498817"),
                     WeatherItem("Pushkin", "00.000000", "00.000000")
                 )
-            )
+            ).subscribe()
         }
     }
 }

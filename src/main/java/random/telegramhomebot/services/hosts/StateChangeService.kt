@@ -39,21 +39,21 @@ class StateChangeService(
 
         var result = ""
         val storedHosts = hostService.getAllHosts()
-        if (storedHosts.isEmpty()) {
-            result = messageFormatService.formHostsListTable(getMessage(NEW_HOSTS_MSG), currentHosts)
-        }
+//        if (storedHosts.isEmpty()) {
+//            result = messageFormatService.formHostsListTable(getMessage(NEW_HOSTS_MSG), currentHosts)
+//        }
         var newHosts: List<Host>? = null
         var reachableHosts: List<Host>? = null
         var notReachableHosts: List<Host>? = null
-        if (storedHosts.isNotEmpty()) {
-            newHosts = hostService.getNewHosts(storedHosts, currentHosts)
-            reachableHosts = hostService.getHostsThatBecameReachable(storedHosts, currentHosts)
-            notReachableHosts = hostService.getHostsThatBecameNotReachable(storedHosts, currentHosts)
-            result = getChangedHostsInfo(newHosts, reachableHosts, notReachableHosts)
-            if (notReachableHosts.isNotEmpty()) {
-                hostService.saveAllHosts(notReachableHosts)
-            }
-        }
+//        if (storedHosts.isNotEmpty()) {
+//            newHosts = hostService.getNewHosts(storedHosts, currentHosts)
+//            reachableHosts = hostService.getHostsThatBecameReachable(storedHosts, currentHosts)
+//            notReachableHosts = hostService.getHostsThatBecameNotReachable(storedHosts, currentHosts)
+//            result = getChangedHostsInfo(newHosts, reachableHosts, notReachableHosts)
+//            if (notReachableHosts.isNotEmpty()) {
+//                hostService.saveAllHosts(notReachableHosts)
+//            }
+//        }
         if (currentHosts.isNotEmpty()) {
             hostService.saveAllHosts(currentHosts)
         }

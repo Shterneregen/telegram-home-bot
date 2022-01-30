@@ -14,6 +14,8 @@ import random.telegramhomebot.auth.db.repositories.UserRepository
 import random.telegramhomebot.auth.enums.AuthRole
 import random.telegramhomebot.auth.enums.Privileges
 import random.telegramhomebot.utils.logger
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @Order(1)
 @Component
@@ -54,33 +56,58 @@ class AdminLoader(
         val editHost = createPrivilegeIfNotFound(Privileges.EDIT_HOST.name)
         val deleteHost = createPrivilegeIfNotFound(Privileges.DELETE_HOST.name)
 
-        val adminRole = createRoleIfNotFound(
-            AuthRole.ROLE_ADMIN.name,
-            listOf(
-                viewCommands, addCommand, editCommand, deleteCommand,
-                viewHosts, importCsvHosts, exportCsvHosts, addHost, editHost, deleteHost
-            )
+//        val adminPrivileges = Flux.merge(
+//            viewCommands, addCommand, editCommand, deleteCommand,
+//            viewHosts, importCsvHosts, exportCsvHosts, addHost, editHost, deleteHost
+//        )
+//        createRoleIfNotFound(AuthRole.ROLE_ADMIN.name, adminPrivileges.collectList().block(ofSeconds(10)))
+//            .flatMap { adminRole -> createUserIfNotFound(adminLogin, adminPassword, "", "", "", listOf(adminRole)) }
+//            .subscribe()
+
+        Flux.merge(
+            viewCommands, addCommand, editCommand, deleteCommand,
+            viewHosts, importCsvHosts, exportCsvHosts, addHost, editHost, deleteHost
         )
-        createUserIfNotFound(adminLogin, adminPassword, "", "", "", listOf(adminRole))
+            .collectList()
+            .flatMap { adminPrivileges ->
+                createRoleIfNotFound(AuthRole.ROLE_ADMIN.name, adminPrivileges)
+            }.flatMap { adminRole ->
+                createUserIfNotFound(adminLogin, adminPassword, "", "", "", listOf(adminRole))
+            }.subscribe()
 
-        val userRole = createRoleIfNotFound(AuthRole.ROLE_USER.name, listOf(viewCommands, viewHosts))
-        createUserIfNotFound(userLogin, userPassword, "", "", "", listOf(userRole))
+//        val adminRole = createRoleIfNotFound(
+//            AuthRole.ROLE_ADMIN.name,
+//            listOf(
+//                viewCommands, addCommand, editCommand, deleteCommand,
+//                viewHosts, importCsvHosts, exportCsvHosts, addHost, editHost, deleteHost
+//            )
+//        )
+//        createUserIfNotFound(adminLogin, adminPassword, "", "", "", listOf(adminRole))
+
+        Flux.merge(viewCommands, viewHosts)
+            .collectList()
+            .flatMap { userPrivileges ->
+                createRoleIfNotFound(AuthRole.ROLE_USER.name, userPrivileges)
+            }
+            .flatMap { userRole ->
+                createUserIfNotFound(userLogin, userPassword, "", "", "", listOf(userRole))
+            }.subscribe()
+
+//        val userRole = createRoleIfNotFound(AuthRole.ROLE_USER.name, listOf(viewCommands, viewHosts))
+//        createUserIfNotFound(userLogin, userPassword, "", "", "", listOf(userRole))
     }
 
     @Transactional
-    fun createPrivilegeIfNotFound(name: String): Privilege {
-        var privilege: Privilege? = privilegeRepository.findByName(name)
-        if (privilege == null) {
-            privilege = Privilege(name)
-            privilegeRepository.save(privilege)
-        }
-        return privilege
+    fun createPrivilegeIfNotFound(name: String): Mono<Privilege> {
+        return privilegeRepository.findByName(name)
+            .switchIfEmpty(privilegeRepository.save(Privilege(name)))
     }
 
     @Transactional
-    fun createRoleIfNotFound(name: String, privileges: List<Privilege>): Role {
-        val role = roleRepository.findByName(name) ?: Role(name, privileges)
-        return roleRepository.save(role)
+    fun createRoleIfNotFound(name: String, privileges: List<Privilege>): Mono<Role> {
+        return roleRepository.findByName(name)
+            .switchIfEmpty(Mono.just(Role(name, privileges)))
+            .flatMap { role -> roleRepository.save(role) }
     }
 
     @Transactional
@@ -91,10 +118,10 @@ class AdminLoader(
         firstName: String?,
         lastName: String?,
         roles: List<Role>
-    ): User? {
-        val user: User = userRepository.findByUsername(username)
-            ?: User(username, password, firstName, lastName, email, true)
-        user.roles = roles
-        return userRepository.save(user)
+    ): Mono<User> {
+        return userRepository.findByUsername(username)
+            .switchIfEmpty(Mono.just(User(username, password, firstName, lastName, email, true)))
+            .doOnNext { user -> user.roles = roles }
+            .flatMap { user -> userRepository.save(user) }
     }
 }

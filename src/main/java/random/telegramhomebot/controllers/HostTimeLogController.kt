@@ -6,22 +6,17 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import random.telegramhomebot.const.AppConstants.DEFAULT_DATE_VALUE_NOW
-import random.telegramhomebot.const.AppConstants.END_DATE_MODEL_ATTR
 import random.telegramhomebot.const.AppConstants.END_DATE_REQ_PARAM
 import random.telegramhomebot.const.AppConstants.HOSTS_MAPPING
-import random.telegramhomebot.const.AppConstants.START_DATE_MODEL_ATTR
 import random.telegramhomebot.const.AppConstants.START_DATE_REQ_PARAM
 import random.telegramhomebot.const.AppConstants.TIME_LOG_MAPPING
-import random.telegramhomebot.const.AppConstants.TIME_LOG_MAP_MODEL_ATTR
 import random.telegramhomebot.const.AppConstants.TIME_LOG_VIEW
 import random.telegramhomebot.db.dto.TimeLogDto
 import random.telegramhomebot.db.model.HostTimeLog
 import random.telegramhomebot.db.repository.HostTimeLogRepository
 import random.telegramhomebot.services.hosts.TimeLogConverter
 import random.telegramhomebot.utils.logger
-import java.sql.Timestamp.valueOf
 import java.time.LocalDate
-import java.time.LocalTime
 
 @Controller
 @RequestMapping(HOSTS_MAPPING)
@@ -39,12 +34,12 @@ class HostTimeLogController(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
         model: Model
     ): String {
-        val startOfDate = startDate.atTime(LocalTime.MIN)
-        val endOfDate = endDate.atTime(LocalTime.MAX)
-        val logs = hostTimeLogRepository.findByCreatedDateBetween(valueOf(startOfDate), valueOf(endOfDate))
-        model.addAttribute(TIME_LOG_MAP_MODEL_ATTR, getTimeLogDtoMap(logs))
-        model.addAttribute(START_DATE_MODEL_ATTR, startDate)
-        model.addAttribute(END_DATE_MODEL_ATTR, endDate)
+//        val startOfDate = startDate.atTime(LocalTime.MIN)
+//        val endOfDate = endDate.atTime(LocalTime.MAX)
+//        val logs = hostTimeLogRepository.findByCreatedDateBetween(valueOf(startOfDate), valueOf(endOfDate))
+//        model.addAttribute(TIME_LOG_MAP_MODEL_ATTR, getTimeLogDtoMap(logs))
+//        model.addAttribute(START_DATE_MODEL_ATTR, startDate)
+//        model.addAttribute(END_DATE_MODEL_ATTR, endDate)
         return TIME_LOG_VIEW
     }
 

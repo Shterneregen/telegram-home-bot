@@ -11,6 +11,7 @@ import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.services.messages.MessageFormatService
 import random.telegramhomebot.telegram.Icon
 import random.telegramhomebot.telegram.menu.dto.Menu
+import java.time.Duration.ofSeconds
 
 @Service
 class MainMenuService(
@@ -24,10 +25,12 @@ class MainMenuService(
 
     override fun getMenuMap(): Map<String, Menu> = mapOf(
         REACHABLE_HOSTS_COMMAND to Menu(Icon.DESKTOP_COMPUTER.get()) {
-            messageFormatService.getHostsState(hostService.getReachableHosts()).ifBlank { "No hosts" }
+            messageFormatService
+                .getHostsState(hostService.getReachableHosts().collectList().block(ofSeconds(10)))
+                .ifBlank { "No hosts" }
         },
         SHOW_ALL_COMMANDS to Menu(Icon.HAMMER.get()) {
-            "Available commands:\n" + commandService.getAllEnabledCommandsAsString().ifBlank { "No commands" }
+            "Available commands:\n" + commandService.getAllEnabledCommandsAsString()?.ifBlank { "No commands" }
         },
         LAST_ACTIVITY to Menu(Icon.SCROLL.get()) {
             "History:\n" + hostService.getLastHostTimeLogsAsString(20).ifBlank { "No activity" }

@@ -19,6 +19,7 @@ import random.telegramhomebot.const.AppConstants.REDIRECT_COMMANDS
 import random.telegramhomebot.const.AppConstants.SAVE_COMMAND_MAPPING
 import random.telegramhomebot.db.model.TelegramCommand
 import random.telegramhomebot.db.repository.TelegramCommandRepository
+import reactor.core.publisher.Mono
 import java.util.UUID
 
 @Controller
@@ -26,30 +27,32 @@ import java.util.UUID
 class CommandController(private val telegramCommandRepository: TelegramCommandRepository) {
 
     @RequestMapping
-    fun getAllCommands(model: Model): String {
-        model.addAttribute(COMMANDS_MODEL_ATTR, telegramCommandRepository.findAll())
-        return COMMANDS_VIEW
+    fun getAllCommands(model: Model): Mono<String> {
+        return telegramCommandRepository.findAll().collectList()
+            .flatMap { commands ->
+                model.addAttribute(COMMANDS_MODEL_ATTR, commands)
+                Mono.just(COMMANDS_VIEW)
+            }
+//        model.addAttribute(COMMANDS_MODEL_ATTR, telegramCommandRepository.findAll().collectList().block(ofSeconds(10)))
+//        return COMMANDS_VIEW
     }
 
     @RequestMapping(path = [EDIT_COMMAND_MAPPING, EDIT_COMMAND_BY_ID_MAPPING])
-    fun editCommandById(model: Model, @PathVariable(COMMAND_ID_PATH_VAR) id: UUID?): String {
-        val command =
-            if (id == null) TelegramCommand()
-            else id.let { telegramCommandRepository.findById(it).orElse(null) } ?: return ERROR_404_REDIRECT
-
-        model.addAttribute(COMMAND_MODEL_ATTR, command)
-        return ADD_EDIT_COMMAND_VIEW
+    fun editCommandById(model: Model, @PathVariable(COMMAND_ID_PATH_VAR) id: UUID?): Mono<String> {
+        return (id?.let { telegramCommandRepository.findById(it) } ?: Mono.just(TelegramCommand()))
+            .flatMap { command ->
+                model.addAttribute(COMMAND_MODEL_ATTR, command)
+                Mono.just(ADD_EDIT_COMMAND_VIEW)
+            }.switchIfEmpty(Mono.just(ERROR_404_REDIRECT))
     }
 
     @RequestMapping(path = [DELETE_COMMAND_MAPPING])
-    fun deleteCommandById(@PathVariable(COMMAND_ID_PATH_VAR) id: UUID): String {
-        telegramCommandRepository.deleteById(id)
-        return REDIRECT_COMMANDS
+    fun deleteCommandById(@PathVariable(COMMAND_ID_PATH_VAR) id: UUID): Mono<String> {
+        return telegramCommandRepository.deleteById(id).thenReturn(REDIRECT_COMMANDS)
     }
 
     @PostMapping(path = [SAVE_COMMAND_MAPPING])
-    fun createOrUpdateCommand(command: TelegramCommand): String {
-        telegramCommandRepository.save(command)
-        return REDIRECT_COMMANDS
+    fun createOrUpdateCommand(command: TelegramCommand): Mono<String> {
+        return telegramCommandRepository.save(command).thenReturn(REDIRECT_COMMANDS)
     }
 }

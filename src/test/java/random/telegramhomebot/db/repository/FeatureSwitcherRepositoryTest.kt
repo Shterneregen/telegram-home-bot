@@ -20,15 +20,15 @@ internal class FeatureSwitcherRepositoryTest {
 
     @AfterEach
     fun tearDown() {
-        repository.deleteAll()
+        repository.deleteAll().block()
     }
 
     @Test
     fun `should save feature`() {
         val feature = FeatureSwitcher(Features.NEW_HOSTS_NOTIFICATION.name, true)
-        repository.save(feature)
+        repository.save(feature).block()
 
-        val featureFromDb = repository.findFeatureSwitcherByName(feature.name)
+        val featureFromDb = repository.findFeatureSwitcherByName(feature.name).block()
         assertEquals(feature.name, featureFromDb?.name)
     }
 
@@ -39,8 +39,8 @@ internal class FeatureSwitcherRepositoryTest {
             FeatureSwitcher(Features.REACHABLE_HOSTS_NOTIFICATION.name, true),
             FeatureSwitcher(Features.NOT_REACHABLE_HOSTS_NOTIFICATION.name, true)
         )
-        repository.saveAll(features)
-        val featuresFromDb = repository.findAll()
+        repository.saveAll(features).subscribe()
+        val featuresFromDb = repository.findAll().collectList().block()
         assertEquals(features.size, featuresFromDb.size)
     }
 
@@ -48,11 +48,11 @@ internal class FeatureSwitcherRepositoryTest {
     fun `should delete feature`() {
 
         val feature = FeatureSwitcher(Features.NEW_HOSTS_NOTIFICATION.name, true)
-        repository.save(feature)
+        repository.save(feature).block()
 
-        repository.deleteById(feature.id!!)
-        repository.findFeatureSwitcherByName(feature.name)
+        repository.deleteById(feature.id!!).block()
+        repository.findFeatureSwitcherByName(feature.name).block()
 
-        assertNull(repository.findFeatureSwitcherByName(feature.name))
+        assertNull(repository.findFeatureSwitcherByName(feature.name).block())
     }
 }

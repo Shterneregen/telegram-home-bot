@@ -14,7 +14,8 @@ import random.telegramhomebot.auth.dto.PasswordDto
 import random.telegramhomebot.auth.exceptinos.InvalidOldPasswordException
 import random.telegramhomebot.auth.services.UserService
 import random.telegramhomebot.services.messages.MessageService
-import javax.servlet.http.HttpServletRequest
+import reactor.core.publisher.Mono
+// import javax.servlet.http.HttpServletRequest
 import javax.validation.Valid
 
 @Controller
@@ -22,7 +23,7 @@ class ChangePasswordController(private val messageService: MessageService, priva
 
     @GetMapping("/updatePassword")
     fun updatePassword(
-        request: HttpServletRequest?,
+//        request: HttpServletRequest?,
         model: ModelMap,
         @RequestParam("messageKey", required = false) messageKey: String?
     ): ModelAndView {
@@ -35,13 +36,28 @@ class ChangePasswordController(private val messageService: MessageService, priva
 
     @ResponseBody
     @PostMapping("/user/updatePassword")
-    fun changeUserPassword(passwordDto: @Valid PasswordDto): GenericResponse {
+    fun changeUserPassword(passwordDto: @Valid PasswordDto): Mono<GenericResponse> {
         val userPrincipal = SecurityContextHolder.getContext().authentication.principal as UserPrincipal
-        val user = userService.getUserByID(userPrincipal.id) ?: throw RuntimeException("Cannot get user")
-        if (!userService.checkIfValidOldPassword(user, passwordDto.oldPassword)) {
-            throw InvalidOldPasswordException()
-        }
-        userService.changeUserPassword(user, passwordDto.newPassword)
-        return GenericResponse(messageService.getMessage("message.updatePasswordSuc"))
+
+//        val user = userService.getUserByID(userPrincipal.id) ?: throw RuntimeException("Cannot get user")
+//        if (!userService.checkIfValidOldPassword(user, passwordDto.oldPassword)) {
+//            throw InvalidOldPasswordException()
+//        }
+//        userService.changeUserPassword(user, passwordDto.newPassword)
+//        return GenericResponse(messageService.getMessage("message.updatePasswordSuc"))
+
+        return userService.getUserByID(userPrincipal.id)
+            .switchIfEmpty(Mono.error(RuntimeException("Cannot get user")))
+            .flatMap { user ->
+                if (!userService.checkIfValidOldPassword(user, passwordDto.oldPassword)) {
+                    return@flatMap Mono.error(InvalidOldPasswordException())
+                }
+                Mono.just(user)
+            }
+            .flatMap { user ->
+                userService.changeUserPassword(user, passwordDto.newPassword)
+                Mono.just(user)
+            }
+            .flatMap { Mono.just(GenericResponse(messageService.getMessage("message.updatePasswordSuc"))) }
     }
 }

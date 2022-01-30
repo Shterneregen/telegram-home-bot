@@ -20,7 +20,7 @@ interface MenuService {
     }
 
     fun getDefaultVerticalMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val rowList: List<List<InlineKeyboardButton>> = getMenuMap().entries
+        val rowList: List<List<InlineKeyboardButton>> = getMenuMap()
             .map { (command, menu) ->
                 InlineKeyboardButton.builder()
                     .text(menu.buttonText)

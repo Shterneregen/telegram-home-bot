@@ -5,7 +5,6 @@ import org.hibernate.annotations.Type
 import java.util.UUID
 import javax.persistence.CascadeType
 import javax.persistence.Column
-import javax.persistence.Entity
 import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
@@ -13,13 +12,15 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 import javax.validation.constraints.NotBlank
 
-@Entity
 @Table(name = "hosts")
 class Host(
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Type(type = "org.hibernate.type.UUIDCharType")
+
+//    @ColumnDefault("random_uuid()")
+//    @Type(type = "uuid-char")
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     var id: UUID? = null,
 

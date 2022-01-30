@@ -6,14 +6,13 @@ import com.opencsv.bean.StatefulBeanToCsvBuilder
 import com.opencsv.exceptions.CsvDataTypeMismatchException
 import com.opencsv.exceptions.CsvFieldAssignmentException
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException
-import org.springframework.http.HttpHeaders
+import org.springframework.http.server.reactive.ServerHttpResponse
 import org.springframework.web.multipart.MultipartFile
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.lang.reflect.ParameterizedType
-import javax.servlet.http.HttpServletResponse
 
 abstract class CsvService<T> {
     @Throws(IOException::class)
@@ -29,10 +28,10 @@ abstract class CsvService<T> {
     }
 
     @Throws(CsvFieldAssignmentException::class, IOException::class)
-    fun exportBeansToCsvFile(response: HttpServletResponse, beans: List<T>, fileName: String?) {
-        response.contentType = CSV_CONTENT_TYPE
-        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_VALUE_FORMAT, fileName))
-        write(response.writer, beans)
+    fun exportBeansToCsvFile(response: ServerHttpResponse, beans: List<T>, fileName: String?) {
+//        response.contentType = CSV_CONTENT_TYPE
+//        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_VALUE_FORMAT, fileName))
+//        write(response.writer, beans)
     }
 
     @Throws(CsvDataTypeMismatchException::class, CsvRequiredFieldEmptyException::class)

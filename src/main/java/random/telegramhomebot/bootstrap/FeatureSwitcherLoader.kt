@@ -9,6 +9,7 @@ import random.telegramhomebot.services.FeatureSwitcherService.Features.NEW_HOSTS
 import random.telegramhomebot.services.FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION
 import random.telegramhomebot.services.FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION
 import random.telegramhomebot.utils.logger
+import java.time.Duration
 
 @Order(3)
 @Component
@@ -23,7 +24,7 @@ class FeatureSwitcherLoader(
     }
 
     private fun createFeatureSwitchers() {
-        if (featureSwitcherRepository.count() == 0L) {
+        if (featureSwitcherRepository.count().block() == 0L) {
             log.info("Filling FeatureSwitcher table...")
             featureSwitcherRepository.saveAll(
                 listOf(
@@ -31,7 +32,7 @@ class FeatureSwitcherLoader(
                     FeatureSwitcher(REACHABLE_HOSTS_NOTIFICATION.name, true),
                     FeatureSwitcher(NOT_REACHABLE_HOSTS_NOTIFICATION.name, true)
                 )
-            )
+            ).blockLast(Duration.ofSeconds(10))
         }
     }
 }

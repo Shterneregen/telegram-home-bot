@@ -18,23 +18,23 @@ class TelegramCommandRepositoryTest {
 
     @AfterEach
     fun tearDown() {
-        repository.deleteAll()
+        repository.deleteAll().subscribe()
     }
 
     @Test
     fun `should return ping command`() {
         val command: TelegramCommand = getMockTelegramCommand("/ping", "echo pong")
         repository.save(command)
-        val commands = repository.findAll()
+        val commands = repository.findAll().collectList().block()
         assertEquals("/ping", commands[0]?.commandAlias)
     }
 
     @Test
     fun `should delete command`() {
         val command: TelegramCommand = getMockTelegramCommand("/ping", "echo pong")
-        val fetchedCommand: TelegramCommand = repository.save(command)
+        val fetchedCommand: TelegramCommand = repository.save(command).block()
         repository.deleteById(fetchedCommand.id!!)
-        val all = repository.findAll()
+        val all = repository.findAll().collectList().block()
         assertEquals(0, all.size)
     }
 

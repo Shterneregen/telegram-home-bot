@@ -12,6 +12,8 @@ import random.telegramhomebot.services.hosts.HostExplorerService
 import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.services.scan.model.JsonHost
 import random.telegramhomebot.utils.logger
+import reactor.core.publisher.Mono
+import java.time.Duration
 import java.time.LocalDateTime
 
 @ConditionalOnProperty(prefix = "network-monitor", value = ["enabled"], havingValue = "true")
@@ -38,12 +40,15 @@ class DefaultHostScanService(
         return jsonHosts.filter { it.mac != null }.map { it.toEntity() }
     }
 
-    private fun JsonHost.toEntity() =
-        hostService.getHostByMac(mac)?.also {
-            it.ip = ip
-            it.hostInterface = hostInterface
-            it.state = state
-        } ?: Host(ip, hostInterface, mac, state, getNewHostName())
+    private fun JsonHost.toEntity(): Host = hostService.getHostByMac(mac)
+        .flatMap { host ->
+            host.ip = ip
+            host.hostInterface = hostInterface
+            host.state = state
+            Mono.just(host)
+        }
+        .switchIfEmpty(Mono.just(Host(ip, hostInterface, mac, state, getNewHostName())))
+        .block(Duration.ofSeconds(10))
 
     private fun getNewHostName() = "[NEW DEVICE] ${LocalDateTime.now().format(AppConstants.DATE_TIME_FORMATTER)}"
 }

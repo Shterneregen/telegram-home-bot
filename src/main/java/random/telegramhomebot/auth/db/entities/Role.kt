@@ -1,6 +1,5 @@
 package random.telegramhomebot.auth.db.entities
 
-import javax.persistence.Entity
 import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -9,7 +8,6 @@ import javax.persistence.JoinColumn
 import javax.persistence.JoinTable
 import javax.persistence.ManyToMany
 
-@Entity
 class Role(
     var name: String,
     @ManyToMany(fetch = FetchType.EAGER)

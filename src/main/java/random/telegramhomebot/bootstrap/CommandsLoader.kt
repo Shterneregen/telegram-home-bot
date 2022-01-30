@@ -23,13 +23,13 @@ class CommandsLoader(
     }
 
     private fun loadSampleCommands() {
-        val commandsCount = telegramCommandRepository.count()
-        log.info("Stored commands count [{}]", commandsCount)
-        if (commandsCount == 0L) {
-            log.info("Loading sample commands...")
-            telegramCommandRepository.saveAll(
-                telegramCommands.entries.map { TelegramCommand(it.key, it.value, true) }
-            )
-        }
+        telegramCommandRepository.count()
+            .filter { commandsCount -> commandsCount != 0L }
+            .flatMap { _ ->
+                log.info("Loading sample commands...")
+                telegramCommandRepository.saveAll(
+                    telegramCommands.entries.map { TelegramCommand(it.key, it.value, true) }
+                ).collectList()
+            }.subscribe()
     }
 }

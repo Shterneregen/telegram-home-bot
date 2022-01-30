@@ -32,14 +32,14 @@ internal class HostRepositoryTest {
     @Test
     fun `should save host`() {
         repository.save(host)
-        val fetchedHost = repository.findHostByMac(host.mac)
+        val fetchedHost = repository.findHostByMac(host.mac).block()
         Assertions.assertEquals(MAC, fetchedHost?.mac)
     }
 
     @Test
     fun `should return all hosts`() {
         repository.save(host)
-        val hosts = repository.findAll()
+        val hosts = repository.findAll().collectList().block()
         Assertions.assertEquals(MAC, hosts[0]?.mac)
     }
 

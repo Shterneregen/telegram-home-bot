@@ -1,8 +1,8 @@
 package random.telegramhomebot.utils
 
+import org.springframework.http.server.reactive.ServerHttpRequest
 import random.telegramhomebot.db.model.Host
 import java.util.regex.Pattern
-import javax.servlet.http.HttpServletRequest
 
 class NetUtils {
 
@@ -10,13 +10,14 @@ class NetUtils {
         private val UNDEFINED = "undefined"
 
         @JvmStatic
-        fun getClientIp(request: HttpServletRequest?): String = request?.getHeader("X-Forwarded-For")
-            ?: request?.getHeader("Proxy-Client-IP")
+        fun getClientIp(request: ServerHttpRequest?): String =
+            /*request?.getHeader("X-Forwarded-For")
+            ?: request?.headers("Proxy-Client-IP")
             ?: request?.getHeader("WL-Proxy-Client-IP")
             ?: request?.getHeader("HTTP_CLIENT_IP")
             ?: request?.getHeader("HTTP_X_FORWARDED_FOR")
             ?: request?.remoteAddr
-            ?: UNDEFINED
+            ?: */UNDEFINED
 
         fun comparingByIp(): Comparator<Host?> = Comparator { host1, host2 ->
             val ip1 = host1?.ip

@@ -5,6 +5,7 @@ import random.telegramhomebot.const.AppConstants.DATE_TIME_FORMATTER
 import random.telegramhomebot.services.WakeOnLanService
 import random.telegramhomebot.services.hosts.HostService
 import random.telegramhomebot.telegram.menu.dto.Menu
+import java.time.Duration
 import java.time.LocalDateTime.now
 
 @Service
@@ -16,7 +17,7 @@ class WakeOnLanMenuService(
     override val menuText = "Wake On Lan hosts"
 
     override fun getMenuMap(): Map<String, Menu> {
-        return hostService.getWakeOnLanEnableHosts()
+        return hostService.getWakeOnLanEnableHosts().collectList().block(Duration.ofSeconds(10))
             .associate {
                 "$menuCommand${it.id}" to Menu("Wake-up '${it.deviceName ?: it.mac!!}'") {
                     wakeOnLanService.wakeOnLan(it.mac)

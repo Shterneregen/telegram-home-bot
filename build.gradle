@@ -54,7 +54,8 @@ dependencies {
             "com.opencsv:opencsv:$opencsvVersion",
             "org.apache.commons:commons-lang3:$commonsLang3Version",
             "com.kcthota:emoji4j:$emoji4jVersion",
-            "org.passay:passay:$passayVersion"
+            "org.passay:passay:$passayVersion",
+            "org.flywaydb:flyway-core:$flywayCoreVersion"
     )
     implementation(
             "org.webjars:webjars-locator:$webjarsLocatorVersion",

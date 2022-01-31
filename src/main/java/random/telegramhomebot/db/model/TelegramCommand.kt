@@ -21,7 +21,7 @@ class TelegramCommand(
     @Column(name = "command_alias", unique = true)
     var commandAlias: String = "",
     var command: String = "",
-    var enabled: Boolean? = false
+    var enabled: Boolean = false
 ) : Command {
     constructor(commandAlias: String, command: String, enabled: Boolean) : this(null, commandAlias, command, enabled)
 

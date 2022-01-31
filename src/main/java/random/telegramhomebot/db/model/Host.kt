@@ -41,7 +41,7 @@ class Host(
     var timeLogs: List<HostTimeLog>? = null,
 
     var notes: String? = null,
-    var wakeOnLanEnabled: Boolean? = false
+    var wakeOnLanEnabled: Boolean = false
 ) {
     constructor(mac: String, deviceName: String, notes: String) :
         this(null, null, null, mac, null, deviceName, null, notes)

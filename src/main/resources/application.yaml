@@ -1,0 +1,127 @@
+server:
+  port: ${SERVER_PORT:9988}
+  #============================================================
+  # SSL config
+  #============================================================
+  ssl:
+    enabled: false
+    key-store: classpath:thb-keystore.p12
+    key-store-password: SOME_SECURE_PSW
+    key-store-type: PKCS12
+    key-alias: thb
+
+#============================================================
+# Switchers
+#============================================================
+network-monitor.enabled: false
+mock-bot.enabled: false
+
+#============================================================
+logging.level:
+  random.telegramhomebot: info
+  org.telegram: info
+
+management:
+  endpoints.web.exposure.include: '*'
+  endpoint.health.show-details: when_authorized
+
+spring:
+  servlet:
+    multipart:
+      # Max file size
+      max-file-size: 1MB
+      # Max Request Size
+      max-request-size: 1MB
+  #============================================================
+  # H2/DB config
+  #============================================================
+  h2.console:
+    enabled: false
+    path: /console/
+    settings:
+      trace: false
+      web-allow-others: false
+  datasource:
+    url: jdbc:h2:${user.dir}/thb
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate.ddl-auto: validate
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+#============================================================
+# Telegram-bot config
+#============================================================
+telegram:
+  api-url: https://api.telegram.org
+  bot-owner-id: ${TELEGRAM_BOT_CHAT_ID}
+  token: ${TELEGRAM_TOKEN}
+  bot-name: ${TELEGRAM_BOT_NAME}
+  # comma separated list
+  home-group-user-ids:
+
+buttons.in.row: 3
+
+#============================================================
+# Network Monitor config
+#============================================================
+state.change:
+  command: ip -j n show
+  scheduled.time: 600000
+ping.stored.hosts.scheduled.time: 600000
+broadcast.ping.command:
+  linux: fping -A -d -a -q -g -a -i 1 -r 2 192.168.0.0/24 ; arp -a
+  windows: FOR /L %i in (1,1,255) do @ping -n 1 192.168.0.%i | find "Reply" && arp -a
+  broadcast.ping.scheduled.time: 120000
+
+#============================================================
+# Lang config
+#============================================================
+# en,ru
+default.language: en
+internationalization.enabled: false
+
+#============================================================
+# Security config
+#============================================================
+bcrypt.rounds: 11
+default:
+  admin:
+    login: admin
+    # BCrypt string with bcrypt.rounds
+    password: $2y$11$LH5u77OHqFSc6p2nmR9VM.E3FgeCM6QeAVii1GsEENEhOEjCpYdPu
+  user:
+    login: user
+    # BCrypt string with bcrypt.rounds
+    password: $2y$11$LH5u77OHqFSc6p2nmR9VM.E3FgeCM6QeAVii1GsEENEhOEjCpYdPu
+login:
+  max.attempts.before.block: 5
+  blocking.time.in.minutes: 600
+
+#============================================================
+# Hosts page config
+#============================================================
+hosts.default:
+  page.size: 20
+  sorting: state
+  sorting.direction: asc
+
+#============================================================
+# Wake On Lan config
+#============================================================
+wakeOnLan:
+  port: 9
+  broadcast.ip: 192.168.31.255
+
+#============================================================
+# Open Weather config
+#============================================================
+openweather:
+  enabled: false
+  base-url: https://api.openweathermap.org/data/2.5
+  appid: ${OPENWEATHER_APPID}

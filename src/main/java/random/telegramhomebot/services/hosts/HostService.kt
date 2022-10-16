@@ -25,6 +25,7 @@ class HostService(
     val log = logger()
 
     fun getAllHosts(): List<Host> = hostRepository.findAll()
+    fun getAllHostsByIpNotNull(): List<Host> = hostRepository.findAllByIpNotNull()
     fun getAllHosts(pageable: PageRequest): Page<Host?> = hostRepository.findAll(pageable)
 
     fun saveAllHosts(hosts: List<Host>) {
@@ -69,17 +70,20 @@ class HostService(
 
     fun pingStoredHosts() {
         log.debug("Ping stored hosts...")
-        val storedHosts = getAllHosts()
+        val storedHosts = getAllHostsByIpNotNull()
         log.debug("Stored hosts: \n{}", storedHosts)
         commandRunnerService.pingHosts(storedHosts)
     }
+
+    fun getLastHostTimeLog(host: Host): HostTimeLog? =
+        hostTimeLogRepository.findFirstByHostOrderByCreatedDateDesc(host)
 
     private fun getLastHostTimeLogs(logCount: Int): List<HostTimeLog> {
         val page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate")
         return hostTimeLogRepository.findAll(page).sortedWith(Comparator.comparing(HostTimeLog::createdDate))
     }
 
-    fun getLastHostTimeLogsForHost(host: Host?, logCount: Int): List<HostTimeLog> {
+    fun getLastHostTimeLogsForHost(host: Host, logCount: Int): List<HostTimeLog> {
         val page = PageRequest.of(0, logCount, Sort.Direction.DESC, "createdDate")
         return hostTimeLogRepository.findHostTimeLogByHost(page, host)
             .sortedWith(Comparator.comparing(HostTimeLog::createdDate))

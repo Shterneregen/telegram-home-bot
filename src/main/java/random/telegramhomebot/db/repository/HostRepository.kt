@@ -7,6 +7,7 @@ import java.util.UUID
 
 interface HostRepository : JpaRepository<Host, UUID> {
     fun findHostByMac(mac: String?): Host?
+    fun findAllByIpNotNull(): List<Host>
 
     @Query(value = "SELECT h FROM Host h WHERE h.state <> random.telegramhomebot.db.model.HostState.FAILED")
     fun findReachableHosts(): List<Host>

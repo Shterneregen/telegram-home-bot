@@ -15,9 +15,9 @@ import random.telegramhomebot.const.AppConstants.TIME_LOG_MAPPING
 import random.telegramhomebot.const.AppConstants.TIME_LOG_MAP_MODEL_ATTR
 import random.telegramhomebot.const.AppConstants.TIME_LOG_VIEW
 import random.telegramhomebot.db.dto.TimeLogDto
+import random.telegramhomebot.db.model.HostState
 import random.telegramhomebot.db.model.HostTimeLog
 import random.telegramhomebot.db.repository.HostTimeLogRepository
-import random.telegramhomebot.services.hosts.TimeLogConverter
 import random.telegramhomebot.utils.logger
 import java.sql.Timestamp.valueOf
 import java.time.LocalDate
@@ -27,7 +27,6 @@ import java.time.LocalTime
 @RequestMapping(HOSTS_MAPPING)
 class HostTimeLogController(
     private val hostTimeLogRepository: HostTimeLogRepository,
-    private val timeLogConverter: TimeLogConverter
 ) {
     val log = logger()
 
@@ -49,5 +48,12 @@ class HostTimeLogController(
     }
 
     private fun getTimeLogDtoMap(logs: List<HostTimeLog>): Map<String, List<TimeLogDto>> =
-        logs.groupBy({ it.host.deviceName ?: it.host.mac ?: "" }, { timeLogConverter.convertToDto(it) }).toSortedMap()
+        logs.groupBy(
+            { it.host.deviceName ?: it.host.mac ?: "" },
+            { convertToDto(it) }).toSortedMap()
+
+    private fun convertToDto(timeLog: HostTimeLog) = TimeLogDto(getState(timeLog), timeLog.createdDate)
+
+    private fun getState(timeLog: HostTimeLog) =
+        if (timeLog.state !== HostState.FAILED) HostState.REACHABLE.toString() else timeLog.state.toString()
 }

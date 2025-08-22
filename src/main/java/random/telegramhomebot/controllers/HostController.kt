@@ -23,7 +23,7 @@ import random.telegramhomebot.const.AppConstants.HOST_MODEL_ATTR
 import random.telegramhomebot.const.AppConstants.REDIRECT_HOSTS
 import random.telegramhomebot.const.AppConstants.SAVE_HOST_MAPPING
 import random.telegramhomebot.db.model.Host
-import random.telegramhomebot.services.hosts.HostService
+import random.telegramhomebot.monitor.hosts.HostService
 import random.telegramhomebot.utils.pagination.PagerHelper
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest

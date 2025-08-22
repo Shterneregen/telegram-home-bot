@@ -5,13 +5,13 @@ import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import random.telegramhomebot.const.AppConstants.CHATBOT_STARTED_MSG
 import random.telegramhomebot.services.messages.MessageService
-import random.telegramhomebot.telegram.Bot
+import random.telegramhomebot.integrations.telegram.TelegramMessageSenderService
 import random.telegramhomebot.utils.logger
 
 @Order(99)
 @Component
 class BootstrapLoader(
-    private val bot: Bot,
+    private val telegramMessageSenderService: TelegramMessageSenderService,
     private val messageService: MessageService
 ) : CommandLineRunner {
     val log = logger()
@@ -22,6 +22,6 @@ class BootstrapLoader(
     }
 
     private fun sendBootstrapMessage() {
-        bot.sendMessage(messageService.getMessage(CHATBOT_STARTED_MSG))
+        telegramMessageSenderService.sendMessage(messageService.getMessage(CHATBOT_STARTED_MSG))
     }
 }

@@ -13,7 +13,7 @@ import random.telegramhomebot.const.AppConstants.HOSTS_CSV_EXPORT_MAPPING
 import random.telegramhomebot.const.AppConstants.HOSTS_CSV_IMPORT_MAPPING
 import random.telegramhomebot.const.AppConstants.HOSTS_MAPPING
 import random.telegramhomebot.services.csv.HostsCsvService
-import random.telegramhomebot.services.hosts.HostService
+import random.telegramhomebot.monitor.hosts.HostService
 import random.telegramhomebot.utils.logger
 import javax.servlet.http.HttpServletResponse
 

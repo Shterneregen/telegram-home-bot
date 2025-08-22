@@ -5,11 +5,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.Update
 import random.telegramhomebot.auth.services.LoginAttemptService
-import random.telegramhomebot.telegram.BotProperties
+import random.telegramhomebot.integrations.telegram.BotProperties
 import random.telegramhomebot.utils.logger
 
-@ConditionalOnProperty(prefix = "mock-bot", value = ["enabled"], havingValue = "false")
 @Service
+@ConditionalOnProperty(name = ["integrations.telegram.enabled"], havingValue = "true")
 class UserValidatorService(
     private val botProperties: BotProperties,
     @Qualifier("botAttemptService")
@@ -38,7 +38,7 @@ class UserValidatorService(
     private fun isAllowedUser(userId: Long) = isOwner(userId) || isHomeGroupUser(userId)
 
     private fun isOwner(userId: Long): Boolean {
-        val isOwner = userId == botProperties.botOwnerId.toLong()
+        val isOwner = userId == botProperties.chatId.toLong()
         log.debug("Is owner: {}", isOwner)
         return isOwner
     }

@@ -23,7 +23,7 @@ Application settings are stored in [application.properties](src/main/resources/a
 - Get **token** from the final message (and use it as **telegram.token**)
 - Start conversation with bot
 - Retrieve **chat_id**, call https://api.telegram.org/bot[YOUR_TOKEN]/getUpdates
-  (and use it as **telegram.bot-owner-id**)
+  (and use it as **TELEGRAM_BOT_CHAT_ID** env variable)
 
 ### Admin site in browser
 
@@ -36,7 +36,7 @@ Application settings are stored in [application.properties](src/main/resources/a
 
 ### Enable network monitor
 
-- Set `network-monitor.enabled` to `true`
+- Set `NETWORK_MONITOR_ENABLED` to `true`
 - You can observe/add/edit hosts on http://127.0.0.1:9988/hosts page
 - Hosts availability changes is on http://127.0.0.1:9988/hosts/time-log page
 - Unfortunately, current implementation is based on `ip -j n show` and some other native calls, so you have to
@@ -46,8 +46,8 @@ Application settings are stored in [application.properties](src/main/resources/a
 
 #### What does network monitor do?
 
-- Periodically calls a command (**state.change.command**) to check network changes
-- Chatbot notifies about hosts appearances/disappearances **telegram.bot-owner-id** user
+- Periodically calls a command (**network-monitor.state-change.command**) to check network changes
+- Chatbot notifies about hosts appearances/disappearances **TELEGRAM_BOT_CHAT_ID** user
 
 ### Run commands on chatbot machine
 
@@ -66,9 +66,9 @@ Application settings are stored in [application.properties](src/main/resources/a
 
 ### Enable Weather menu
 
-- Set `openweather.enabled` property to `true`
+- Set `OPENWEATHER_ENABLED` env variable to `true`
 - Generate you API key on https://home.openweathermap.org/api_keys page
-- Set the API key above as `openweather.appid` property
+- Set the API key above as `OPENWEATHER_APPID` env variable
 - Add places where you want to know the weather on http://127.0.0.1:9988/weather page
     - Don't add `city ID` with `lat & lon` in the same time, use them separately
     - City ID could be found in [city.list.json.gz](http://bulk.openweathermap.org/sample/city.list.json.gz)

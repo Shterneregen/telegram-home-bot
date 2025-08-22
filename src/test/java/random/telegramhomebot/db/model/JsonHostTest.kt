@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
-import random.telegramhomebot.services.scan.model.JsonHost
+import random.telegramhomebot.monitor.scan.model.JsonHost
 
 @JsonTest
 class JsonHostTest {

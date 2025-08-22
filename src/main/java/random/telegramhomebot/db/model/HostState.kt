@@ -1,6 +1,6 @@
 package random.telegramhomebot.db.model
 
-import random.telegramhomebot.telegram.Icon
+import random.telegramhomebot.integrations.telegram.Icon
 
 enum class HostState {
     PERMANENT, NOARP, STALE, REACHABLE, NONE, INCOMPLETE, DELAY, PROBE, FAILED;

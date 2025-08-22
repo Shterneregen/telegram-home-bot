@@ -11,12 +11,6 @@ server:
     key-alias: thb
 
 #============================================================
-# Switchers
-#============================================================
-network-monitor.enabled: false
-mock-bot.enabled: false
-
-#============================================================
 logging.level:
   random.telegramhomebot: info
   org.telegram: info
@@ -54,30 +48,23 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
-#============================================================
-# Telegram-bot config
-#============================================================
-telegram:
-  api-url: https://api.telegram.org
-  bot-owner-id: ${TELEGRAM_BOT_CHAT_ID}
-  token: ${TELEGRAM_TOKEN}
-  bot-name: ${TELEGRAM_BOT_NAME}
-  # comma separated list
-  home-group-user-ids:
 
 buttons.in.row: 3
 
 #============================================================
 # Network Monitor config
 #============================================================
-state.change:
-  command: ip -j n show
-  scheduled.time: 600000
-ping.stored.hosts.scheduled.time: 600000
-broadcast.ping.command:
-  linux: fping -A -d -a -q -g -a -i 1 -r 2 192.168.0.0/24 ; arp -a
-  windows: FOR /L %i in (1,1,255) do @ping -n 1 192.168.0.%i | find "Reply" && arp -a
-  broadcast.ping.scheduled.time: 120000
+network-monitor:
+  enabled: ${NETWORK_MONITOR_ENABLED:false}
+  state-change:
+    command: ip -j n show
+    scheduled.time: 600000
+  ping-stored-hosts.scheduled-time: 600000
+  broadcast.ping:
+    scheduled-time: 120000
+    command:
+      linux: ${BROADCAST_PING_COMMAND_LINUX:fping -A -d -a -q -g -a -i 1 -r 2 192.168.0.0/24 ; arp -a}
+      windows: ${BROADCAST_PING_COMMAND_WINDOWS:cmd.exe /c FOR /L %i in (1,1,255) do @ping -n 1 -w 100 192.168.1.%i | find "Reply" && arp -a}
 
 #============================================================
 # Lang config
@@ -118,10 +105,22 @@ wakeOnLan:
   port: 9
   broadcast.ip: 192.168.31.255
 
-#============================================================
-# Open Weather config
-#============================================================
-openweather:
-  enabled: false
-  base-url: https://api.openweathermap.org/data/2.5
-  appid: ${OPENWEATHER_APPID}
+integrations:
+  #============================================================
+  # Telegram-bot config
+  #============================================================
+  telegram:
+    enabled: ${TELEGRAM_ENABLED:false}
+    api-url: https://api.telegram.org
+    token: ${TELEGRAM_TOKEN}
+    bot-name: ${TELEGRAM_BOT_NAME}
+    chat-id: ${TELEGRAM_BOT_CHAT_ID}
+    # comma separated list
+    home-group-user-ids:
+  #============================================================
+  # Open Weather config
+  #============================================================
+  openweather:
+    enabled: ${OPENWEATHER_ENABLED:false}
+    base-url: https://api.openweathermap.org/data/2.5
+    appid: ${OPENWEATHER_APPID}

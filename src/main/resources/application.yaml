@@ -36,10 +36,10 @@ spring:
       trace: false
       web-allow-others: false
   datasource:
-    url: jdbc:h2:${user.dir}/thb
+    url: ${DB_URL:jdbc:h2:${user.dir}/thb}
     driverClassName: org.h2.Driver
-    username: sa
-    password:
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
   jpa:
     hibernate.ddl-auto: validate
     database-platform: org.hibernate.dialect.H2Dialect
@@ -47,7 +47,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-
+    validate-on-migrate: true
 
 buttons.in.row: 3
 
@@ -70,8 +70,8 @@ network-monitor:
 # Lang config
 #============================================================
 # en,ru
-default.language: en
-internationalization.enabled: false
+default.language: ${DEFAULT_LANGUAGE:en}
+internationalization.enabled: ${INTERNATIONALIZATION_ENABLED:false}
 
 #============================================================
 # Security config

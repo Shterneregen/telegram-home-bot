@@ -1,34 +1,4 @@
-server:
-  port: ${SERVER_PORT:9988}
-  #============================================================
-  # SSL config
-  #============================================================
-  ssl:
-    enabled: false
-    key-store: classpath:thb-keystore.p12
-    key-store-password: SOME_SECURE_PSW
-    key-store-type: PKCS12
-    key-alias: thb
-
-#============================================================
-logging.level:
-  random.telegramhomebot: info
-  org.telegram: info
-
-management:
-  endpoints.web.exposure.include: '*'
-  endpoint.health.show-details: when_authorized
-
 spring:
-  servlet:
-    multipart:
-      # Max file size
-      max-file-size: 1MB
-      # Max Request Size
-      max-request-size: 1MB
-  #============================================================
-  # H2/DB config
-  #============================================================
   h2.console:
     enabled: false
     path: /console/
@@ -36,7 +6,7 @@ spring:
       trace: false
       web-allow-others: false
   datasource:
-    url: jdbc:h2:${user.dir}/thb
+    url: jdbc:h2:${user.dir}/thb-test
     driverClassName: org.h2.Driver
     username: sa
     password:
@@ -49,41 +19,33 @@ spring:
 
 buttons.in.row: 3
 
-#============================================================
-# Lang config
-#============================================================
-# en,ru
 default.language: en
-internationalization.enabled: false
+#internationalization.enabled: ${INTERNATIONALIZATION_ENABLED:false}
 
-#============================================================
-# Security config
-#============================================================
 bcrypt.rounds: 11
 default:
   admin:
     login: admin
-    # BCrypt string with bcrypt.rounds
     password: $2y$11$LH5u77OHqFSc6p2nmR9VM.E3FgeCM6QeAVii1GsEENEhOEjCpYdPu
   user:
     login: user
-    # BCrypt string with bcrypt.rounds
     password: $2y$11$LH5u77OHqFSc6p2nmR9VM.E3FgeCM6QeAVii1GsEENEhOEjCpYdPu
+
 login:
   max.attempts.before.block: 5
   blocking.time.in.minutes: 600
 
-#============================================================
-# Hosts page config
-#============================================================
 hosts.default:
   page.size: 20
   sorting: state
   sorting.direction: asc
 
-#============================================================
-# Wake On Lan config
-#============================================================
 wakeOnLan:
   port: 9
   broadcast.ip: 192.168.31.255
+
+integrations:
+  telegram:
+    enabled: false
+  openweather:
+    enabled: false

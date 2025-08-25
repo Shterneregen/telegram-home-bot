@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import random.telegramhomebot.const.AppConstants
 import random.telegramhomebot.integrations.openweather.db.WeatherItem
 import random.telegramhomebot.integrations.openweather.db.WeatherItemRepository
-import java.util.UUID
 
 @ConditionalOnProperty(name = ["integrations.openweather.enabled"], havingValue = "true")
 @Controller
@@ -23,7 +22,7 @@ class WeatherItemsController(private val repository: WeatherItemRepository) {
     }
 
     @RequestMapping(path = ["/edit", "/edit/{id}"])
-    fun editById(model: Model, @PathVariable("id") id: UUID?): String {
+    fun editById(model: Model, @PathVariable("id") id: Long?): String {
         val weatherItem =
             if (id == null) WeatherItem()
             else id.let { repository.findById(it).orElse(null) } ?: return AppConstants.ERROR_404_REDIRECT
@@ -33,7 +32,7 @@ class WeatherItemsController(private val repository: WeatherItemRepository) {
     }
 
     @RequestMapping(path = ["/delete/{id}"])
-    fun deleteById(@PathVariable("id") id: UUID): String {
+    fun deleteById(@PathVariable("id") id: Long): String {
         repository.deleteById(id)
         return "redirect:/weather"
     }

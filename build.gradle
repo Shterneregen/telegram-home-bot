@@ -1,11 +1,14 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
+    id "java"
     id "org.springframework.boot" version "$springBootVersion"
     id "io.spring.dependency-management" version "$springDependencyVersion"
-    id "java"
     id "org.jetbrains.kotlin.jvm" version "$kotlinVersion"
     id "org.jetbrains.kotlin.plugin.spring" version "$kotlinVersion"
     id "org.jetbrains.kotlin.plugin.jpa" version "$kotlinVersion"
     id "org.jetbrains.kotlin.kapt" version "$kotlinVersion"
+    id "org.jlleitschuh.gradle.ktlint" version "$ktlintVersion"
     id "jacoco"
     id "org.sonarqube" version "$sonarqubeVersion"
 }
@@ -22,15 +25,15 @@ group = "random"
 version = "0.0.1-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
-    ktlint
 }
 
 repositories {
@@ -49,13 +52,15 @@ dependencies {
     )
     implementation(
             "nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect",
-            "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:$thymeleafExtrasSpringsecurity5Version",
-            "org.telegram:telegrambots-spring-boot-starter:$telegrambotsSpringBootStarterVersion",
+            "org.thymeleaf.extras:thymeleaf-extras-springsecurity6:$thymeleafExtrasSpringSecurityVersion",
+            "org.telegram:telegrambots-springboot-longpolling-starter:$telegrambotsVersion",
+            "org.telegram:telegrambots-client:$telegrambotsVersion",
             "com.opencsv:opencsv:$opencsvVersion",
             "org.apache.commons:commons-lang3:$commonsLang3Version",
-            "com.kcthota:emoji4j:$emoji4jVersion",
+            "com.vdurmont:emoji-java:$emojiJavaVersion",
             "org.passay:passay:$passayVersion",
-            "org.flywaydb:flyway-core:$flywayCoreVersion"
+            "org.flywaydb:flyway-core",
+            "com.google.guava:guava:$guavaVersion"
     )
     implementation(
             "org.webjars:webjars-locator:$webjarsLocatorVersion",
@@ -72,19 +77,13 @@ dependencies {
             "org.springframework.security:spring-security-test"
     )
 
-    runtimeOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    runtimeOnly "org.jetbrains.kotlin:kotlin-reflect"
     implementation(
-            "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
-            "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesCoreVersion",
-            "com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonModuleKotlinVersion"
+            "org.jetbrains.kotlin:kotlin-stdlib",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+            "com.fasterxml.jackson.module:jackson-module-kotlin"
     )
     kapt "org.springframework.boot:spring-boot-configuration-processor"
-
-    ktlint("com.pinterest:ktlint:$ktlintVersion") {
-        attributes {
-            attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
-        }
-    }
 }
 
 test {
@@ -95,37 +94,12 @@ bootJar {
     archiveFileName = "thb.jar"
     launchScript()
 }
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-}
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-}
-
-task ktlint(type: JavaExec, group: "verification") {
-    description = "Check Kotlin code style."
-    classpath = configurations.ktlint
-    main = "com.pinterest.ktlint.Main"
-    args "src/**/*.kt"
-}
-check.dependsOn ktlint
-
-task ktlintFormat(type: JavaExec, group: "formatting") {
-    description = "Fix Kotlin code style deviations."
-    classpath = configurations.ktlint
-    main = "com.pinterest.ktlint.Main"
-    args "-F", "src/**/*.kt"
-}
 
 jacocoTestReport {
     reports {
-        xml.enabled true
-        html.enabled true
-        csv.enabled false
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
     }
 }
 

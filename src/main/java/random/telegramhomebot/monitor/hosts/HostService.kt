@@ -13,8 +13,7 @@ import random.telegramhomebot.services.commands.CommandRunnerService
 import random.telegramhomebot.utils.NetUtils
 import random.telegramhomebot.utils.logger
 import java.text.SimpleDateFormat
-import java.util.Optional
-import java.util.UUID
+import java.util.*
 
 @Service
 class HostService(
@@ -34,8 +33,8 @@ class HostService(
     }
 
     fun getHostByMac(mac: String?): Host? = hostRepository.findHostByMac(mac)
-    fun getHostById(id: UUID): Optional<Host?> = hostRepository.findById(id)
-    fun deleteHostById(id: UUID) = hostRepository.deleteById(id)
+    fun getHostById(id: Long): Optional<Host?> = hostRepository.findById(id)
+    fun deleteHostById(id: Long) = hostRepository.deleteById(id)
     fun saveHost(host: Host): Host = hostRepository.save(host)
     fun getReachableHosts(): List<Host> = hostRepository.findReachableHosts()
     fun getWakeOnLanEnableHosts(): List<Host> = hostRepository.findWakeOnLanEnabledHosts()

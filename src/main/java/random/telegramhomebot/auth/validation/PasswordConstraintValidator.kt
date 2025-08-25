@@ -1,12 +1,12 @@
 package random.telegramhomebot.auth.validation
 
 import com.google.common.base.Joiner
+import jakarta.validation.ConstraintValidator
+import jakarta.validation.ConstraintValidatorContext
 import org.passay.LengthRule
 import org.passay.PasswordData
 import org.passay.PasswordValidator
 import org.passay.WhitespaceRule
-import javax.validation.ConstraintValidator
-import javax.validation.ConstraintValidatorContext
 
 class PasswordConstraintValidator : ConstraintValidator<ValidPassword, String> {
 

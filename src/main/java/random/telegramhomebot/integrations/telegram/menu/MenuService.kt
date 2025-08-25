@@ -2,6 +2,7 @@ package random.telegramhomebot.integrations.telegram.menu
 
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow
 import random.telegramhomebot.integrations.telegram.menu.dto.Menu
 
 interface MenuService {
@@ -11,21 +12,30 @@ interface MenuService {
     fun getMenuInlineKeyboardMarkup(): InlineKeyboardMarkup
 
     fun getDefaultHorizontalMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val buttons = getMenuMap().entries.map { (command, menu) ->
-            InlineKeyboardButton.builder()
-                .text(menu.buttonText)
-                .callbackData(command).build()
-        }
-        return InlineKeyboardMarkup.builder().keyboard(listOf(buttons)).build()
+        return getDefaultMenuInlineKeyboardMarkup()
     }
 
     fun getDefaultVerticalMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        val rowList: List<List<InlineKeyboardButton>> = getMenuMap().entries
-            .map { (command, menu) ->
-                InlineKeyboardButton.builder()
-                    .text(menu.buttonText)
-                    .callbackData(command).build()
-            }.map { listOf(it) }
-        return InlineKeyboardMarkup.builder().keyboard(rowList).build()
+        return getDefaultMenuInlineKeyboardMarkup(MenuOrientation.VERTICAL)
+    }
+
+    fun getDefaultMenuInlineKeyboardMarkup(
+        orientation: MenuOrientation = MenuOrientation.HORIZONTAL
+    ): InlineKeyboardMarkup {
+        val buttons = getMenuMap().entries.map { (command, menu) ->
+            InlineKeyboardButton.builder()
+                .text(menu.buttonText)
+                .callbackData(command)
+                .build()
+        }
+
+        val rows = when (orientation) {
+            MenuOrientation.HORIZONTAL -> listOf(InlineKeyboardRow(buttons)) // все кнопки в один ряд
+            MenuOrientation.VERTICAL -> buttons.map { InlineKeyboardRow(listOf(it)) } // каждая кнопка в отдельный ряд
+        }
+
+        return InlineKeyboardMarkup.builder()
+            .keyboard(rows)
+            .build()
     }
 }

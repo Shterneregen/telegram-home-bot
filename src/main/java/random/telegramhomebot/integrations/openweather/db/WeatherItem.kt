@@ -1,13 +1,6 @@
 package random.telegramhomebot.integrations.openweather.db
 
-import org.hibernate.annotations.GenericGenerator
-import org.hibernate.annotations.Type
-import java.util.UUID
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.Table
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "weather_item")
@@ -18,11 +11,10 @@ class WeatherItem(
     var lon: String?
 ) {
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Type(type = "org.hibernate.type.UUIDCharType")
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
-    var id: UUID? = null
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "weather_item_seq")
+    @SequenceGenerator(name = "weather_item_seq", sequenceName = "weather_item_seq", allocationSize = 1)
+    @Column(updatable = false, nullable = false)
+    var id: Long? = null
 
     constructor(cityName: String, lat: String?, lon: String?) : this(cityName, null, lat, lon)
     constructor(cityName: String, cityId: String?) : this(cityName, cityId, null, null)

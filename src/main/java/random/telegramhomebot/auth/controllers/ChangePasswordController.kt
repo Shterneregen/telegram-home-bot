@@ -1,5 +1,7 @@
 package random.telegramhomebot.auth.controllers
 
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.Valid
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Controller
 import org.springframework.ui.ModelMap
@@ -14,8 +16,6 @@ import random.telegramhomebot.auth.dto.PasswordDto
 import random.telegramhomebot.auth.exceptinos.InvalidOldPasswordException
 import random.telegramhomebot.auth.services.UserService
 import random.telegramhomebot.services.messages.MessageService
-import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
 
 @Controller
 class ChangePasswordController(private val messageService: MessageService, private val userService: UserService) {

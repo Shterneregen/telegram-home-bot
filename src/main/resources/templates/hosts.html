@@ -6,13 +6,6 @@
 
 <head>
     <title th:text="#{hosts}"></title>
-
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        let _csrf_param_name = /*[[${_csrf.parameterName}]]*/ '';
-        let _csrf_token = /*[[${_csrf.token}]]*/ '';
-        /*]]>*/
-    </script>
     <script type="text/javascript" th:src="@{/js/hosts.js}"></script>
 </head>
 

@@ -30,7 +30,7 @@ class LoginAttemptService(blockingTimeInMinutes: Int, private val maxAttempts: I
 
     init {
         attemptsCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(blockingTimeInMinutes.toLong(), TimeUnit.MINUTES)
+            .expireAfterAccess(blockingTimeInMinutes.toLong(), TimeUnit.MINUTES)
             .build(object : CacheLoader<String, Int>() {
                 override fun load(key: String): Int {
                     return 0

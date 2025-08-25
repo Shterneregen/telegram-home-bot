@@ -1,5 +1,6 @@
 package random.telegramhomebot.controllers
 
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
@@ -15,7 +16,6 @@ import random.telegramhomebot.const.AppConstants.HOSTS_MAPPING
 import random.telegramhomebot.services.csv.HostsCsvService
 import random.telegramhomebot.monitor.hosts.HostService
 import random.telegramhomebot.utils.logger
-import javax.servlet.http.HttpServletResponse
 
 @Controller
 @RequestMapping(HOSTS_MAPPING)

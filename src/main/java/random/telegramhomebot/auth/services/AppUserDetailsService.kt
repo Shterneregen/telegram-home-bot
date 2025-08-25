@@ -1,5 +1,6 @@
 package random.telegramhomebot.auth.services
 
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -10,7 +11,6 @@ import random.telegramhomebot.auth.db.repositories.UserRepository
 import random.telegramhomebot.auth.enums.AuthErrorCode
 import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.utils.NetUtils.Companion.getClientIp
-import javax.servlet.http.HttpServletRequest
 
 @Service
 class AppUserDetailsService(

@@ -1,6 +1,6 @@
 package random.telegramhomebot.integrations.telegram
 
-import emoji4j.EmojiUtils
+import com.vdurmont.emoji.EmojiManager
 
 enum class Icon(private val value: String) {
     PLUS("heavy_plus_sign"),
@@ -18,7 +18,10 @@ enum class Icon(private val value: String) {
     WARNING("warning")
     ;
 
-    fun get(): String = EmojiUtils.getEmoji(value)?.emoji ?: value
+    fun get(): String {
+        val emoji = EmojiManager.getForAlias(value)
+        return emoji?.unicode ?: ":$value:"
+    }
 
     companion object {
         fun isChecked(flag: Boolean) = if (flag) CHECK.get() else NOT.get()

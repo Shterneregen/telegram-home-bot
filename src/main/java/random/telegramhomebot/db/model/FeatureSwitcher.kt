@@ -1,23 +1,15 @@
 package random.telegramhomebot.db.model
 
-import org.hibernate.annotations.GenericGenerator
-import org.hibernate.annotations.Type
-import java.util.UUID
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.Table
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "feature_switcher")
 class FeatureSwitcher(
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Type(type = "org.hibernate.type.UUIDCharType")
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
-    var id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "feature_switcher_seq")
+    @SequenceGenerator(name = "feature_switcher_seq", sequenceName = "feature_switcher_seq", allocationSize = 1)
+    @Column(updatable = false, nullable = false)
+    var id: Long? = null,
     var name: String,
     var enabled: Boolean
 ) {

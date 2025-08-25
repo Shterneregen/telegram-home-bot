@@ -1,23 +1,15 @@
 package random.telegramhomebot.db.model
 
-import org.hibernate.annotations.GenericGenerator
-import org.hibernate.annotations.Type
-import java.util.UUID
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.Table
+import jakarta.persistence.*
 
 @Entity
-@Table(name = "telegram_commands")
+@Table(name = "telegram_command")
 class TelegramCommand(
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Type(type = "org.hibernate.type.UUIDCharType")
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
-    var id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "telegram_command_seq")
+    @SequenceGenerator(name = "telegram_command_seq", sequenceName = "telegram_command_seq", allocationSize = 1)
+    @Column(updatable = false, nullable = false)
+    var id: Long? = null,
     @Column(name = "command_alias", unique = true)
     var commandAlias: String = "",
     var command: String = "",

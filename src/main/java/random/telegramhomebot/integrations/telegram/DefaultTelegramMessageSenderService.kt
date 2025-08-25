@@ -1,23 +1,26 @@
 package random.telegramhomebot.integrations.telegram
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
-import org.telegram.telegrambots.bots.TelegramLongPollingBot
+import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient
+import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer
+import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
+import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
+import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
-import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
+import org.telegram.telegrambots.meta.api.objects.message.Message
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
+import org.telegram.telegrambots.meta.generics.TelegramClient
 import random.telegramhomebot.const.AppConstants.UNAUTHORIZED_ACCESS_MSG
 import random.telegramhomebot.integrations.telegram.menu.CallbackMenuService
 import random.telegramhomebot.services.UserValidatorService
 import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.services.messages.MessageService
 import random.telegramhomebot.utils.logger
+import java.io.Serializable
 
 @Component
 @ConditionalOnProperty(name = ["integrations.telegram.enabled"], havingValue = "true")
@@ -27,19 +30,30 @@ class DefaultTelegramMessageSenderService(
     private val messageService: MessageService,
     private val callbackMenuService: CallbackMenuService,
     private val botProperties: BotProperties
-) : TelegramLongPollingBot(), TelegramMessageSenderService {
-    val log = logger()
+) : SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer, TelegramMessageSenderService {
+    private val log = logger()
+    private val telegramClient: TelegramClient = OkHttpTelegramClient(getBotToken())
 
-    override fun onUpdateReceived(update: Update) {
+    override fun getBotToken(): String? {
+        return botProperties.token
+    }
+
+    override fun sendMessage(messageText: String) = sendMessage(messageText, botProperties.chatId.toLong())
+
+    override fun consume(update: Update) {
         if (log.isDebugEnabled) {
             log.debug(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(update))
         }
         when {
             !userValidatorService.checkAccessForUpdate(update) -> logWarnMessage(update)
             update.hasCallbackQuery() -> handleCallback(update)
-            getMenuForCommand(update.message) -> log.debug("[${update.message}] command was executed")
+            getMenuForCommand(update.message) -> log.debug("[{}] command was executed", update.message)
             else -> executeCommandOnMachine(update.message)
         }
+    }
+
+    override fun getUpdatesConsumer(): LongPollingUpdateConsumer? {
+        return this
     }
 
     private fun logWarnMessage(update: Update) {
@@ -61,21 +75,28 @@ class DefaultTelegramMessageSenderService(
         commandService.executeCommandOnMachine(message.text.lowercase())
             ?.let { sendMessage(it, message.chatId, message.messageId) }
 
-    private fun handleCallback(update: Update) = CoroutineScope(Dispatchers.Default).launch {
+
+    private fun handleCallback(update: Update) {
         try {
-            executeAsync(callbackMenuService.handleCallback(update))
-                .thenApply {
-                    // https://core.telegram.org/bots/api#callbackquery
-                    // NOTE: After the user presses a callback button, Telegram clients will display a progress bar
-                    // until you call answerCallbackQuery.
-                    // It is, therefore, necessary to react by calling answerCallbackQuery even if no notification
-                    // to the user is needed (e.g., without specifying any of the optional parameters).
-                    executeAsync(AnswerCallbackQuery.builder().callbackQueryId(update.callbackQuery.id).build())
-                }
+            val response = callbackMenuService.handleCallback(update)
+            execute(response)
+
+            // https://core.telegram.org/bots/api#callbackquery
+            // NOTE: After the user presses a callback button, Telegram clients will display a progress bar
+            // until you call answerCallbackQuery.
+            // It is, therefore, necessary to react by calling answerCallbackQuery even if no notification
+            // to the user is needed (e.g., without specifying any of the optional parameters).
+            execute(
+                AnswerCallbackQuery.builder()
+                    .callbackQueryId(update.callbackQuery.id)
+                    .build()
+            )
         } catch (e: Exception) {
             log.error(e.message, e)
-            executeAsync(
-                AnswerCallbackQuery.builder().callbackQueryId(update.callbackQuery.id)
+
+            execute(
+                AnswerCallbackQuery.builder()
+                    .callbackQueryId(update.callbackQuery.id)
                     .text("${Icon.WARNING.get()} Unexpected error occurred!")
                     .build()
             )
@@ -85,14 +106,12 @@ class DefaultTelegramMessageSenderService(
     private fun getMenuForCommand(message: Message): Boolean {
         val menuForCommand = callbackMenuService.getMenuForCommand(message) ?: return false
         try {
-            executeAsync(menuForCommand)
+            execute(menuForCommand)
         } catch (e: TelegramApiException) {
             log.error(e.message, e)
         }
         return true
     }
-
-    override fun sendMessage(messageText: String) = sendMessage(messageText, botProperties.chatId.toLong())
 
     private fun sendMessage(messageText: String, chatId: Long, replyToMessageId: Int? = null) {
         if (messageText.isBlank()) {
@@ -106,13 +125,19 @@ class DefaultTelegramMessageSenderService(
             .replyMarkup(commandService.createReplyMarkupCommandButtons())
             .build()
         try {
-            executeAsync(message)
+            execute(message)
             log.debug("Message to send: {}", message)
         } catch (e: TelegramApiException) {
             log.error(e.message, e)
         }
     }
 
-    override fun getBotUsername() = botProperties.botName
-    override fun getBotToken() = botProperties.token
+    private fun <T : Serializable, M : BotApiMethod<T>> execute(method: M): T? {
+        try {
+            return telegramClient.execute(method)
+        } catch (e: TelegramApiException) {
+            log.error("Error: {}", e.message, e)
+            return null
+        }
+    }
 }

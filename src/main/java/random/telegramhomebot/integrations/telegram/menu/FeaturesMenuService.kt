@@ -5,9 +5,7 @@ import org.springframework.stereotype.Service
 import random.telegramhomebot.integrations.telegram.Icon
 import random.telegramhomebot.integrations.telegram.menu.dto.Menu
 import random.telegramhomebot.services.FeatureSwitcherService
-import random.telegramhomebot.services.FeatureSwitcherService.Features.NEW_HOSTS_NOTIFICATION
-import random.telegramhomebot.services.FeatureSwitcherService.Features.NOT_REACHABLE_HOSTS_NOTIFICATION
-import random.telegramhomebot.services.FeatureSwitcherService.Features.REACHABLE_HOSTS_NOTIFICATION
+import random.telegramhomebot.services.FeatureSwitcherService.Features.*
 import random.telegramhomebot.services.messages.MessageService
 
 @Service
@@ -32,7 +30,7 @@ class FeaturesMenuService(
         checkFunction: () -> Boolean
     ): Pair<String, Menu> {
         val message = messageService.getMessage(feature.messageCode)
-        return feature.command to Menu("${Icon.Companion.isChecked(checkFunction.invoke())} $message") {
+        return feature.command to Menu("${Icon.isChecked(checkFunction.invoke())} $message") {
             featureSwitcherService.switchFeature(feature.name)
             "Feature \"$message\" toggled"
         }

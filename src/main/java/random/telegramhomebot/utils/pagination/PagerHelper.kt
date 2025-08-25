@@ -1,10 +1,10 @@
 package random.telegramhomebot.utils.pagination
 
+import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.ui.Model
-import javax.servlet.http.Cookie
-import javax.servlet.http.HttpServletRequest
 
 object PagerHelper {
 

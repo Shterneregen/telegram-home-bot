@@ -1,28 +1,18 @@
 package random.telegramhomebot.db.model
 
 import com.fasterxml.jackson.annotation.JsonBackReference
+import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.GenericGenerator
-import org.hibernate.annotations.Type
 import java.sql.Timestamp
-import java.util.UUID
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.ManyToOne
-import javax.persistence.Table
 
 @Entity
-@Table(name = "host_time_logs")
+@Table(name = "host_time_log")
 class HostTimeLog(
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Type(type = "org.hibernate.type.UUIDCharType")
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
-    var id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "host_time_log_seq")
+    @SequenceGenerator(name = "host_time_log_seq", sequenceName = "host_time_log_seq", allocationSize = 1)
+    @Column(updatable = false, nullable = false)
+    var id: Long? = null,
     @CreationTimestamp @Column(updatable = false)
     var createdDate: Timestamp? = null,
     @JoinColumn(name = "host_id") @ManyToOne @JsonBackReference

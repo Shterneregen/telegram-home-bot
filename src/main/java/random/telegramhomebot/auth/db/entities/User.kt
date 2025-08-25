@@ -1,22 +1,23 @@
 package random.telegramhomebot.auth.db.entities
 
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.FetchType
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.JoinTable
-import javax.persistence.ManyToMany
-import javax.persistence.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
+import jakarta.persistence.SequenceGenerator
+import jakarta.persistence.Table
 
 @Entity
-@Table(name = "USER")
+@Table(name = "thb_user")
 class User(
-    @Column(name = "USERNAME", nullable = false, unique = true)
+    @Column(name = "username", nullable = false, unique = true)
     var username: String,
-    @Column(name = "PASSWORD")
+    @Column(name = "password")
     var password: String,
     var firstName: String?,
     var lastName: String?,
@@ -24,8 +25,9 @@ class User(
     var enabled: Boolean?
 ) {
     @Id
-    @Column(name = "USER_ID")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
+    @SequenceGenerator(name = "user_seq", sequenceName = "user_seq", allocationSize = 1)
     var id: Long? = null
 
     @ManyToMany(fetch = FetchType.EAGER)

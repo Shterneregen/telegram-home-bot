@@ -1,8 +1,8 @@
 package random.telegramhomebot.utils
 
+import jakarta.servlet.http.HttpServletRequest
 import random.telegramhomebot.db.model.Host
 import java.util.regex.Pattern
-import javax.servlet.http.HttpServletRequest
 
 class NetUtils {
 

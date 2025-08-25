@@ -1,5 +1,6 @@
 package random.telegramhomebot.db.repository
 
+import jakarta.annotation.Resource
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import random.telegramhomebot.db.model.TelegramCommand
-import javax.annotation.Resource
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest

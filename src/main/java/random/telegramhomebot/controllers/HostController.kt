@@ -1,5 +1,7 @@
 package random.telegramhomebot.controllers
 
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -25,9 +27,6 @@ import random.telegramhomebot.const.AppConstants.SAVE_HOST_MAPPING
 import random.telegramhomebot.db.model.Host
 import random.telegramhomebot.monitor.hosts.HostService
 import random.telegramhomebot.utils.pagination.PagerHelper
-import java.util.UUID
-import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
 
 @Controller
 @RequestMapping(HOSTS_MAPPING)
@@ -68,7 +67,7 @@ class HostController(private val hostService: HostService) {
     }
 
     @RequestMapping(path = [EDIT_HOST_MAPPING, EDIT_HOST_BY_ID_MAPPING])
-    fun editHostById(model: Model, @PathVariable(HOST_ID_PATH_VAR) id: UUID?): String {
+    fun editHostById(model: Model, @PathVariable(HOST_ID_PATH_VAR) id: Long?): String {
         val host =
             if (id == null) Host()
             else id.let { hostService.getHostById(it).orElse(null) } ?: return ERROR_404_REDIRECT
@@ -78,7 +77,7 @@ class HostController(private val hostService: HostService) {
     }
 
     @RequestMapping(path = [DELETE_HOST_MAPPING])
-    fun deleteHostById(@PathVariable(HOST_ID_PATH_VAR) id: UUID): String {
+    fun deleteHostById(@PathVariable(HOST_ID_PATH_VAR) id: Long): String {
         hostService.deleteHostById(id)
         return REDIRECT_HOSTS
     }

@@ -3,9 +3,8 @@ package random.telegramhomebot.db.repository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import random.telegramhomebot.db.model.Host
-import java.util.UUID
 
-interface HostRepository : JpaRepository<Host, UUID> {
+interface HostRepository : JpaRepository<Host, Long> {
     fun findHostByMac(mac: String?): Host?
     fun findAllByIpNotNull(): List<Host>
 

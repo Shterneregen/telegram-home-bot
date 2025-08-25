@@ -19,7 +19,6 @@ import random.telegramhomebot.const.AppConstants.REDIRECT_COMMANDS
 import random.telegramhomebot.const.AppConstants.SAVE_COMMAND_MAPPING
 import random.telegramhomebot.db.model.TelegramCommand
 import random.telegramhomebot.db.repository.TelegramCommandRepository
-import java.util.UUID
 
 @Controller
 @RequestMapping(COMMANDS_MAPPING)
@@ -32,7 +31,7 @@ class CommandController(private val telegramCommandRepository: TelegramCommandRe
     }
 
     @RequestMapping(path = [EDIT_COMMAND_MAPPING, EDIT_COMMAND_BY_ID_MAPPING])
-    fun editCommandById(model: Model, @PathVariable(COMMAND_ID_PATH_VAR) id: UUID?): String {
+    fun editCommandById(model: Model, @PathVariable(COMMAND_ID_PATH_VAR) id: Long?): String {
         val command =
             if (id == null) TelegramCommand()
             else id.let { telegramCommandRepository.findById(it).orElse(null) } ?: return ERROR_404_REDIRECT
@@ -42,7 +41,7 @@ class CommandController(private val telegramCommandRepository: TelegramCommandRe
     }
 
     @RequestMapping(path = [DELETE_COMMAND_MAPPING])
-    fun deleteCommandById(@PathVariable(COMMAND_ID_PATH_VAR) id: UUID): String {
+    fun deleteCommandById(@PathVariable(COMMAND_ID_PATH_VAR) id: Long): String {
         telegramCommandRepository.deleteById(id)
         return REDIRECT_COMMANDS
     }

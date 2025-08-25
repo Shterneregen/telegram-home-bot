@@ -1,27 +1,16 @@
 package random.telegramhomebot.db.model
 
-import org.hibernate.annotations.GenericGenerator
-import org.hibernate.annotations.Type
-import java.util.UUID
-import javax.persistence.CascadeType
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.FetchType
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.persistence.OneToMany
-import javax.persistence.Table
-import javax.validation.constraints.NotBlank
+import jakarta.persistence.*
+import jakarta.validation.constraints.NotBlank
 
 @Entity
-@Table(name = "hosts")
+@Table(name = "host")
 class Host(
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Type(type = "org.hibernate.type.UUIDCharType")
-    @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
-    var id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "host_seq")
+    @SequenceGenerator(name = "host_seq", sequenceName = "host_seq", allocationSize = 1)
+    @Column(updatable = false, nullable = false)
+    var id: Long? = null,
 
     var ip: String? = null,
 
@@ -44,10 +33,10 @@ class Host(
     var wakeOnLanEnabled: Boolean = false
 ) {
     constructor(mac: String, deviceName: String, notes: String) :
-        this(null, null, null, mac, null, deviceName, null, notes)
+            this(null, null, null, mac, null, deviceName, null, notes)
 
     constructor(ip: String?, hostInterface: String?, mac: String?, state: HostState?, deviceName: String) :
-        this(null, ip, hostInterface, mac, state, deviceName, null, null)
+            this(null, ip, hostInterface, mac, state, deviceName, null, null)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

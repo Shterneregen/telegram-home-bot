@@ -9,7 +9,6 @@ $(document).ready(function () {
 function uploadCsv() {
     let form = $('#import-hosts-to-csv-form')[0];
     let data = new FormData(form)
-    data.append(_csrf_param_name, _csrf_token)
 
     $("#btnSubmit").prop("disabled", true);
 

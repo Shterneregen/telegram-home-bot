@@ -1,15 +1,13 @@
 package random.telegramhomebot.auth.db.entities
 
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.ManyToMany
+import jakarta.persistence.*
 
 @Entity
+@Table(name = "privilege")
 class Privilege(var name: String) {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "privilege_seq")
+    @SequenceGenerator(name = "privilege_seq", sequenceName = "privilege_seq", allocationSize = 1)
     var id: Long? = null
 
     @ManyToMany(mappedBy = "privileges")

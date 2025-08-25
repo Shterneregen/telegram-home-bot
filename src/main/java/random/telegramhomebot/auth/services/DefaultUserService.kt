@@ -1,10 +1,10 @@
 package random.telegramhomebot.auth.services
 
+import jakarta.transaction.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import random.telegramhomebot.auth.db.entities.User
 import random.telegramhomebot.auth.db.repositories.UserRepository
-import javax.transaction.Transactional
 
 @Service
 @Transactional

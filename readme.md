@@ -1,5 +1,3 @@
-[![CircleCI](https://circleci.com/gh/Shterneregen/telegram-home-bot.svg?style=svg)](https://circleci.com/gh/Shterneregen/telegram-home-bot)
-
 # Telegram Home Bot
 
 Can be used for home automation on Raspberry Pi

@@ -36,3 +36,4 @@ out/
 *.db
 *.p12
 *.cer
+*.env

@@ -40,8 +40,7 @@ function savePass(event){
 
     let formData = {
                       oldPassword: $("#oldpass").val(),
-                      newPassword: $("#password").val(),
-                      [_csrf_param_name]: _csrf_token
+                      newPassword: $("#password").val()
                    };
     $.post(serverContext + "user/updatePassword", formData, function(data) {
         $("#successMessage").show().html(data.message);

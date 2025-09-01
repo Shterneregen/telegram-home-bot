@@ -22,16 +22,22 @@ class WeatherMenuService(
             val cityId = it.cityId
             val cityName = it.cityName
             "/$cityId" to Menu("Get weather for '$cityName'") {
-                val weatherResponse = weatherService.getWeather(cityId = cityId!!).block()
-                "Weather for '$cityName' is [${weatherResponse?.main?.temp ?: "N/A"}]"
+                weatherService.getWeather(cityId = cityId)
+                    .map { weather -> "Weather for '$cityName' is [${weather?.main?.temp}]" }
+                    .onErrorReturn("Weather service unavailable for '$cityName'")
+                    .defaultIfEmpty("Weather data not found for '$cityName'")
+                    .block()!!
             }
         }
 
         val mapByCoordinates = allWeatherItems.filter { it.lat != null && it.lon != null }.associate {
             val cityName = it.cityName
             "/$cityName" to Menu("Get weather for '$cityName'") {
-                val weatherResponse = weatherService.getWeather(lat = it.lat!!, lon = it.lon!!).block()
-                "Weather for '$cityName' is [${weatherResponse?.main?.temp ?: "N/A"}]"
+                weatherService.getWeather(lat = it.lat, lon = it.lon)
+                    .map { weather -> "Weather for [${weather?.coord}] is [${weather?.main?.temp}]" }
+                    .onErrorReturn("Weather service unavailable")
+                    .defaultIfEmpty("Weather data not found")
+                    .block()!!
             }
         }
         return mapByCode + mapByCoordinates

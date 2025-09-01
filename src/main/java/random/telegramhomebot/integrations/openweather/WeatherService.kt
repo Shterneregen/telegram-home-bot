@@ -8,8 +8,10 @@ import reactor.core.publisher.Mono
 import java.util.Optional.ofNullable
 
 @ConditionalOnProperty(name = ["integrations.openweather.enabled"], havingValue = "true")
-class WeatherService(private val weatherWebClient: WebClient, private val properties: OpenWeatherProperties) {
-
+class WeatherService(
+    private val weatherWebClient: WebClient,
+    private val properties: OpenWeatherProperties
+) {
     fun getWeather(
         cityId: String? = null,
         lat: String? = null,

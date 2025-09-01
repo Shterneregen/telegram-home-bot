@@ -111,12 +111,10 @@ integrations:
   #============================================================
   telegram:
     enabled: ${TELEGRAM_ENABLED:false}
-    api-url: https://api.telegram.org
     token: ${TELEGRAM_TOKEN}
-    bot-name: ${TELEGRAM_BOT_NAME}
     chat-id: ${TELEGRAM_BOT_CHAT_ID}
     # comma separated list
-    home-group-user-ids:
+    home-group-user-ids: ${TELEGRAM_HOME_GROUP_USER_IDS:}
   #============================================================
   # Open Weather config
   #============================================================

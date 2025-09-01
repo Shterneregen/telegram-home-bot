@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
-import random.telegramhomebot.integrations.telegram.TelegramMessageSenderService
+import random.telegramhomebot.integrations.telegram.send.TelegramMessageSender
 import random.telegramhomebot.monitor.hosts.StateChangeService
 import random.telegramhomebot.utils.logger
 
@@ -12,7 +12,7 @@ import random.telegramhomebot.utils.logger
 @ConditionalOnProperty(name = ["network-monitor.enabled"], havingValue = "true")
 class ScanHostsEventListener(
     private val stateChangeService: StateChangeService,
-    private val telegramMessageSenderService: TelegramMessageSenderService
+    private val telegramMessageSender: TelegramMessageSender
 ) {
     private val log = logger()
 
@@ -21,6 +21,6 @@ class ScanHostsEventListener(
     fun onEvent(event: ScanHostsEvent) {
         log.debug("Received ScanHostsEvent")
         val checkState = stateChangeService.checkState()
-        if (checkState.isNotBlank()) telegramMessageSenderService.sendMessage(checkState)
+        if (checkState.isNotBlank()) telegramMessageSender.sendMessage(checkState)
     }
 }

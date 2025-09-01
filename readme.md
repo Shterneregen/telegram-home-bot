@@ -36,7 +36,7 @@ Application settings are stored in [application.properties](src/main/resources/a
 
 ### Enable network monitor
 
-- Set `NETWORK_MONITOR_ENABLED` to `true`
+- Set `NETWORK_MONITOR_ENABLED` env var to `true`
 - You can observe/add/edit hosts on http://127.0.0.1:9988/hosts page
 - Hosts availability changes is on http://127.0.0.1:9988/hosts/time-log page
 - Unfortunately, current implementation is based on `ip -j n show` and some other native calls, so you have to
@@ -46,7 +46,7 @@ Application settings are stored in [application.properties](src/main/resources/a
 
 #### What does network monitor do?
 
-- Periodically calls a command (**network-monitor.state-change.command**) to check network changes
+- Periodically calls a command (**STATE_CHANGE_COMMAND**) to check network changes
 - Chatbot notifies about hosts appearances/disappearances **TELEGRAM_BOT_CHAT_ID** user
 
 ### Run commands on chatbot machine
@@ -59,7 +59,7 @@ Application settings are stored in [application.properties](src/main/resources/a
 
 ### Wake On Lan feature
 
-- Modify `wakeOnLan.broadcast.ip` according to your network mask
+- Modify `WAKE_ON_LAN_BROADCAST_IP` env var according to your network mask
 - To enable WOL for a host open http://127.0.0.1:9988/hosts page
 - Choose a host and check `Wake On Lan Enabled` checkbox
 - To wake up a host, run `/wol` in the Telegram client and select the one you want
@@ -105,13 +105,14 @@ sudo mkdir /var/telegram # create a folder for jar file
 sudo cp /SOME_LINUX_FOLDER/thb.jar /var/telegram/thb.jar # copy jar to the folder
 sudo ln -s /var/telegram/thb.jar /etc/init.d/thb # create symlink the jar to init.d
 sudo chmod +x /var/telegram/thb.jar # make thb.jar executable
+sudo chown -R $USER:$USER /var/telegram
+sudo chmod 755 /var/telegram
 sudo systemctl daemon-reload # reload systemd manager configuration
 sudo service thb start # start bot as a service
 update-rc.d thb defaults # autostart
 ```
 
-- When I'm using THB as a Linux service, I just put the properties files next to the jar file and also set the Telegram
-  credentials into the application.properties without using env variables
+- When I'm using THB as a Linux service, I just put the `.env` file (with all necessary props) next to the jar file
 
 ### Enable HTTPS
 
@@ -124,8 +125,7 @@ keytool -genkeypair -alias thb -keyalg RSA -keysize 2048 -storetype PKCS12 -keys
 ```
 
 - You will be asked to enter a password for the keystore
-- Uncomment `server.ssl.*` properties
-- Set your password as **server.ssl.key-store-password** property and change other props if necessary
+- Set your password as *SSL_KEY_STORE_PASSWORD** property and change other props if necessary
 - Add `thb-keystore.p12` to the `Trusted Root Certification Authorities certificate` store (Windows)
 
 ### Launch bot in Docker
@@ -185,4 +185,4 @@ gradlew sonarqube -Dsonar.projectKey=thb -Dsonar.host.url=http://127.0.0.1:9000 
 
 ---
 
-Kotlin, Spring (Boot/Security/WebFlux), Gradle, H2, Thymeleaf, Google Charts, telegrambots-spring-boot-starter
+Kotlin, Spring (Boot/Security/WebFlux), Gradle, H2, Thymeleaf, Google Charts, telegrambots-springboot-longpolling-starter

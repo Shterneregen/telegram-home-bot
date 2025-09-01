@@ -4,11 +4,11 @@ server:
   # SSL config
   #============================================================
   ssl:
-    enabled: false
-    key-store: classpath:thb-keystore.p12
-    key-store-password: SOME_SECURE_PSW
-    key-store-type: PKCS12
-    key-alias: thb
+    enabled: ${SSL_ENABLED:false}
+    key-store: ${SSL_KEY_STORE:classpath:thb-keystore.p12}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD:SOME_SECURE_PSW}
+    key-store-type: ${SSL_KEY_STORE_TYPE:PKCS12}
+    key-alias: ${SSL_KEY_ALIAS:thb}
 
 #============================================================
 logging.level:
@@ -57,13 +57,13 @@ buttons.in.row: 3
 network-monitor:
   enabled: ${NETWORK_MONITOR_ENABLED:false}
   state-change:
-    command: ip -j n show
-    scheduled.time: 600000
-  ping-stored-hosts.scheduled-time: 600000
+    command: ${STATE_CHANGE_COMMAND:ip -j n show}
+    scheduled.time: ${STATE_CHANGE_SCHEDULED_TIME:600000}
+  ping-stored-hosts.scheduled-time: ${PING_STORED_HOSTS_SCHEDULED_TIME:600000}
   broadcast.ping:
-    scheduled-time: 120000
+    scheduled-time: ${BROADCAST_PING_SCHEDULED_TIME:120000}
     command:
-      linux: ${BROADCAST_PING_COMMAND_LINUX:fping -A -d -a -q -g -a -i 1 -r 2 192.168.0.0/24 ; arp -a}
+      linux: ${BROADCAST_PING_COMMAND_LINUX:fping -A -d -a -q -g -a -i 1 -r 2 192.168.1.0/24 ; arp -a}
       windows: ${BROADCAST_PING_COMMAND_WINDOWS:cmd.exe /c FOR /L %i in (1,1,255) do @ping -n 1 -w 100 192.168.1.%i | find "Reply" && arp -a}
 
 #============================================================
@@ -102,8 +102,8 @@ hosts.default:
 # Wake On Lan config
 #============================================================
 wakeOnLan:
-  port: 9
-  broadcast.ip: 192.168.31.255
+  port: ${WAKE_ON_LAN_PORT:9}
+  broadcast.ip: ${WAKE_ON_LAN_BROADCAST_IP:192.168.1.255}
 
 integrations:
   #============================================================

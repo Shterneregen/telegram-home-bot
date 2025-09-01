@@ -1,7 +1,6 @@
 package random.telegramhomebot.integrations.telegram.send
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod
 import random.telegramhomebot.utils.logger

@@ -22,7 +22,7 @@ sourceSets {
 }
 
 group = "random"
-version = "0.0.1-SNAPSHOT"
+version = "0.1.0"
 
 java {
     toolchain {
@@ -60,7 +60,8 @@ dependencies {
             "com.vdurmont:emoji-java:$emojiJavaVersion",
             "org.passay:passay:$passayVersion",
             "org.flywaydb:flyway-core",
-            "com.google.guava:guava:$guavaVersion"
+            "com.google.guava:guava:$guavaVersion",
+            "me.paulschwarz:spring-dotenv:$springDotenvVersion"
     )
     implementation(
             "org.webjars:webjars-locator:$webjarsLocatorVersion",

@@ -8,9 +8,7 @@ import org.springframework.stereotype.Component
 @ConditionalOnProperty(name = ["integrations.telegram.enabled"], havingValue = "true")
 @ConfigurationProperties(prefix = "integrations.telegram")
 class BotProperties {
-    lateinit var apiUrl: String
     lateinit var chatId: Number
     lateinit var token: String
-    lateinit var botName: String
     lateinit var homeGroupUserIds: List<Long>
 }

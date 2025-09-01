@@ -25,9 +25,10 @@ class CallbackMenuService(private val menuServices: List<MenuService>) {
     }
 
     fun getRequestResult(command: String): RequestResult =
-        menuServices.find { it.getMenuMap().containsKey(command) }?.let { menuService ->
-            menuService.getMenuMap()[command]
-                ?.let { menu -> RequestResult(menu.method.get(), menuService.getMenuInlineKeyboardMarkup()) }
+        menuServices.firstNotNullOfOrNull { service ->
+            service.getMenuMap()[command]?.let { menu ->
+                RequestResult(menu.method.get(), service.getMenuInlineKeyboardMarkup())
+            }
         } ?: RequestResult("No answer")
 
     fun getMenuForCommand(message: Message): SendMessage? =

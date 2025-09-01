@@ -41,6 +41,9 @@ class SecurityConfiguration(private val userDetailsService: AppUserDetailsServic
                         "/hosts/edit/**",
                         "/hosts/delete/**"
                     ).hasAuthority(AuthRole.ROLE_ADMIN.name)
+                    .requestMatchers(
+                        "/.well-known/**"
+                    ).permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { it.permitAll() }

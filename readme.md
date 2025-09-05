@@ -38,7 +38,7 @@ Application settings are stored in [application.properties](src/main/resources/a
 - You can observe/add/edit hosts on http://127.0.0.1:9988/hosts page
 - Hosts availability changes is on http://127.0.0.1:9988/hosts/time-log page
 - Unfortunately, current implementation is based on `ip -j n show` and some other native calls, so you have to
-  install `iproute2` and `fping`on Linux machine where chatbot is running. See [Dockerfile](Dockerfile)
+  install `iproute2` and `fping`on Linux machine where chatbot is running. See [Dockerfile](build.Dockerfile)
 - This feature does not work on Windows
 - To enable/disable host notifications, run the `/features` command in the Telegram client and choose what you want
 
@@ -126,24 +126,68 @@ keytool -genkeypair -alias thb -keyalg RSA -keysize 2048 -storetype PKCS12 -keys
 - Set your password as *SSL_KEY_STORE_PASSWORD** property and change other props if necessary
 - Add `thb-keystore.p12` to the `Trusted Root Certification Authorities certificate` store (Windows)
 
-### Launch bot in Docker
+### Launch bot in Docker (docker-compose)
 
-```shell
-# Build the image
-docker build -t thb-image .
+#### Prerequisites
 
-# Create and start new container from the image
-docker run -d -p 80:8080 --network=bridge --name=thb  thb-image
+- Docker and docker-compose installed on the target machine
+- SSH access to Raspberry Pi (or any Linux host)
+- `.env` file configured with required variables (see below)
 
-# Start the container
-docker start thb
+#### Required `.env` variables
 
-# Stop the running container
-docker stop thb
-
-# Show information logged by a running container
-docker logs -f thb
+```env
+TELEGRAM_ENABLED=true
+TELEGRAM_TOKEN=your_telegram_bot_token
+TELEGRAM_BOT_CHAT_ID=your_chat_id
+NETWORK_MONITOR_ENABLED=true
+OPENWEATHER_ENABLED=false
 ```
+
+#### First deploy (one-time setup)
+
+```bash
+# Build everything and deploy to Raspberry Pi
+make first-deploy
+```
+
+This will:
+1. Build a Docker image with JDK 17 + network tools (fping, iproute2, net-tools)
+2. Save the image as `thb-image.tar`
+3. Build `thb.jar` via `gradlew bootJar`
+4. SCP jar, image, docker-compose.yml, and .env to the Pi
+5. Load the image and start the container via `docker-compose up -d`
+
+#### Daily update (new code → deploy)
+
+```bash
+# Build jar, send to Pi, restart container
+make redeploy
+```
+
+#### Available make targets
+
+| Command | Description |
+|---------|-------------|
+| `make build-jar` | Build `thb.jar` locally |
+| `make build-image` | Build Docker image and save as `thb-image.tar` |
+| `make send-jar` | SCP jar to Raspberry Pi |
+| `make send-image` | SCP Docker image to Raspberry Pi |
+| `make send-config` | SCP `docker-compose.yml` and `.env` to Raspberry Pi |
+| `make up` | Load image and start container on Raspberry Pi |
+| `make restart` | Restart container on Raspberry Pi |
+| `make redeploy` | Full update cycle: build jar → send → restart |
+| `make first-deploy` | One-time setup: build image → send all → start |
+| `make logs` | Stream container logs from Raspberry Pi |
+| `make stop` | Stop container on Raspberry Pi |
+| `make status` | Check container status on Raspberry Pi |
+
+#### Architecture
+
+- **Jar is mounted as a volume**, not baked into the image — updates only need a new jar + restart
+- **`network_mode: host`** — required for ARP scanning and Wake-on-LAN
+- **Database** persists in `./data/` directory on the Pi (mounted to `/app` in container)
+- **Image** is built once (contains JDK + tools), jar is updated independently
 
 ### Launch SonarQube in Docker
 

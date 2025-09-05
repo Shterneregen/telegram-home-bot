@@ -1,14 +1,8 @@
-FROM openjdk:11-jre-slim-buster
-
-ENV SERVER_PORT=8080
-EXPOSE ${SERVER_PORT}
-
-WORKDIR application
-COPY build/libs/*.jar app.jar
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
 
 RUN apt-get update && \
-    apt-get -y install fping &&  \
-    apt-get -y install iproute2 &&  \
-    apt-get clean
+    apt-get -y install --no-install-recommends fping iproute2 net-tools && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["java", "-jar","./app.jar"]
+ENTRYPOINT ["java","-jar","/app/app.jar"]

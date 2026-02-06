@@ -33,7 +33,7 @@ class StateChangeService(
 
         val currentHosts: List<Host> = try {
             hostExplorerService.getCurrentHosts()
-        } catch (e: JsonProcessingException) {
+        } catch (_: JsonProcessingException) {
             return "Unable to determine the state of the hosts"
         }
 

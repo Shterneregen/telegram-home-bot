@@ -34,7 +34,7 @@ class WeatherMenuService(
             val cityName = it.cityName
             "/$cityName" to Menu("Get weather for '$cityName'") {
                 weatherService.getWeather(lat = it.lat, lon = it.lon)
-                    .map { weather -> "Weather for [${weather?.coord}] is [${weather?.main?.temp}]" }
+                    .map { weather -> "Weather for '$cityName' is [${weather?.main?.temp}]" }
                     .onErrorReturn("Weather service unavailable")
                     .defaultIfEmpty("Weather data not found")
                     .block()!!

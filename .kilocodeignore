@@ -1,0 +1,135 @@
+# Kilo Code ignore file for Telegram Home Bot
+# Keep source code, configs, migrations, Dockerfile and docker-compose files visible.
+# Exclude generated files, local secrets, databases, caches and heavy binaries.
+
+# Build output
+build/
+out/
+target/
+bin/
+classes/
+generated/
+generated-sources/
+
+# Gradle
+.gradle/
+.gradle-cache/
+gradle-app.setting
+!gradle/wrapper/gradle-wrapper.properties
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+.sts4-cache
+.apt_generated/
+.apt_generated_tests/
+
+# Local environment and secrets
+.env
+.env.*
+*.env
+*.local
+*.secret
+*.secrets
+secrets/
+config/secrets/
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+**/application-secrets.yml
+**/application-secrets.yaml
+**/application-secrets.properties
+
+# Logs and runtime files
+*.log
+logs/
+log/
+tmp/
+temp/
+*.pid
+*.lock
+
+# H2 / local database files
+*.db
+*.mv.db
+*.trace.db
+*.lock.db
+thb
+thb.*
+data/
+db-data/
+database/
+docker/volumes/
+docker/data/
+volumes/
+
+# Test and coverage output
+coverage/
+.sonarqube/
+.scannerwork/
+jacoco.exec
+**/jacoco/
+**/test-results/
+**/reports/tests/
+**/reports/jacoco/
+
+# Docker generated artifacts
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+*.rar
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Binary / packaged artifacts
+*.jar
+*.war
+*.ear
+*.class
+*.so
+*.dll
+*.dylib
+*.exe
+*.msi
+*.deb
+*.rpm
+
+# Certificates and keys
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.pem
+*.key
+*.crt
+*.cer
+*.csr
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Node/frontend caches if added later
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store/

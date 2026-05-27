@@ -1,0 +1,248 @@
+// Telegram Home Bot — Gradle Deployment Automation
+
+def deployProperty = { String name, String defaultValue ->
+    providers.gradleProperty(name).orElse(defaultValue)
+}
+
+def imageName = deployProperty("imageName", "thb-image:latest")
+def piUser = deployProperty("piUser", "master")
+def piHost = deployProperty("piHost", "192.168.1.15")
+def piDir = deployProperty("piDir", "/home/master/telegram-home-bot")
+def dockerComposeCommand = deployProperty("dockerComposeCommand", "docker compose")
+def dockerPlatform = deployProperty("dockerPlatform", "")
+
+def bootJarTask = tasks.named("bootJar")
+def jarFileProvider = bootJarTask.flatMap { it.archiveFile }
+def imageTarProvider = layout.buildDirectory.file("deploy/thb-image.tar")
+
+def remoteHostProvider = piUser.zip(piHost) { user, host ->
+    "${user}@${host}"
+}
+
+def remoteDeployPath = { String fileName ->
+    piDir.map { dir -> "${dir}/${fileName}" }
+}
+
+def remoteDeployTarget = { String fileName ->
+    remoteHostProvider.zip(remoteDeployPath(fileName)) { remoteHost, remotePath ->
+        "${remoteHost}:${remotePath}"
+    }
+}
+
+// Docker image tasks
+
+tasks.register("deployDockerBuildImage", Exec) {
+    group = "deployment"
+    description = "Build Docker image. Use -PdockerPlatform=linux/arm64 for Raspberry Pi ARM64."
+
+    doFirst {
+        def platform = dockerPlatform.get()
+
+        if (platform.isEmpty()) {
+            commandLine "docker", "build",
+                    "-t", imageName.get(),
+                    "."
+        } else {
+            commandLine "docker", "buildx", "build",
+                    "--platform", platform,
+                    "-t", imageName.get(),
+                    "--load",
+                    "."
+        }
+    }
+}
+
+tasks.register("deployDockerSaveImage", Exec) {
+    group = "deployment"
+    description = "Save Docker image as build/deploy/thb-image.tar"
+
+    dependsOn "deployDockerBuildImage"
+
+    doFirst {
+        def imageTarFile = imageTarProvider.get().asFile
+        imageTarFile.parentFile.mkdirs()
+
+        commandLine "docker", "save",
+                imageName.get(),
+                "-o", imageTarFile.absolutePath
+    }
+}
+
+// Remote preparation
+
+tasks.register("deployPrepareRemote", Exec) {
+    group = "deployment"
+    description = "Create deployment directory on Raspberry Pi"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "mkdir -p ${piDir.get()}"
+    }
+}
+
+// SCP transfer tasks
+
+tasks.register("deploySendJar", Exec) {
+    group = "deployment"
+    description = "SCP jar to Raspberry Pi"
+
+    dependsOn bootJarTask, "deployPrepareRemote"
+
+    doFirst {
+        commandLine "scp",
+                jarFileProvider.get().asFile.absolutePath,
+                remoteDeployTarget("thb.jar").get()
+    }
+}
+
+tasks.register("deploySendImage", Exec) {
+    group = "deployment"
+    description = "SCP Docker image tar to Raspberry Pi"
+
+    dependsOn "deployDockerSaveImage", "deployPrepareRemote"
+
+    doFirst {
+        commandLine "scp",
+                imageTarProvider.get().asFile.absolutePath,
+                remoteDeployTarget("thb-image.tar").get()
+    }
+}
+
+tasks.register("deploySendCompose", Exec) {
+    group = "deployment"
+    description = "SCP docker-compose.yml to Raspberry Pi"
+
+    dependsOn "deployPrepareRemote"
+
+    doFirst {
+        commandLine "scp",
+                "docker-compose.yml",
+                remoteDeployTarget("docker-compose.yml").get()
+    }
+}
+
+tasks.register("deploySendEnv", Exec) {
+    group = "deployment"
+    description = "SCP .env to Raspberry Pi. Requires -PsendEnv=true."
+
+    dependsOn "deployPrepareRemote"
+
+    onlyIf {
+        providers.gradleProperty("sendEnv").orElse("false").get() == "true"
+    }
+
+    doFirst {
+        if (!file(".env").isFile()) {
+            throw new GradleException(".env does not exist. Create it locally or remove -PsendEnv=true.")
+        }
+
+        commandLine "scp",
+                ".env",
+                remoteDeployTarget(".env").get()
+    }
+}
+
+// SSH lifecycle tasks
+
+tasks.register("deployUp", Exec) {
+    group = "deployment"
+    description = "Load Docker image and start container on Raspberry Pi"
+
+    dependsOn "deployPrepareRemote"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "cd ${piDir.get()} && docker load -i thb-image.tar && ${dockerComposeCommand.get()} up -d"
+    }
+}
+
+tasks.register("deployRestart", Exec) {
+    group = "deployment"
+    description = "Restart container on Raspberry Pi"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "cd ${piDir.get()} && ${dockerComposeCommand.get()} restart"
+    }
+}
+
+tasks.register("deployLogs", Exec) {
+    group = "deployment"
+    description = "Stream container logs from Raspberry Pi"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "cd ${piDir.get()} && ${dockerComposeCommand.get()} logs -f"
+    }
+}
+
+tasks.register("deployStop", Exec) {
+    group = "deployment"
+    description = "Stop container on Raspberry Pi"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "cd ${piDir.get()} && ${dockerComposeCommand.get()} down"
+    }
+}
+
+tasks.register("deployStatus", Exec) {
+    group = "deployment"
+    description = "Check container status on Raspberry Pi"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "cd ${piDir.get()} && ${dockerComposeCommand.get()} ps"
+    }
+}
+
+// Aggregate tasks
+
+tasks.register("firstDeploy") {
+    group = "deployment"
+    description = "First deploy: build image + jar, send files to Pi, load image, start container"
+
+    dependsOn "deploySendImage",
+            "deploySendJar",
+            "deploySendCompose",
+            "deploySendEnv",
+            "deployUp"
+}
+
+tasks.register("redeploy") {
+    group = "deployment"
+    description = "Daily update: build jar, send to Pi, restart container"
+
+    dependsOn "deploySendJar",
+            "deployRestart"
+}
+
+// Ordering
+
+tasks.named("deployUp") {
+    mustRunAfter "deploySendImage",
+            "deploySendJar",
+            "deploySendCompose",
+            "deploySendEnv"
+}
+
+tasks.named("deployRestart") {
+    mustRunAfter "deploySendJar"
+}
+
+tasks.register("deployRollback", Exec) {
+    group = "deployment"
+    description = "Rollback previous jar on Raspberry Pi"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "cd ${piDir.get()} && cp thb.jar.bak thb.jar && ${dockerComposeCommand.get()} restart"
+    }
+}

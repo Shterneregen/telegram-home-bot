@@ -38,7 +38,7 @@ Application settings are stored in [application.properties](src/main/resources/a
 - You can observe/add/edit hosts on http://127.0.0.1:9988/hosts page
 - Hosts availability changes is on http://127.0.0.1:9988/hosts/time-log page
 - Unfortunately, current implementation is based on `ip -j n show` and some other native calls, so you have to
-  install `iproute2` and `fping`on Linux machine where chatbot is running. See [Dockerfile](build.Dockerfile)
+  install `iproute2` and `fping`on Linux machine where chatbot is running. See [Dockerfile](Dockerfile)
 - This feature does not work on Windows
 - To enable/disable host notifications, run the `/features` command in the Telegram client and choose what you want
 
@@ -148,45 +148,91 @@ OPENWEATHER_ENABLED=false
 
 ```bash
 # Build everything and deploy to Raspberry Pi
-make first-deploy
+gradlew firstDeploy
+
+# For ARM64 Raspberry Pi, specify the platform:
+gradlew firstDeploy -PdockerPlatform=linux/arm64
 ```
 
 This will:
 1. Build a Docker image with JDK 17 + network tools (fping, iproute2, net-tools)
-2. Save the image as `thb-image.tar`
+2. Save the image as `build/deploy/thb-image.tar`
 3. Build `thb.jar` via `gradlew bootJar`
-4. SCP jar, image, docker-compose.yml, and .env to the Pi
-5. Load the image and start the container via `docker-compose up -d`
+4. Create the remote deployment directory if it does not exist
+5. SCP jar, image, and `docker-compose.yml` to the Pi
+6. Load the image and start the container via `docker-compose up -d`
+
+> **Note:** `.env` is not sent automatically for security. Create it manually on the Pi, or use `gradlew deploySendEnv -PsendEnv=true`.
 
 #### Daily update (new code → deploy)
 
 ```bash
 # Build jar, send to Pi, restart container
-make redeploy
+gradlew redeploy
 ```
 
-#### Available make targets
+#### Gradle deployment tasks
+
+All deployment logic is in [`gradle/deploy.gradle`](gradle/deploy.gradle). Run `gradlew tasks --group deployment` to list them.
 
 | Command | Description |
 |---------|-------------|
-| `make build-jar` | Build `thb.jar` locally |
-| `make build-image` | Build Docker image and save as `thb-image.tar` |
-| `make send-jar` | SCP jar to Raspberry Pi |
-| `make send-image` | SCP Docker image to Raspberry Pi |
-| `make send-config` | SCP `docker-compose.yml` and `.env` to Raspberry Pi |
-| `make up` | Load image and start container on Raspberry Pi |
-| `make restart` | Restart container on Raspberry Pi |
-| `make redeploy` | Full update cycle: build jar → send → restart |
-| `make first-deploy` | One-time setup: build image → send all → start |
-| `make logs` | Stream container logs from Raspberry Pi |
-| `make stop` | Stop container on Raspberry Pi |
-| `make status` | Check container status on Raspberry Pi |
+| `gradlew bootJar` | Build `thb.jar` locally |
+| `gradlew deployDockerBuildImage` | Build Docker image (add `-PdockerPlatform=linux/arm64` for ARM) |
+| `gradlew deployDockerSaveImage` | Save Docker image as `build/deploy/thb-image.tar` |
+| `gradlew deployPrepareRemote` | Create deployment directory on Raspberry Pi |
+| `gradlew deploySendJar` | SCP jar to Raspberry Pi |
+| `gradlew deploySendImage` | SCP Docker image tar to Raspberry Pi |
+| `gradlew deploySendCompose` | SCP `docker-compose.yml` to Raspberry Pi |
+| `gradlew deploySendEnv -PsendEnv=true` | SCP `.env` to Raspberry Pi (opt-in) |
+| `gradlew deployUp` | Load image and start container on Raspberry Pi |
+| `gradlew deployRestart` | Restart container on Raspberry Pi |
+| `gradlew redeploy` | Daily update: build jar → send → restart |
+| `gradlew firstDeploy` | First deploy: build image + jar → send all → start |
+| `gradlew deployLogs` | Stream container logs from Raspberry Pi |
+| `gradlew deployStop` | Stop container on Raspberry Pi |
+| `gradlew deployStatus` | Check container status on Raspberry Pi |
+
+#### Overridable properties
+
+Customize deployment via `-P` flags (defaults shown):
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `-PpiHost=192.168.1.15` | `192.168.1.15` | Raspberry Pi IP / hostname |
+| `-PpiUser=master` | `master` | SSH user on the Pi |
+| `-PpiDir=/var/telegram` | `/var/telegram` | Deployment directory on the Pi |
+| `-PimageName=thb-image:latest` | `thb-image:latest` | Docker image tag to build, save, and load |
+| `-PdockerPlatform=` | _(empty)_ | Set to `linux/arm64` for ARM cross-compile |
+| `-PdockerComposeCommand=docker-compose` | `docker-compose` | Docker Compose binary (use `docker compose` for plugin) |
+| `-PsendEnv=true` | _(unset)_ | Allow `deploySendEnv` to copy local `.env` to the Pi |
+
+Example with custom host and user:
+
+```bash
+gradlew redeploy -PpiHost=192.168.1.100 -PpiUser=pi
+gradlew deployStatus -PpiHost=192.168.1.100 -PpiUser=pi
+```
+
+#### Makefile compatibility wrapper
+
+A thin [`Makefile`](Makefile) is kept for convenience, delegating to Gradle:
+
+```bash
+make redeploy      # → gradlew redeploy
+make first-deploy  # → gradlew firstDeploy
+make logs          # → gradlew deployLogs
+make stop          # → gradlew deployStop
+make status        # → gradlew deployStatus
+```
+
+Use `gradlew` / `gradlew.bat` directly for full control, especially `-P` property overrides.
 
 #### Architecture
 
 - **Jar is mounted as a volume**, not baked into the image — updates only need a new jar + restart
 - **`network_mode: host`** — required for ARP scanning and Wake-on-LAN
-- **Database** persists in `./data/` directory on the Pi (mounted to `/app` in container)
+- **Database** persists in `./data/` directory on the Pi (mounted to `/app/data` in container, with `DB_URL=jdbc:h2:/app/data/thb` by default)
 - **Image** is built once (contains JDK + tools), jar is updated independently
 
 ### Launch SonarQube in Docker

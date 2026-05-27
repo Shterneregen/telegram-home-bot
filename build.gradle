@@ -88,6 +88,8 @@ dependencies {
     kapt "org.springframework.boot:spring-boot-configuration-processor"
 }
 
+apply from: "gradle/deploy.gradle"
+
 test {
     useJUnitPlatform()
 }

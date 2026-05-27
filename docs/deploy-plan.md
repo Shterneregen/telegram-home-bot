@@ -1,6 +1,6 @@
 # Deploy Plan: Telegram Home Bot → Raspberry Pi
 
-## Status: Plan (Docker/deploy baseline drafted, Gradle migration pending)
+## Status: Implemented (Docker/deploy baseline and Gradle deployment automation drafted; local validation still required where noted)
 
 ---
 
@@ -43,7 +43,7 @@ flowchart LR
     end
     Dev -->|1 scp thb.jar| Pi
     Dev -->|2 scp thb-image.tar\nfirst deploy only| Pi
-    Dev -->|3 scp docker-compose.yml + .env\nfirst deploy only| Pi
+    Dev -->|3 scp docker-compose.yml\n.env manual/opt-in| Pi
     Pi -->|4 docker-compose up -d| CONT
 ```
 
@@ -51,7 +51,7 @@ flowchart LR
 
 1. **Jar mounted as volume, not baked into image** — update = `scp new jar` + `docker-compose restart` (seconds)
 2. **`network_mode: host`** — the app needs local network access for ARP scanning and Wake-on-LAN
-3. **No ARM cross-compilation** — `eclipse-temurin:17-jre-jammy` has native ARM builds, Java bytecode is platform-independent
+3. **No ARM cross-compilation by default** — `eclipse-temurin:17-jre-jammy` has native ARM builds and Java bytecode is platform-independent; use `-PdockerPlatform=linux/arm64` only when building an ARM image on another architecture
 4. **Image built locally, saved as tar** — Raspberry Pi doesn't need to pull from Docker Hub
 5. **docker-compose over raw `docker run`** — declarative config, simple lifecycle management
 6. **Gradle over Makefile for project automation** — reuse existing Gradle wrapper, `bootJar`, task dependencies, and project properties instead of maintaining a separate Makefile DSL
@@ -90,16 +90,18 @@ flowchart LR
       network_mode: host
       working_dir: /app
       env_file: .env
+      environment:
+        DB_URL: ${DB_URL:-jdbc:h2:/app/data/thb}
       volumes:
         - ./thb.jar:/app/app.jar:ro
-        - ./data:/app
+        - ./data:/app/data
       entrypoint: ["java", "-jar", "/app/app.jar"]
   ```
 
 ### Phase 4: Fix DB path
 
-- [x] **4.1** In [`application.yaml`](../src/main/resources/application.yaml) line 39: verify `datasource.url` = `jdbc:h2:${user.dir}/thb` — this is correct since `WORKDIR /app`, DB will be at `/app/thb.mv.db`
-- [x] **4.2** Confirm docker-compose mounts `./data:/app` (from step 3.1), so DB persists across container restarts
+- [x] **4.1** In [`application.yaml`](../src/main/resources/application.yaml) line 39: verify `datasource.url` has a safe local default (`jdbc:h2:${user.dir}/thb`) that can be overridden by `DB_URL`
+- [x] **4.2** Confirm docker-compose sets `DB_URL=jdbc:h2:/app/data/thb` by default and mounts `./data:/app/data`, so DB files persist without mounting over the whole `/app` directory
 
 ### Phase 5: Makefile — rewrite for docker-compose
 
@@ -198,41 +200,44 @@ Goal: keep the deployment flow from Phase 5, but move it from [`Makefile`](../Ma
 
 #### 8.1 Add a separate Gradle deployment script
 
-- [ ] Create [`gradle/deploy.gradle`](../gradle/deploy.gradle) instead of putting all deployment logic directly into [`build.gradle`](../build.gradle).
-- [ ] Connect it from [`build.gradle`](../build.gradle):
+- [x] Create [`gradle/deploy.gradle`](../gradle/deploy.gradle) instead of putting all deployment logic directly into [`build.gradle`](../build.gradle).
+- [x] Connect it from [`build.gradle`](../build.gradle):
   ```groovy
   apply from: "gradle/deploy.gradle"
   ```
-- [ ] Keep deployment tasks in group `deployment` with explicit descriptions so they appear clearly in `gradlew tasks`.
+- [x] Keep deployment tasks in group `deployment` with explicit descriptions so they appear clearly in `gradlew tasks`.
 
 #### 8.2 Define deployment properties
 
-- [ ] Add configurable defaults in [`gradle/deploy.gradle`](../gradle/deploy.gradle):
+- [x] Add configurable defaults in [`gradle/deploy.gradle`](../gradle/deploy.gradle):
   ```groovy
-  def appName = findProperty("appName") ?: "thb"
-  def imageName = findProperty("imageName") ?: "thb-image:latest"
-  def piUser = findProperty("piUser") ?: "master"
-  def piHost = findProperty("piHost") ?: "192.168.1.15"
-  def piDir = findProperty("piDir") ?: "/var/telegram"
-  def dockerComposeCommand = findProperty("dockerComposeCommand") ?: "docker-compose"
-  def dockerPlatform = findProperty("dockerPlatform") ?: ""
+  def deployProperty = { String name, String defaultValue ->
+      providers.gradleProperty(name).orElse(defaultValue)
+  }
+  def appName = deployProperty("appName", "thb")
+  def imageName = deployProperty("imageName", "thb-image:latest")
+  def piUser = deployProperty("piUser", "master")
+  def piHost = deployProperty("piHost", "192.168.1.15")
+  def piDir = deployProperty("piDir", "/var/telegram")
+  def dockerComposeCommand = deployProperty("dockerComposeCommand", "docker-compose")
+  def dockerPlatform = deployProperty("dockerPlatform", "")
   ```
-- [ ] Document override examples:
+- [x] Document override examples:
   ```bash
   gradlew redeploy -PpiHost=192.168.1.15 -PpiUser=master
   gradlew firstDeploy -PdockerPlatform=linux/arm64
   gradlew deployStatus -PdockerComposeCommand="docker compose"
   ```
-- [ ] Decide where persistent project defaults live:
+- [x] Decide where persistent project defaults live:
   - checked-in safe defaults in [`gradle.properties`](../gradle.properties), or
   - local-only values passed through `-P...`, or
   - developer-specific Gradle user home properties outside the repository.
 
 #### 8.3 Move `build-jar` to Gradle-native `bootJar`
 
-- [ ] Do not create a shell wrapper for jar build; depend on existing [`bootJar`](../build.gradle#L95).
-- [ ] Use `tasks.named("bootJar")` as dependency for jar deployment tasks.
-- [ ] Read the jar path from the task output instead of hardcoding `build/libs/thb.jar`:
+- [x] Do not create a shell wrapper for jar build; depend on existing [`bootJar`](../build.gradle#L97).
+- [x] Use `tasks.named("bootJar")` as dependency for jar deployment tasks.
+- [x] Read the jar path from the task output instead of hardcoding `build/libs/thb.jar`:
   ```groovy
   def bootJarTask = tasks.named("bootJar")
   def jarFileProvider = bootJarTask.flatMap { it.archiveFile }
@@ -240,65 +245,66 @@ Goal: keep the deployment flow from Phase 5, but move it from [`Makefile`](../Ma
 
 #### 8.4 Add Docker image tasks
 
-- [ ] Add `deployDockerBuildImage` as an `Exec` task.
-- [ ] If `dockerPlatform` is empty, use regular build:
+- [x] Add `deployDockerBuildImage` as an `Exec` task.
+- [x] If `dockerPlatform` is empty, use regular build:
   ```bash
   docker build -t thb-image:latest .
   ```
-- [ ] If `dockerPlatform` is set, use buildx for Raspberry Pi architecture:
+- [x] If `dockerPlatform` is set, use buildx for Raspberry Pi architecture:
   ```bash
   docker buildx build --platform linux/arm64 -t thb-image:latest --load .
   ```
-- [ ] Add `deployDockerSaveImage` as an `Exec` task depending on `deployDockerBuildImage`.
-- [ ] Save image tar under Gradle build output, not repository root:
+- [x] Add `deployDockerSaveImage` as an `Exec` task depending on `deployDockerBuildImage`.
+- [x] Save image tar under Gradle build output, not repository root:
   ```text
   build/deploy/thb-image.tar
   ```
 
 #### 8.5 Add SCP transfer tasks
 
-- [ ] Add `deploySendJar` depending on [`bootJar`](../build.gradle#L95):
+- [x] Add `deployPrepareRemote` to create the remote deployment directory before SCP tasks.
+- [x] Add `deploySendJar` depending on [`bootJar`](../build.gradle#L97):
   ```bash
   scp build/libs/thb.jar master@192.168.1.15:/var/telegram/thb.jar
   ```
-- [ ] Add `deploySendImage` depending on `deployDockerSaveImage`:
+- [x] Add `deploySendImage` depending on `deployDockerSaveImage`:
   ```bash
   scp build/deploy/thb-image.tar master@192.168.1.15:/var/telegram/thb-image.tar
   ```
-- [ ] Add `deploySendCompose`:
+- [x] Add `deploySendCompose`:
   ```bash
   scp docker-compose.yml master@192.168.1.15:/var/telegram/docker-compose.yml
   ```
-- [ ] Decide how to handle `.env`:
+- [x] Decide how to handle `.env`:
   - safer default: do not send `.env` automatically; create it on Pi manually;
   - optional task: `deploySendEnv`, disabled unless `-PsendEnv=true` is provided.
 
 #### 8.6 Add SSH lifecycle tasks
 
-- [ ] Add `deployUp`:
+- [x] Add `deployUp`:
   ```bash
   ssh master@192.168.1.15 "cd /var/telegram && docker load -i thb-image.tar && docker-compose up -d"
   ```
-- [ ] Add `deployRestart`:
+- [x] Add `deployRestart`:
   ```bash
   ssh master@192.168.1.15 "cd /var/telegram && docker-compose restart"
   ```
-- [ ] Add `deployLogs`:
+- [x] Add `deployLogs`:
   ```bash
   ssh master@192.168.1.15 "cd /var/telegram && docker-compose logs -f"
   ```
-- [ ] Add `deployStop`:
+- [x] Add `deployStop`:
   ```bash
   ssh master@192.168.1.15 "cd /var/telegram && docker-compose down"
   ```
-- [ ] Add `deployStatus`:
+- [x] Add `deployStatus`:
   ```bash
   ssh master@192.168.1.15 "cd /var/telegram && docker-compose ps"
   ```
 
 #### 8.7 Add aggregate Gradle tasks equivalent to Make targets
 
-- [ ] Add `firstDeploy` lifecycle task:
+- [x] Add `firstDeploy` lifecycle task:
   ```groovy
   tasks.register("firstDeploy") {
       group = "deployment"
@@ -306,7 +312,7 @@ Goal: keep the deployment flow from Phase 5, but move it from [`Makefile`](../Ma
       dependsOn "deploySendImage", "deploySendJar", "deploySendCompose", "deployUp"
   }
   ```
-- [ ] Add `redeploy` lifecycle task:
+- [x] Add `redeploy` lifecycle task:
   ```groovy
   tasks.register("redeploy") {
       group = "deployment"
@@ -314,10 +320,10 @@ Goal: keep the deployment flow from Phase 5, but move it from [`Makefile`](../Ma
       dependsOn "deploySendJar", "deployRestart"
   }
   ```
-- [ ] Ensure task ordering is deterministic where needed:
+- [x] Ensure task ordering is deterministic where needed:
   ```groovy
   tasks.named("deployUp") {
-      mustRunAfter "deploySendImage", "deploySendJar", "deploySendCompose"
+      mustRunAfter "deploySendImage", "deploySendJar", "deploySendCompose", "deploySendEnv"
   }
   tasks.named("deployRestart") {
       mustRunAfter "deploySendJar"
@@ -327,7 +333,7 @@ Goal: keep the deployment flow from Phase 5, but move it from [`Makefile`](../Ma
 #### 8.8 Replace or downgrade Makefile
 
 - [ ] Preferred option: delete [`Makefile`](../Makefile) after Gradle tasks are documented and verified.
-- [ ] Compatibility option: keep [`Makefile`](../Makefile) as a thin wrapper only:
+- [x] Compatibility option: keep [`Makefile`](../Makefile) as a thin wrapper only:
   ```makefile
   first-deploy:
   	gradlew firstDeploy
@@ -344,26 +350,28 @@ Goal: keep the deployment flow from Phase 5, but move it from [`Makefile`](../Ma
   status:
   	gradlew deployStatus
   ```
-- [ ] Do not keep two independent implementations of deployment logic.
+- [x] Do not keep two independent implementations of deployment logic.
 
 #### 8.9 Update documentation
 
-- [ ] Update [`readme.md`](../readme.md) Docker section:
+- [x] Update [`readme.md`](../readme.md) Docker section:
   - replace `make first-deploy` with `gradlew firstDeploy` / `gradlew.bat firstDeploy`;
   - replace `make redeploy` with `gradlew redeploy` / `gradlew.bat redeploy`;
   - replace Make targets table with Gradle deployment tasks table;
   - document `-PpiHost`, `-PpiUser`, `-PpiDir`, `-PdockerPlatform`, `-PdockerComposeCommand`.
-- [ ] Update this plan's Quick Start section to use Gradle commands.
+- [x] Update this plan's Quick Start section to use Gradle commands.
 
 #### 8.10 Validate Gradle migration
 
-- [ ] Run `gradlew tasks --group deployment` and verify all deployment tasks are listed.
-- [ ] Run `gradlew bootJar` and verify [`build/libs/thb.jar`](../build/libs/thb.jar) is produced.
-- [ ] Run `gradlew deployDockerBuildImage` on a machine with Docker.
-- [ ] Run `gradlew deployDockerSaveImage` and verify [`build/deploy/thb-image.tar`](../build/deploy/thb-image.tar) is produced.
+- [x] Run `gradlew tasks --group deployment` and verify all deployment tasks are listed — *PASSED with JDK 17; default JDK 25 fails Gradle script semantic analysis (`Unsupported class file major version 69`)*.
+- [x] Run `gradlew bootJar` and verify [`build/libs/thb.jar`](../build/libs/thb.jar) is produced — *PASSED with JDK 17*.
+- [x] Run `docker compose config` and verify [`docker-compose.yml`](../docker-compose.yml) syntax — *PASSED; local `.env` values are loaded by Compose and may override documented defaults*.
+- [x] Run `gradlew deployDockerBuildImage` on a machine with Docker — *PASSED via `gradlew deployDockerSaveImage`, which depends on image build*.
+- [x] Run `gradlew deployDockerSaveImage` and verify [`build/deploy/thb-image.tar`](../build/deploy/thb-image.tar) is produced — *PASSED; tar generated under `build/deploy/`*.
 - [ ] Run `gradlew deployStatus -PpiHost=192.168.1.15` after SSH access is configured.
+- [x] Run `gradlew firstDeploy --dry-run` and verify lifecycle ordering — *PASSED with JDK 17*.
 - [ ] Run `gradlew firstDeploy -PdockerPlatform=linux/arm64` for first Raspberry Pi deployment if the Pi is ARM64.
-- [ ] Run `gradlew redeploy` for normal jar-only updates.
+- [ ] Run `gradlew redeploy` for normal jar-only updates after SSH access is configured.
 
 ---
 

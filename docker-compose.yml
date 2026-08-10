@@ -2,18 +2,26 @@ services:
   thb:
     image: thb-image:latest
     container_name: thb
-    restart: always
+    restart: unless-stopped
     network_mode: host
     working_dir: /app
     env_file: .env
     environment:
       DB_URL: ${DB_URL:-jdbc:h2:/app/data/thb}
+      SSL_KEY_STORE: ${SSL_KEY_STORE:-file:/app/secrets/thb-keystore.p12}
     volumes:
       - ./thb.jar:/app/app.jar:ro
       - ./data:/app/data
-    entrypoint: ["java", "-jar", "/app/app.jar"]
+      - ${SSL_SECRETS_HOST_PATH:-./secrets}:/app/secrets:ro
     healthcheck:
-      test: [ "CMD-SHELL", "pgrep -f 'java -jar /app/app.jar' || exit 1" ]
+      test:
+        - CMD-SHELL
+        - >-
+          protocol=http;
+          if [ "$${SSL_ENABLED:-false}" = "true" ]; then protocol=https; fi;
+          curl -fkSs "$${protocol}://127.0.0.1:$${SERVER_PORT:-9988}/actuator/health"
+          | grep -q UP
       interval: 30s
-      timeout: 10s
-      retries: 3
+      timeout: 5s
+      retries: 5
+      start_period: 30s

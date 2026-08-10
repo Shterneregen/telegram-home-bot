@@ -10,6 +10,7 @@ def piHost = deployProperty("piHost", "192.168.1.15")
 def piDir = deployProperty("piDir", "/home/master/telegram-home-bot")
 def dockerComposeCommand = deployProperty("dockerComposeCommand", "docker compose")
 def dockerPlatform = deployProperty("dockerPlatform", "")
+def healthWaitSeconds = deployProperty("healthWaitSeconds", "120")
 
 def bootJarTask = tasks.named("bootJar")
 def jarFileProvider = bootJarTask.flatMap { it.archiveFile }
@@ -27,6 +28,95 @@ def remoteDeployTarget = { String fileName ->
     remoteHostProvider.zip(remoteDeployPath(fileName)) { remoteHost, remotePath ->
         "${remoteHost}:${remotePath}"
     }
+}
+
+def remoteWorkingDirectory = {
+    "cd '${piDir.get().replace("'", "'\\''")}'"
+}
+
+def waitForHealthyCommand = {
+    def attempts = Math.max(1, (healthWaitSeconds.get().toInteger() + 1).intdiv(2))
+    "attempts=${attempts}; " +
+            "while [ \"\$attempts\" -gt 0 ]; do " +
+            "status=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' thb 2>/dev/null || true); " +
+            "if [ \"\$status\" = healthy ]; then exit 0; fi; " +
+            "if [ \"\$status\" = unhealthy ]; then exit 1; fi; " +
+            "attempts=\$((attempts - 1)); sleep 2; " +
+            "done; exit 1"
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def hasDeploymentTask = graph.allTasks.any { it.group == "deployment" }
+    if (hasDeploymentTask && JavaVersion.current() != JavaVersion.VERSION_17) {
+        throw new GradleException(
+                "Deployment tasks require Gradle to run on JDK 17. " +
+                        "Current JVM: ${System.getProperty('java.version')}. Set JAVA_HOME to JDK 17."
+        )
+    }
+}
+
+// Local validation
+
+tasks.register("deployValidateEnv") {
+    group = "deployment"
+    description = "Validate required deployment values in the local .env file"
+
+    doLast {
+        def envFile = file(".env")
+        if (!envFile.isFile()) {
+            throw new GradleException(".env does not exist. Copy .env.example and configure it.")
+        }
+
+        def values = [:]
+        envFile.eachLine { line ->
+            def trimmed = line.trim()
+            if (trimmed && !trimmed.startsWith("#") && trimmed.contains("=")) {
+                def separator = trimmed.indexOf("=")
+                def key = trimmed.substring(0, separator).trim()
+                def value = trimmed.substring(separator + 1).trim()
+                if ((value.startsWith('"') && value.endsWith('"')) ||
+                        (value.startsWith("'") && value.endsWith("'"))) {
+                    value = value.substring(1, value.length() - 1)
+                }
+                values[key] = value
+            }
+        }
+
+        def requireValue = { String key ->
+            if (!values[key]) {
+                throw new GradleException("${key} must be set in .env")
+            }
+        }
+
+        def dbUrl = values["DB_URL"] ?: "jdbc:h2:/app/data/thb"
+        if (!dbUrl.startsWith("jdbc:h2:/app/data/")) {
+            throw new GradleException("DB_URL must point inside /app/data so the H2 database is persistent: ${dbUrl}")
+        }
+
+        if (values["TELEGRAM_ENABLED"]?.equalsIgnoreCase("true")) {
+            requireValue("TELEGRAM_TOKEN")
+            requireValue("TELEGRAM_BOT_CHAT_ID")
+        }
+        if (values["OPENWEATHER_ENABLED"]?.equalsIgnoreCase("true")) {
+            requireValue("OPENWEATHER_APPID")
+        }
+        if (values["SSL_ENABLED"]?.equalsIgnoreCase("true")) {
+            requireValue("SSL_KEY_STORE_PASSWORD")
+            requireValue("SSL_SECRETS_HOST_PATH")
+            if (!values["SSL_KEY_STORE"]?.startsWith("file:/app/secrets/")) {
+                throw new GradleException(
+                        "SSL_KEY_STORE must point inside file:/app/secrets/"
+                )
+            }
+        }
+    }
+}
+
+tasks.register("deployValidateCompose", Exec) {
+    group = "deployment"
+    description = "Validate docker-compose.yml with the local .env file"
+    dependsOn "deployValidateEnv"
+    commandLine "docker", "compose", "config", "--quiet"
 }
 
 // Docker image tasks
@@ -77,7 +167,7 @@ tasks.register("deployPrepareRemote", Exec) {
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "mkdir -p ${piDir.get()}"
+                "mkdir -p '${piDir.get()}' '${piDir.get()}/data' '${piDir.get()}/secrets'"
     }
 }
 
@@ -92,7 +182,23 @@ tasks.register("deploySendJar", Exec) {
     doFirst {
         commandLine "scp",
                 jarFileProvider.get().asFile.absolutePath,
-                remoteDeployTarget("thb.jar").get()
+                remoteDeployTarget("thb.jar.new").get()
+    }
+}
+
+tasks.register("deployInstallJar", Exec) {
+    group = "deployment"
+    description = "Atomically install the uploaded jar and keep thb.jar.bak"
+
+    dependsOn "deploySendJar", "deployValidateRemote"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "${remoteWorkingDirectory()} && " +
+                        "test -s thb.jar.new && " +
+                        "if [ -f thb.jar ]; then cp -f thb.jar thb.jar.bak; fi && " +
+                        "mv -f thb.jar.new thb.jar"
     }
 }
 
@@ -143,29 +249,80 @@ tasks.register("deploySendEnv", Exec) {
     }
 }
 
+tasks.register("deployValidateRemote", Exec) {
+    group = "deployment"
+    description = "Validate remote .env, persistent database path, TLS keystore, and Compose configuration"
+
+    dependsOn "deployPrepareRemote", "deploySendCompose", "deploySendEnv"
+
+    doFirst {
+        def readEnvFunction =
+                "read_env() { grep -E \"^\$1=\" .env | tail -n 1 | cut -d= -f2- | tr -d '\"\\r'; }; "
+        def validation =
+                "db_url=\$(read_env DB_URL); " +
+                        "case \"\${db_url:-jdbc:h2:/app/data/thb}\" in jdbc:h2:/app/data/*) ;; " +
+                        "*) echo 'DB_URL must point inside /app/data' >&2; exit 1 ;; esac; " +
+                        "ssl_enabled=\$(read_env SSL_ENABLED); " +
+                        "if [ \"\${ssl_enabled:-false}\" = true ]; then " +
+                        "key_store=\$(read_env SSL_KEY_STORE); " +
+                        "secrets_host=\$(read_env SSL_SECRETS_HOST_PATH); " +
+                        "case \"\$key_store\" in file:/app/secrets/*) ;; " +
+                        "*) echo 'SSL_KEY_STORE must point inside /app/secrets' >&2; exit 1 ;; esac; " +
+                        "key_store_name=\${key_store#file:/app/secrets/}; " +
+                        "[ -n \"\$secrets_host\" ] && [ -f \"\$secrets_host/\$key_store_name\" ] || " +
+                        "{ echo 'TLS keystore configuration is invalid or the host file is missing' >&2; exit 1; }; " +
+                        "fi"
+
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "${remoteWorkingDirectory()} && test -f .env && " +
+                        readEnvFunction + validation + " && ${dockerComposeCommand.get()} config --quiet"
+    }
+}
+
 // SSH lifecycle tasks
 
 tasks.register("deployUp", Exec) {
     group = "deployment"
     description = "Load Docker image and start container on Raspberry Pi"
 
-    dependsOn "deployPrepareRemote"
+    dependsOn "deploySendImage",
+            "deploySendCompose",
+            "deployInstallJar",
+            "deployValidateRemote",
+            "deployValidateCompose"
 
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "cd ${piDir.get()} && docker load -i thb-image.tar && ${dockerComposeCommand.get()} up -d"
+                "${remoteWorkingDirectory()} && " +
+                        "test -f .env && test -s thb.jar && test -s thb-image.tar && " +
+                        "docker load -i thb-image.tar && " +
+                        "${dockerComposeCommand.get()} config --quiet && " +
+                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "(${waitForHealthyCommand()}) || " +
+                        "(if [ -s thb.jar.bak ]; then cp -f thb.jar.bak thb.jar && " +
+                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "(${waitForHealthyCommand()}); fi; exit 1)"
     }
 }
 
 tasks.register("deployRestart", Exec) {
     group = "deployment"
-    description = "Restart container on Raspberry Pi"
+    description = "Recreate container, verify health, and rollback the jar on failure"
+
+    dependsOn "deployInstallJar", "deployValidateRemote"
 
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "cd ${piDir.get()} && ${dockerComposeCommand.get()} restart"
+                "${remoteWorkingDirectory()} && " +
+                        "test -f .env && ${dockerComposeCommand.get()} config --quiet && " +
+                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "(${waitForHealthyCommand()}) || " +
+                        "(test -s thb.jar.bak && cp -f thb.jar.bak thb.jar && " +
+                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "(${waitForHealthyCommand()}); exit 1)"
     }
 }
 
@@ -208,32 +365,14 @@ tasks.register("firstDeploy") {
     group = "deployment"
     description = "First deploy: build image + jar, send files to Pi, load image, start container"
 
-    dependsOn "deploySendImage",
-            "deploySendJar",
-            "deploySendCompose",
-            "deploySendEnv",
-            "deployUp"
+    dependsOn "deployUp"
 }
 
 tasks.register("redeploy") {
     group = "deployment"
     description = "Daily update: build jar, send to Pi, restart container"
 
-    dependsOn "deploySendJar",
-            "deployRestart"
-}
-
-// Ordering
-
-tasks.named("deployUp") {
-    mustRunAfter "deploySendImage",
-            "deploySendJar",
-            "deploySendCompose",
-            "deploySendEnv"
-}
-
-tasks.named("deployRestart") {
-    mustRunAfter "deploySendJar"
+    dependsOn "deployRestart"
 }
 
 tasks.register("deployRollback", Exec) {
@@ -243,6 +382,9 @@ tasks.register("deployRollback", Exec) {
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "cd ${piDir.get()} && cp thb.jar.bak thb.jar && ${dockerComposeCommand.get()} restart"
+                "${remoteWorkingDirectory()} && " +
+                        "test -s thb.jar.bak && cp -f thb.jar.bak thb.jar && " +
+                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "(${waitForHealthyCommand()})"
     }
 }

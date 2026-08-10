@@ -37,3 +37,4 @@ out/
 *.p12
 *.cer
 *.env
+*.tar

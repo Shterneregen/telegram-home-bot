@@ -16,7 +16,7 @@ logging.level:
   org.telegram: info
 
 management:
-  endpoints.web.exposure.include: '*'
+  endpoints.web.exposure.include: health,info
   endpoint.health.show-details: when_authorized
 
 spring:

@@ -130,44 +130,61 @@ keytool -genkeypair -alias thb -keyalg RSA -keysize 2048 -storetype PKCS12 -keys
 
 #### Prerequisites
 
-- Docker and docker-compose installed on the target machine
+- JDK 17 used to run Gradle deployment tasks
+- Docker with the Compose plugin installed on the target machine
 - SSH access to Raspberry Pi (or any Linux host)
-- `.env` file configured with required variables (see below)
+- `.env` created from [`.env.example`](.env.example)
 
-#### Required `.env` variables
+#### Environment and persistent files
 
 ```env
-TELEGRAM_ENABLED=true
-TELEGRAM_TOKEN=your_telegram_bot_token
-TELEGRAM_BOT_CHAT_ID=your_chat_id
-NETWORK_MONITOR_ENABLED=true
-OPENWEATHER_ENABLED=false
+DB_URL=jdbc:h2:/app/data/thb
+SERVER_PORT=9988
+SSL_ENABLED=false
 ```
+
+The H2 database is stored under `./data` on the target host. Do not point `DB_URL` outside `/app/data`.
+
+When Spring Boot terminates TLS itself, place the keystore on the target host and configure:
+
+```env
+SSL_ENABLED=true
+SSL_KEY_STORE=file:/app/secrets/thb-keystore.p12
+SSL_SECRETS_HOST_PATH=/absolute/host/secrets-directory
+SSL_KEY_STORE_PASSWORD=change-me
+```
+
+If HTTPS is terminated by a reverse proxy, keep `SSL_ENABLED=false`.
 
 #### First deploy (one-time setup)
 
 ```bash
-# Build everything and deploy to Raspberry Pi
+# Create .env on the target host first, then deploy
 gradlew firstDeploy
 
-# For ARM64 Raspberry Pi, specify the platform:
+# Or explicitly send the local .env
+gradlew firstDeploy -PsendEnv=true
+
+# Cross-build for an ARM64 Raspberry Pi
 gradlew firstDeploy -PdockerPlatform=linux/arm64
 ```
 
 This will:
-1. Build a Docker image with JDK 17 + network tools (fping, iproute2, net-tools)
-2. Save the image as `build/deploy/thb-image.tar`
-3. Build `thb.jar` via `gradlew bootJar`
-4. Create the remote deployment directory if it does not exist
-5. SCP jar, image, and `docker-compose.yml` to the Pi
-6. Load the image and start the container via `docker-compose up -d`
+1. Validate `.env`, Compose configuration, and the Gradle JVM version
+2. Build a Docker image with JRE 17, curl, and the network tools
+3. Save the image as `build/deploy/thb-image.tar`
+4. Build and upload the jar as `thb.jar.new`
+5. Preserve an existing `thb.jar` as `thb.jar.bak` and atomically install the new jar
+6. Load the image and recreate the container
+7. Wait until the Actuator health endpoint reports `UP`
+8. Restore `thb.jar.bak` automatically if the new container is unhealthy
 
 > **Note:** `.env` is not sent automatically for security. Create it manually on the Pi, or use `gradlew deploySendEnv -PsendEnv=true`.
 
 #### Daily update (new code → deploy)
 
 ```bash
-# Build jar, send to Pi, restart container
+# Build jar, install it atomically, recreate the container, and verify health
 gradlew redeploy
 ```
 
@@ -178,17 +195,22 @@ All deployment logic is in [`gradle/deploy.gradle`](gradle/deploy.gradle). Run `
 | Command | Description |
 |---------|-------------|
 | `gradlew bootJar` | Build `thb.jar` locally |
+| `gradlew deployValidateEnv` | Validate required values and persistent paths in `.env` |
+| `gradlew deployValidateCompose` | Run `docker compose config --quiet` |
 | `gradlew deployDockerBuildImage` | Build Docker image (add `-PdockerPlatform=linux/arm64` for ARM) |
 | `gradlew deployDockerSaveImage` | Save Docker image as `build/deploy/thb-image.tar` |
 | `gradlew deployPrepareRemote` | Create deployment directory on Raspberry Pi |
-| `gradlew deploySendJar` | SCP jar to Raspberry Pi |
+| `gradlew deploySendJar` | Upload the jar as `thb.jar.new` |
+| `gradlew deployInstallJar` | Back up and atomically install the uploaded jar |
 | `gradlew deploySendImage` | SCP Docker image tar to Raspberry Pi |
 | `gradlew deploySendCompose` | SCP `docker-compose.yml` to Raspberry Pi |
 | `gradlew deploySendEnv -PsendEnv=true` | SCP `.env` to Raspberry Pi (opt-in) |
-| `gradlew deployUp` | Load image and start container on Raspberry Pi |
-| `gradlew deployRestart` | Restart container on Raspberry Pi |
-| `gradlew redeploy` | Daily update: build jar → send → restart |
-| `gradlew firstDeploy` | First deploy: build image + jar → send all → start |
+| `gradlew deployValidateRemote` | Validate the remote `.env`, database path, keystore, and Compose file |
+| `gradlew deployUp` | Load image, recreate container, and verify health |
+| `gradlew deployRestart` | Recreate container and automatically rollback on failed healthcheck |
+| `gradlew deployRollback` | Restore `thb.jar.bak`, recreate container, and verify health |
+| `gradlew redeploy` | Atomic jar update, container recreation, health verification, and rollback |
+| `gradlew firstDeploy` | Build and send all files, then start and verify the container |
 | `gradlew deployLogs` | Stream container logs from Raspberry Pi |
 | `gradlew deployStop` | Stop container on Raspberry Pi |
 | `gradlew deployStatus` | Check container status on Raspberry Pi |
@@ -201,11 +223,12 @@ Customize deployment via `-P` flags (defaults shown):
 |----------|---------|-------------|
 | `-PpiHost=192.168.1.15` | `192.168.1.15` | Raspberry Pi IP / hostname |
 | `-PpiUser=master` | `master` | SSH user on the Pi |
-| `-PpiDir=/var/telegram` | `/var/telegram` | Deployment directory on the Pi |
+| `-PpiDir=/home/master/telegram-home-bot` | `/home/master/telegram-home-bot` | Deployment directory on the Pi |
 | `-PimageName=thb-image:latest` | `thb-image:latest` | Docker image tag to build, save, and load |
 | `-PdockerPlatform=` | _(empty)_ | Set to `linux/arm64` for ARM cross-compile |
-| `-PdockerComposeCommand=docker-compose` | `docker-compose` | Docker Compose binary (use `docker compose` for plugin) |
+| `-PdockerComposeCommand="docker compose"` | `docker compose` | Docker Compose command |
 | `-PsendEnv=true` | _(unset)_ | Allow `deploySendEnv` to copy local `.env` to the Pi |
+| `-PhealthWaitSeconds=120` | `120` | Maximum time to wait for a healthy container |
 
 Example with custom host and user:
 
@@ -230,10 +253,12 @@ Use `gradlew` / `gradlew.bat` directly for full control, especially `-P` propert
 
 #### Architecture
 
-- **Jar is mounted as a volume**, not baked into the image — updates only need a new jar + restart
+- **Jar is mounted as a volume**, not baked into the image; updates atomically replace it and recreate the container
 - **`network_mode: host`** — required for ARP scanning and Wake-on-LAN
 - **Database** persists in `./data/` directory on the Pi (mounted to `/app/data` in container, with `DB_URL=jdbc:h2:/app/data/thb` by default)
-- **Image** is built once (contains JDK + tools), jar is updated independently
+- **Healthcheck** calls `/actuator/health` over HTTP or HTTPS and requires status `UP`
+- **Rollback** uses `thb.jar.bak` when a newly deployed jar does not become healthy
+- **Image** is built once; normal updates transfer only the jar
 
 ### Launch SonarQube in Docker
 

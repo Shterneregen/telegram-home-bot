@@ -34,6 +34,11 @@ class SecurityConfiguration(private val userDetailsService: AppUserDetailsServic
             .authorizeHttpRequests { authorize ->
                 authorize
                     .requestMatchers(
+                        "/actuator/health",
+                        "/actuator/health/**",
+                        "/.well-known/**"
+                    ).permitAll()
+                    .requestMatchers(
                         "$springH2ConsolePath/**",
                         "/actuator/**",
                         "/commands/edit/**",
@@ -41,9 +46,6 @@ class SecurityConfiguration(private val userDetailsService: AppUserDetailsServic
                         "/hosts/edit/**",
                         "/hosts/delete/**"
                     ).hasAuthority(AuthRole.ROLE_ADMIN.name)
-                    .requestMatchers(
-                        "/.well-known/**"
-                    ).permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { it.permitAll() }

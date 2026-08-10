@@ -6,8 +6,13 @@ def deployProperty = { String name, String defaultValue ->
 
 def imageName = deployProperty("imageName", "thb-image:latest")
 def piUser = deployProperty("piUser", "master")
+def piGroup = deployProperty("piGroup", "master")
 def piHost = deployProperty("piHost", "192.168.1.15")
-def piDir = deployProperty("piDir", "/home/master/telegram-home-bot")
+def piDir = deployProperty("piDir", "/opt/telegram-home-bot")
+def configDir = deployProperty("configDir", "/etc/telegram-home-bot")
+def dataDir = deployProperty("dataDir", "/var/lib/telegram-home-bot")
+def backupDir = deployProperty("backupDir", "/var/backups/telegram-home-bot")
+def cacheDir = deployProperty("cacheDir", "/var/cache/telegram-home-bot")
 def dockerComposeCommand = deployProperty("dockerComposeCommand", "docker compose")
 def dockerPlatform = deployProperty("dockerPlatform", "")
 def healthWaitSeconds = deployProperty("healthWaitSeconds", "120")
@@ -30,8 +35,20 @@ def remoteDeployTarget = { String fileName ->
     }
 }
 
+def remoteAbsoluteTarget = { String absolutePath ->
+    remoteHostProvider.map { remoteHost -> "${remoteHost}:${absolutePath}" }
+}
+
 def remoteWorkingDirectory = {
     "cd '${piDir.get().replace("'", "'\\''")}'"
+}
+
+def remoteComposeCommand = {
+    "THB_APP_DIR='${piDir.get()}' " +
+            "THB_CONFIG_DIR='${configDir.get()}' " +
+            "THB_DATA_DIR='${dataDir.get()}' " +
+            "THB_ENV_FILE='${configDir.get()}/thb.env' " +
+            dockerComposeCommand.get()
 }
 
 def waitForHealthyCommand = {
@@ -102,7 +119,6 @@ tasks.register("deployValidateEnv") {
         }
         if (values["SSL_ENABLED"]?.equalsIgnoreCase("true")) {
             requireValue("SSL_KEY_STORE_PASSWORD")
-            requireValue("SSL_SECRETS_HOST_PATH")
             if (!values["SSL_KEY_STORE"]?.startsWith("file:/app/secrets/")) {
                 throw new GradleException(
                         "SSL_KEY_STORE must point inside file:/app/secrets/"
@@ -160,14 +176,31 @@ tasks.register("deployDockerSaveImage", Exec) {
 
 // Remote preparation
 
-tasks.register("deployPrepareRemote", Exec) {
+tasks.register("deployBootstrapRemote", Exec) {
     group = "deployment"
-    description = "Create deployment directory on Raspberry Pi"
+    description = "Create FHS deployment directories and permissions on Raspberry Pi (requires passwordless sudo)"
 
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "mkdir -p '${piDir.get()}' '${piDir.get()}/data' '${piDir.get()}/secrets'"
+                "sudo -n install -d -m 0755 -o '${piUser.get()}' -g '${piGroup.get()}' '${piDir.get()}' && " +
+                        "sudo -n install -d -m 0750 -o '${piUser.get()}' -g '${piGroup.get()}' " +
+                        "'${dataDir.get()}' '${backupDir.get()}' '${cacheDir.get()}' && " +
+                        "sudo -n install -d -m 0750 -o root -g '${piGroup.get()}' " +
+                        "'${configDir.get()}' '${configDir.get()}/secrets'"
+    }
+}
+
+tasks.register("deployPrepareRemote", Exec) {
+    group = "deployment"
+    description = "Verify FHS deployment directories on Raspberry Pi"
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "test -w '${piDir.get()}' && test -w '${dataDir.get()}' && " +
+                        "test -w '${backupDir.get()}' && test -w '${cacheDir.get()}' && " +
+                        "test -d '${configDir.get()}/secrets'"
     }
 }
 
@@ -188,7 +221,7 @@ tasks.register("deploySendJar", Exec) {
 
 tasks.register("deployInstallJar", Exec) {
     group = "deployment"
-    description = "Atomically install the uploaded jar and keep thb.jar.bak"
+    description = "Atomically install the uploaded jar and keep a backup under /var/backups"
 
     dependsOn "deploySendJar", "deployValidateRemote"
 
@@ -197,7 +230,7 @@ tasks.register("deployInstallJar", Exec) {
                 remoteHostProvider.get(),
                 "${remoteWorkingDirectory()} && " +
                         "test -s thb.jar.new && " +
-                        "if [ -f thb.jar ]; then cp -f thb.jar thb.jar.bak; fi && " +
+                        "if [ -f thb.jar ]; then cp -f thb.jar '${backupDir.get()}/thb.jar.bak'; fi && " +
                         "mv -f thb.jar.new thb.jar"
     }
 }
@@ -211,7 +244,7 @@ tasks.register("deploySendImage", Exec) {
     doFirst {
         commandLine "scp",
                 imageTarProvider.get().asFile.absolutePath,
-                remoteDeployTarget("thb-image.tar").get()
+                remoteAbsoluteTarget("${cacheDir.get()}/thb-image.tar").get()
     }
 }
 
@@ -230,7 +263,7 @@ tasks.register("deploySendCompose", Exec) {
 
 tasks.register("deploySendEnv", Exec) {
     group = "deployment"
-    description = "SCP .env to Raspberry Pi. Requires -PsendEnv=true."
+    description = "Upload .env for installation under /etc. Requires -PsendEnv=true."
 
     dependsOn "deployPrepareRemote"
 
@@ -245,7 +278,27 @@ tasks.register("deploySendEnv", Exec) {
 
         commandLine "scp",
                 ".env",
-                remoteDeployTarget(".env").get()
+                remoteDeployTarget("thb.env.new").get()
+    }
+}
+
+tasks.register("deployInstallEnv", Exec) {
+    group = "deployment"
+    description = "Install the uploaded environment file under /etc with mode 0640"
+
+    dependsOn "deploySendEnv"
+
+    onlyIf {
+        providers.gradleProperty("sendEnv").orElse("false").get() == "true"
+    }
+
+    doFirst {
+        commandLine "ssh",
+                remoteHostProvider.get(),
+                "test -s '${piDir.get()}/thb.env.new' && " +
+                        "sudo -n install -m 0640 -o root -g '${piGroup.get()}' " +
+                        "'${piDir.get()}/thb.env.new' '${configDir.get()}/thb.env' && " +
+                        "rm -f '${piDir.get()}/thb.env.new'"
     }
 }
 
@@ -253,11 +306,12 @@ tasks.register("deployValidateRemote", Exec) {
     group = "deployment"
     description = "Validate remote .env, persistent database path, TLS keystore, and Compose configuration"
 
-    dependsOn "deployPrepareRemote", "deploySendCompose", "deploySendEnv"
+    dependsOn "deployPrepareRemote", "deploySendCompose", "deployInstallEnv"
 
     doFirst {
         def readEnvFunction =
-                "read_env() { grep -E \"^\$1=\" .env | tail -n 1 | cut -d= -f2- | tr -d '\"\\r'; }; "
+                "read_env() { grep -E \"^\$1=\" '${configDir.get()}/thb.env' | " +
+                        "tail -n 1 | cut -d= -f2- | tr -d '\"\\r'; }; "
         def validation =
                 "db_url=\$(read_env DB_URL); " +
                         "case \"\${db_url:-jdbc:h2:/app/data/thb}\" in jdbc:h2:/app/data/*) ;; " +
@@ -265,18 +319,17 @@ tasks.register("deployValidateRemote", Exec) {
                         "ssl_enabled=\$(read_env SSL_ENABLED); " +
                         "if [ \"\${ssl_enabled:-false}\" = true ]; then " +
                         "key_store=\$(read_env SSL_KEY_STORE); " +
-                        "secrets_host=\$(read_env SSL_SECRETS_HOST_PATH); " +
                         "case \"\$key_store\" in file:/app/secrets/*) ;; " +
                         "*) echo 'SSL_KEY_STORE must point inside /app/secrets' >&2; exit 1 ;; esac; " +
                         "key_store_name=\${key_store#file:/app/secrets/}; " +
-                        "[ -n \"\$secrets_host\" ] && [ -f \"\$secrets_host/\$key_store_name\" ] || " +
+                        "[ -f '${configDir.get()}/secrets/'\"\$key_store_name\" ] || " +
                         "{ echo 'TLS keystore configuration is invalid or the host file is missing' >&2; exit 1; }; " +
                         "fi"
 
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "${remoteWorkingDirectory()} && test -f .env && " +
-                        readEnvFunction + validation + " && ${dockerComposeCommand.get()} config --quiet"
+                "${remoteWorkingDirectory()} && test -f '${configDir.get()}/thb.env' && " +
+                        readEnvFunction + validation + " && ${remoteComposeCommand()} config --quiet"
     }
 }
 
@@ -296,13 +349,16 @@ tasks.register("deployUp", Exec) {
         commandLine "ssh",
                 remoteHostProvider.get(),
                 "${remoteWorkingDirectory()} && " +
-                        "test -f .env && test -s thb.jar && test -s thb-image.tar && " +
-                        "docker load -i thb-image.tar && " +
-                        "${dockerComposeCommand.get()} config --quiet && " +
-                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "test -f '${configDir.get()}/thb.env' && test -s thb.jar && " +
+                        "test -s '${cacheDir.get()}/thb-image.tar' && " +
+                        "docker load -i '${cacheDir.get()}/thb-image.tar' && " +
+                        "rm -f '${cacheDir.get()}/thb-image.tar' && " +
+                        "${remoteComposeCommand()} config --quiet && " +
+                        "${remoteComposeCommand()} up -d --force-recreate && " +
                         "(${waitForHealthyCommand()}) || " +
-                        "(if [ -s thb.jar.bak ]; then cp -f thb.jar.bak thb.jar && " +
-                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "(if [ -s '${backupDir.get()}/thb.jar.bak' ]; then " +
+                        "cp -f '${backupDir.get()}/thb.jar.bak' thb.jar && " +
+                        "${remoteComposeCommand()} up -d --force-recreate && " +
                         "(${waitForHealthyCommand()}); fi; exit 1)"
     }
 }
@@ -317,11 +373,12 @@ tasks.register("deployRestart", Exec) {
         commandLine "ssh",
                 remoteHostProvider.get(),
                 "${remoteWorkingDirectory()} && " +
-                        "test -f .env && ${dockerComposeCommand.get()} config --quiet && " +
-                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "test -f '${configDir.get()}/thb.env' && ${remoteComposeCommand()} config --quiet && " +
+                        "${remoteComposeCommand()} up -d --force-recreate && " +
                         "(${waitForHealthyCommand()}) || " +
-                        "(test -s thb.jar.bak && cp -f thb.jar.bak thb.jar && " +
-                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "(test -s '${backupDir.get()}/thb.jar.bak' && " +
+                        "cp -f '${backupDir.get()}/thb.jar.bak' thb.jar && " +
+                        "${remoteComposeCommand()} up -d --force-recreate && " +
                         "(${waitForHealthyCommand()}); exit 1)"
     }
 }
@@ -333,7 +390,7 @@ tasks.register("deployLogs", Exec) {
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "cd ${piDir.get()} && ${dockerComposeCommand.get()} logs -f"
+                "${remoteWorkingDirectory()} && ${remoteComposeCommand()} logs -f"
     }
 }
 
@@ -344,7 +401,7 @@ tasks.register("deployStop", Exec) {
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "cd ${piDir.get()} && ${dockerComposeCommand.get()} down"
+                "${remoteWorkingDirectory()} && ${remoteComposeCommand()} down"
     }
 }
 
@@ -355,7 +412,7 @@ tasks.register("deployStatus", Exec) {
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "cd ${piDir.get()} && ${dockerComposeCommand.get()} ps"
+                "${remoteWorkingDirectory()} && ${remoteComposeCommand()} ps"
     }
 }
 
@@ -365,7 +422,11 @@ tasks.register("firstDeploy") {
     group = "deployment"
     description = "First deploy: build image + jar, send files to Pi, load image, start container"
 
-    dependsOn "deployUp"
+    dependsOn "deployBootstrapRemote", "deployUp"
+}
+
+tasks.named("deployPrepareRemote") {
+    mustRunAfter "deployBootstrapRemote"
 }
 
 tasks.register("redeploy") {
@@ -383,8 +444,9 @@ tasks.register("deployRollback", Exec) {
         commandLine "ssh",
                 remoteHostProvider.get(),
                 "${remoteWorkingDirectory()} && " +
-                        "test -s thb.jar.bak && cp -f thb.jar.bak thb.jar && " +
-                        "${dockerComposeCommand.get()} up -d --force-recreate && " +
+                        "test -s '${backupDir.get()}/thb.jar.bak' && " +
+                        "cp -f '${backupDir.get()}/thb.jar.bak' thb.jar && " +
+                        "${remoteComposeCommand()} up -d --force-recreate && " +
                         "(${waitForHealthyCommand()})"
     }
 }

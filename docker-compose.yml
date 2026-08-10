@@ -5,14 +5,15 @@ services:
     restart: unless-stopped
     network_mode: host
     working_dir: /app
-    env_file: .env
+    env_file:
+      - ${THB_ENV_FILE:-.env}
     environment:
       DB_URL: ${DB_URL:-jdbc:h2:/app/data/thb}
       SSL_KEY_STORE: ${SSL_KEY_STORE:-file:/app/secrets/thb-keystore.p12}
     volumes:
-      - ./thb.jar:/app/app.jar:ro
-      - ./data:/app/data
-      - ${SSL_SECRETS_HOST_PATH:-./secrets}:/app/secrets:ro
+      - ${THB_APP_DIR:-/opt/telegram-home-bot}/thb.jar:/app/app.jar:ro
+      - ${THB_DATA_DIR:-/var/lib/telegram-home-bot}:/app/data
+      - ${THB_CONFIG_DIR:-/etc/telegram-home-bot}/secrets:/app/secrets:ro
     healthcheck:
       test:
         - CMD-SHELL

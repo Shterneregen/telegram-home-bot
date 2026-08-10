@@ -133,6 +133,7 @@ keytool -genkeypair -alias thb -keyalg RSA -keysize 2048 -storetype PKCS12 -keys
 - JDK 17 used to run Gradle deployment tasks
 - Docker with the Compose plugin installed on the target machine
 - SSH access to Raspberry Pi (or any Linux host)
+- Passwordless `sudo` for the deployment user when creating and updating system directories
 - `.env` created from [`.env.example`](.env.example)
 
 #### Environment and persistent files
@@ -143,26 +144,37 @@ SERVER_PORT=9988
 SSL_ENABLED=false
 ```
 
-The H2 database is stored under `./data` on the target host. Do not point `DB_URL` outside `/app/data`.
+Deployment files follow the Linux filesystem hierarchy:
+
+```text
+/opt/telegram-home-bot/              # docker-compose.yml and application jar
+/etc/telegram-home-bot/              # thb.env and TLS secrets
+/var/lib/telegram-home-bot/          # persistent H2 database
+/var/backups/telegram-home-bot/      # previous jar used for rollback
+/var/cache/telegram-home-bot/        # temporary Docker image archive
+```
+
+Do not point `DB_URL` outside `/app/data`; that path is mounted from `/var/lib/telegram-home-bot`.
 
 When Spring Boot terminates TLS itself, place the keystore on the target host and configure:
 
 ```env
 SSL_ENABLED=true
 SSL_KEY_STORE=file:/app/secrets/thb-keystore.p12
-SSL_SECRETS_HOST_PATH=/absolute/host/secrets-directory
 SSL_KEY_STORE_PASSWORD=change-me
 ```
+
+Place the corresponding file at `/etc/telegram-home-bot/secrets/thb-keystore.p12` on the target host.
 
 If HTTPS is terminated by a reverse proxy, keep `SSL_ENABLED=false`.
 
 #### First deploy (one-time setup)
 
 ```bash
-# Create .env on the target host first, then deploy
+# /etc/telegram-home-bot/thb.env must already exist
 gradlew firstDeploy
 
-# Or explicitly send the local .env
+# Or install the local .env under /etc with mode 0640
 gradlew firstDeploy -PsendEnv=true
 
 # Cross-build for an ARM64 Raspberry Pi
@@ -172,14 +184,27 @@ gradlew firstDeploy -PdockerPlatform=linux/arm64
 This will:
 1. Validate `.env`, Compose configuration, and the Gradle JVM version
 2. Build a Docker image with JRE 17, curl, and the network tools
-3. Save the image as `build/deploy/thb-image.tar`
-4. Build and upload the jar as `thb.jar.new`
-5. Preserve an existing `thb.jar` as `thb.jar.bak` and atomically install the new jar
-6. Load the image and recreate the container
-7. Wait until the Actuator health endpoint reports `UP`
-8. Restore `thb.jar.bak` automatically if the new container is unhealthy
+3. Create the required `/opt`, `/etc`, and `/var` directories with restricted permissions
+4. Save and upload the image through `/var/cache/telegram-home-bot/thb-image.tar`
+5. Build and upload the jar as `/opt/telegram-home-bot/thb.jar.new`
+6. Preserve the current jar as `/var/backups/telegram-home-bot/thb.jar.bak`
+7. Atomically install the new jar, load the image, and remove the uploaded tar archive
+8. Recreate the container and wait until the Actuator health endpoint reports `UP`
+9. Restore the backup automatically if the new container is unhealthy
 
-> **Note:** `.env` is not sent automatically for security. Create it manually on the Pi, or use `gradlew deploySendEnv -PsendEnv=true`.
+> **Note:** `.env` is not sent automatically. Create `/etc/telegram-home-bot/thb.env` manually, or use `gradlew deploySendEnv -PsendEnv=true`.
+
+For an existing installation, stop the old container and copy its database and keystore before the first
+FHS-layout deployment. Verify the actual source filenames before copying:
+
+```bash
+docker stop thb
+sudo find /var/telegram -maxdepth 1 -type f \( -name '*.mv.db' -o -name '*.p12' \) -ls
+sudo install -m 0640 -o master -g master /var/telegram/thb-new.mv.db /var/lib/telegram-home-bot/thb.mv.db
+sudo install -m 0640 -o root -g master /var/telegram/thb-keystore.p12 /etc/telegram-home-bot/secrets/
+```
+
+Do not copy a live H2 database. Keep the old files until the new container is healthy and its data has been verified.
 
 #### Daily update (new code → deploy)
 
@@ -199,12 +224,14 @@ All deployment logic is in [`gradle/deploy.gradle`](gradle/deploy.gradle). Run `
 | `gradlew deployValidateCompose` | Run `docker compose config --quiet` |
 | `gradlew deployDockerBuildImage` | Build Docker image (add `-PdockerPlatform=linux/arm64` for ARM) |
 | `gradlew deployDockerSaveImage` | Save Docker image as `build/deploy/thb-image.tar` |
-| `gradlew deployPrepareRemote` | Create deployment directory on Raspberry Pi |
+| `gradlew deployBootstrapRemote` | Create the FHS directories and permissions using `sudo -n` |
+| `gradlew deployPrepareRemote` | Verify that the remote directories are writable |
 | `gradlew deploySendJar` | Upload the jar as `thb.jar.new` |
-| `gradlew deployInstallJar` | Back up and atomically install the uploaded jar |
+| `gradlew deployInstallJar` | Back up the jar under `/var/backups` and atomically install the upload |
 | `gradlew deploySendImage` | SCP Docker image tar to Raspberry Pi |
 | `gradlew deploySendCompose` | SCP `docker-compose.yml` to Raspberry Pi |
-| `gradlew deploySendEnv -PsendEnv=true` | SCP `.env` to Raspberry Pi (opt-in) |
+| `gradlew deploySendEnv -PsendEnv=true` | Upload `.env` for installation under `/etc` (opt-in) |
+| `gradlew deployInstallEnv -PsendEnv=true` | Install `thb.env` as `root:<deploy-group>` with mode `0640` |
 | `gradlew deployValidateRemote` | Validate the remote `.env`, database path, keystore, and Compose file |
 | `gradlew deployUp` | Load image, recreate container, and verify health |
 | `gradlew deployRestart` | Recreate container and automatically rollback on failed healthcheck |
@@ -223,7 +250,12 @@ Customize deployment via `-P` flags (defaults shown):
 |----------|---------|-------------|
 | `-PpiHost=192.168.1.15` | `192.168.1.15` | Raspberry Pi IP / hostname |
 | `-PpiUser=master` | `master` | SSH user on the Pi |
-| `-PpiDir=/home/master/telegram-home-bot` | `/home/master/telegram-home-bot` | Deployment directory on the Pi |
+| `-PpiGroup=master` | `master` | Group allowed to read configuration and update deployment files |
+| `-PpiDir=/opt/telegram-home-bot` | `/opt/telegram-home-bot` | Compose and jar directory |
+| `-PconfigDir=/etc/telegram-home-bot` | `/etc/telegram-home-bot` | Environment and secrets directory |
+| `-PdataDir=/var/lib/telegram-home-bot` | `/var/lib/telegram-home-bot` | Persistent application data |
+| `-PbackupDir=/var/backups/telegram-home-bot` | `/var/backups/telegram-home-bot` | Rollback artifacts |
+| `-PcacheDir=/var/cache/telegram-home-bot` | `/var/cache/telegram-home-bot` | Temporary transferred image |
 | `-PimageName=thb-image:latest` | `thb-image:latest` | Docker image tag to build, save, and load |
 | `-PdockerPlatform=` | _(empty)_ | Set to `linux/arm64` for ARM cross-compile |
 | `-PdockerComposeCommand="docker compose"` | `docker compose` | Docker Compose command |
@@ -255,10 +287,11 @@ Use `gradlew` / `gradlew.bat` directly for full control, especially `-P` propert
 
 - **Jar is mounted as a volume**, not baked into the image; updates atomically replace it and recreate the container
 - **`network_mode: host`** — required for ARP scanning and Wake-on-LAN
-- **Database** persists in `./data/` directory on the Pi (mounted to `/app/data` in container, with `DB_URL=jdbc:h2:/app/data/thb` by default)
+- **Configuration and secrets** live under `/etc/telegram-home-bot` and are mounted read-only
+- **Database** persists under `/var/lib/telegram-home-bot`, mounted to `/app/data`
 - **Healthcheck** calls `/actuator/health` over HTTP or HTTPS and requires status `UP`
-- **Rollback** uses `thb.jar.bak` when a newly deployed jar does not become healthy
-- **Image** is built once; normal updates transfer only the jar
+- **Rollback** uses `/var/backups/telegram-home-bot/thb.jar.bak`
+- **Image tar** is deleted from `/var/cache` immediately after a successful `docker load`
 
 ### Launch SonarQube in Docker
 

@@ -1,7 +1,7 @@
 package random.telegramhomebot.services
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import random.telegramhomebot.monitor.network.LanNetworkResolver
 import random.telegramhomebot.utils.logger
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -13,23 +13,24 @@ import java.net.InetAddress
  * 48-bit MAC address, for a total of 102 bytes.
  * */
 @Service
-class WakeOnLanService {
+class WakeOnLanService(
+    private val properties: WakeOnLanProperties,
+    private val lanNetworkResolver: LanNetworkResolver,
+) {
     val log = logger()
     val numbersOfBytesInMac = 6
     val syncStreamSize = 6
     val macDuplicationCount = 16
 
-    @Value("\${wakeOnLan.port}")
-    private lateinit var port: Number
-
-    @Value("\${wakeOnLan.broadcast.ip}")
-    private lateinit var broadcastIp: String
-
-    fun wakeOnLan(mac: String?, ip: String = broadcastIp) {
+    fun wakeOnLan(
+        mac: String?,
+        ip: String? = null,
+    ) {
         if (mac == null) return
         try {
+            val destinationIp = ip?.takeIf(String::isNotBlank) ?: lanNetworkResolver.resolveBroadcastIp()
             DatagramSocket().run {
-                send(getMagicPacket(mac, ip))
+                send(getMagicPacket(mac, destinationIp))
                 close()
             }
         } catch (e: Exception) {
@@ -38,8 +39,10 @@ class WakeOnLanService {
         }
     }
 
-    private fun getMagicPacket(mac: String, ip: String) =
-        getMagicPacketBytes(mac).let { DatagramPacket(it, it.size, InetAddress.getByName(ip), port.toInt()) }
+    private fun getMagicPacket(
+        mac: String,
+        ip: String,
+    ) = getMagicPacketBytes(mac).let { DatagramPacket(it, it.size, InetAddress.getByName(ip), properties.port) }
 
     private fun getMagicPacketBytes(mac: String): ByteArray {
         val macBytes = getMacBytes(mac)

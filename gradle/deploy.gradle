@@ -5,9 +5,9 @@ def deployProperty = { String name, String defaultValue ->
 }
 
 def imageName = deployProperty("imageName", "thb-image:latest")
-def piUser = deployProperty("piUser", "master")
-def piGroup = deployProperty("piGroup", "master")
-def piHost = deployProperty("piHost", "192.168.1.15")
+def piUser = providers.gradleProperty("piUser")
+def piGroup = providers.gradleProperty("piGroup").orElse(piUser)
+def piHost = providers.gradleProperty("piHost")
 def piDir = deployProperty("piDir", "/opt/telegram-home-bot")
 def configDir = deployProperty("configDir", "/etc/telegram-home-bot")
 def dataDir = deployProperty("dataDir", "/var/lib/telegram-home-bot")
@@ -44,7 +44,8 @@ def remoteWorkingDirectory = {
 }
 
 def remoteComposeCommand = {
-    "THB_APP_DIR='${piDir.get()}' " +
+    "THB_IMAGE='${imageName.get()}' " +
+            "THB_APP_DIR='${piDir.get()}' " +
             "THB_CONFIG_DIR='${configDir.get()}' " +
             "THB_DATA_DIR='${dataDir.get()}' " +
             "THB_ENV_FILE='${configDir.get()}/thb.env' " +
@@ -73,6 +74,45 @@ gradle.taskGraph.whenReady { graph ->
 }
 
 // Local validation
+
+tasks.register("deployValidateProperties") {
+    group = "deployment"
+    description = "Validate required Raspberry Pi deployment properties"
+
+    doLast {
+        def requireProperty = { String name, provider ->
+            def value = provider.orNull?.trim()
+            if (!value) {
+                throw new GradleException("Missing required deployment property: -P${name}=<value>")
+            }
+            value
+        }
+
+        def user = requireProperty("piUser", piUser)
+        def group = requireProperty("piGroup", piGroup)
+        def host = requireProperty("piHost", piHost)
+
+        if (!(user ==~ /[a-z_][a-z0-9_-]*\$?/)) {
+            throw new GradleException("piUser is not a valid Unix username: ${user}")
+        }
+        if (!(group ==~ /[a-z_][a-z0-9_-]*/)) {
+            throw new GradleException("piGroup is not a valid Unix group name: ${group}")
+        }
+        if (!(host ==~ /[A-Za-z0-9._:\[\]-]+/)) {
+            throw new GradleException("piHost contains unsupported characters: ${host}")
+        }
+        if (!(imageName.get() ==~ /[A-Za-z0-9][A-Za-z0-9._\/:@-]*/)) {
+            throw new GradleException("imageName is not a valid Docker image reference: ${imageName.get()}")
+        }
+
+        [piDir, configDir, dataDir, backupDir, cacheDir].each { directory ->
+            def path = directory.get()
+            if (!path.startsWith("/") || path.contains("'")) {
+                throw new GradleException("Deployment paths must be absolute and cannot contain single quotes: ${path}")
+            }
+        }
+    }
+}
 
 tasks.register("deployValidateEnv") {
     group = "deployment"
@@ -105,7 +145,10 @@ tasks.register("deployValidateEnv") {
             }
         }
 
-        def dbUrl = values["DB_URL"] ?: "jdbc:h2:/app/data/thb"
+        def dbUrl = values["DB_URL"]
+        if (!dbUrl) {
+            throw new GradleException("DB_URL must be set in .env")
+        }
         if (!dbUrl.startsWith("jdbc:h2:/app/data/")) {
             throw new GradleException("DB_URL must point inside /app/data so the H2 database is persistent: ${dbUrl}")
         }
@@ -144,6 +187,13 @@ tasks.register("deployDockerBuildImage", Exec) {
     doFirst {
         def platform = dockerPlatform.get()
 
+        if (!(imageName.get() ==~ /[A-Za-z0-9][A-Za-z0-9._\/:@-]*/)) {
+            throw new GradleException("imageName is not a valid Docker image reference: ${imageName.get()}")
+        }
+        if (platform && !(platform ==~ /linux\/[A-Za-z0-9._\/-]+/)) {
+            throw new GradleException("dockerPlatform is not a supported Linux platform value: ${platform}")
+        }
+
         if (platform.isEmpty()) {
             commandLine "docker", "build",
                     "-t", imageName.get(),
@@ -178,16 +228,23 @@ tasks.register("deployDockerSaveImage", Exec) {
 
 tasks.register("deployBootstrapRemote", Exec) {
     group = "deployment"
-    description = "Create FHS deployment directories and permissions on Raspberry Pi (requires passwordless sudo)"
+    description = "Create FHS deployment directories on Raspberry Pi (interactive sudo, run once)"
+
+    dependsOn "deployValidateProperties"
 
     doFirst {
+        standardInput = System.in
         commandLine "ssh",
+                "-tt",
                 remoteHostProvider.get(),
-                "sudo -n install -d -m 0755 -o '${piUser.get()}' -g '${piGroup.get()}' '${piDir.get()}' && " +
-                        "sudo -n install -d -m 0750 -o '${piUser.get()}' -g '${piGroup.get()}' " +
+                "sudo install -d -m 0755 -o '${piUser.get()}' -g '${piGroup.get()}' '${piDir.get()}' && " +
+                        "sudo install -d -m 0750 -o '${piUser.get()}' -g '${piGroup.get()}' " +
                         "'${dataDir.get()}' '${backupDir.get()}' '${cacheDir.get()}' && " +
-                        "sudo -n install -d -m 0750 -o root -g '${piGroup.get()}' " +
-                        "'${configDir.get()}' '${configDir.get()}/secrets'"
+                        "sudo install -d -m 0750 -o '${piUser.get()}' -g '${piGroup.get()}' " +
+                        "'${configDir.get()}' '${configDir.get()}/secrets' && " +
+                        "if [ -f '${configDir.get()}/thb.env' ]; then " +
+                        "sudo chown '${piUser.get()}:${piGroup.get()}' '${configDir.get()}/thb.env' && " +
+                        "sudo chmod 0600 '${configDir.get()}/thb.env'; fi"
     }
 }
 
@@ -195,12 +252,14 @@ tasks.register("deployPrepareRemote", Exec) {
     group = "deployment"
     description = "Verify FHS deployment directories on Raspberry Pi"
 
+    dependsOn "deployValidateProperties"
+
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
                 "test -w '${piDir.get()}' && test -w '${dataDir.get()}' && " +
                         "test -w '${backupDir.get()}' && test -w '${cacheDir.get()}' && " +
-                        "test -d '${configDir.get()}/secrets'"
+                        "test -w '${configDir.get()}' && test -w '${configDir.get()}/secrets'"
     }
 }
 
@@ -284,7 +343,7 @@ tasks.register("deploySendEnv", Exec) {
 
 tasks.register("deployInstallEnv", Exec) {
     group = "deployment"
-    description = "Install the uploaded environment file under /etc with mode 0640"
+    description = "Install the uploaded environment file under /etc with mode 0600"
 
     dependsOn "deploySendEnv"
 
@@ -296,8 +355,7 @@ tasks.register("deployInstallEnv", Exec) {
         commandLine "ssh",
                 remoteHostProvider.get(),
                 "test -s '${piDir.get()}/thb.env.new' && " +
-                        "sudo -n install -m 0640 -o root -g '${piGroup.get()}' " +
-                        "'${piDir.get()}/thb.env.new' '${configDir.get()}/thb.env' && " +
+                        "install -m 0600 '${piDir.get()}/thb.env.new' '${configDir.get()}/thb.env' && " +
                         "rm -f '${piDir.get()}/thb.env.new'"
     }
 }
@@ -314,7 +372,8 @@ tasks.register("deployValidateRemote", Exec) {
                         "tail -n 1 | cut -d= -f2- | tr -d '\"\\r'; }; "
         def validation =
                 "db_url=\$(read_env DB_URL); " +
-                        "case \"\${db_url:-jdbc:h2:/app/data/thb}\" in jdbc:h2:/app/data/*) ;; " +
+                        "[ -n \"\$db_url\" ] || { echo 'DB_URL must be set' >&2; exit 1; }; " +
+                        "case \"\$db_url\" in jdbc:h2:/app/data/*) ;; " +
                         "*) echo 'DB_URL must point inside /app/data' >&2; exit 1 ;; esac; " +
                         "ssl_enabled=\$(read_env SSL_ENABLED); " +
                         "if [ \"\${ssl_enabled:-false}\" = true ]; then " +
@@ -387,6 +446,8 @@ tasks.register("deployLogs", Exec) {
     group = "deployment"
     description = "Stream container logs from Raspberry Pi"
 
+    dependsOn "deployValidateProperties"
+
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
@@ -397,6 +458,8 @@ tasks.register("deployLogs", Exec) {
 tasks.register("deployStop", Exec) {
     group = "deployment"
     description = "Stop container on Raspberry Pi"
+
+    dependsOn "deployValidateProperties"
 
     doFirst {
         commandLine "ssh",
@@ -409,6 +472,8 @@ tasks.register("deployStatus", Exec) {
     group = "deployment"
     description = "Check container status on Raspberry Pi"
 
+    dependsOn "deployValidateProperties"
+
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
@@ -420,9 +485,9 @@ tasks.register("deployStatus", Exec) {
 
 tasks.register("firstDeploy") {
     group = "deployment"
-    description = "First deploy: build image + jar, send files to Pi, load image, start container"
+    description = "First deploy after deployBootstrapRemote: send artifacts and start container"
 
-    dependsOn "deployBootstrapRemote", "deployUp"
+    dependsOn "deployUp"
 }
 
 tasks.named("deployPrepareRemote") {
@@ -439,6 +504,8 @@ tasks.register("redeploy") {
 tasks.register("deployRollback", Exec) {
     group = "deployment"
     description = "Rollback previous jar on Raspberry Pi"
+
+    dependsOn "deployValidateProperties"
 
     doFirst {
         commandLine "ssh",

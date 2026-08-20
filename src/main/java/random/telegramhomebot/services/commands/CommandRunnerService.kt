@@ -10,10 +10,21 @@ class CommandRunnerService {
     private val log = logger()
 
     fun runCommand(command: String): String {
+        return execute(command) { Runtime.getRuntime().exec(command) }
+    }
+
+    fun runShellCommand(command: String): String {
+        return execute(command) { ProcessBuilder("/bin/sh", "-c", command).start() }
+    }
+
+    private fun execute(
+        command: String,
+        processFactory: () -> Process,
+    ): String {
         log.debug("Command to run: [{}]", command)
         return try {
-            val process: Process = Runtime.getRuntime().exec(command)
-            return process.inputStream.bufferedReader().use(BufferedReader::readText)
+            val process = processFactory()
+            process.inputStream.bufferedReader().use(BufferedReader::readText)
                 .ifBlank { process.errorStream.bufferedReader().use(BufferedReader::readText) }
         } catch (e: Exception) {
             log.error(e.message, e)
@@ -26,6 +37,8 @@ class CommandRunnerService {
         log.debug("ping {}", ip)
     }
 
-    fun pingHosts(hosts: List<Host>) =
-        hosts.filter { it.ip != null && it.ip!!.isNotBlank() }.forEach { ping(it.ip!!) }
+    fun pingHosts(hosts: List<Host>) {
+        hosts.filter { it.ip != null && it.ip!!.isNotBlank() }
+            .forEach { ping(it.ip!!) }
+    }
 }

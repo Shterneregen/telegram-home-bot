@@ -57,7 +57,8 @@ Application settings are stored in [application.yaml](src/main/resources/applica
 
 ### Wake On Lan feature
 
-- Modify `WAKE_ON_LAN_BROADCAST_IP` env var according to your network mask
+- By default, the LAN CIDR and Wake-on-LAN broadcast address are detected automatically
+- For multiple interfaces, set `NETWORK_MONITOR_INTERFACE` or override `WAKE_ON_LAN_BROADCAST_IP`
 - To enable WOL for a host open http://127.0.0.1:9988/hosts page
 - Choose a host and check `Wake On Lan Enabled` checkbox
 - To wake up a host, run `/wol` in the Telegram client and select the one you want

@@ -40,9 +40,9 @@ hosts.default:
   sorting: state
   sorting.direction: asc
 
-wakeOnLan:
+wake-on-lan:
   port: 9
-  broadcast.ip: 192.168.31.255
+  broadcast-ip: 192.168.31.255
 
 integrations:
   telegram:

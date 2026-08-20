@@ -1,15 +1,12 @@
 services:
   thb:
-    image: thb-image:latest
+    image: ${THB_IMAGE:-thb-image:latest}
     container_name: thb
     restart: unless-stopped
     network_mode: host
     working_dir: /app
     env_file:
       - ${THB_ENV_FILE:-.env}
-    environment:
-      DB_URL: ${DB_URL:-jdbc:h2:/app/data/thb}
-      SSL_KEY_STORE: ${SSL_KEY_STORE:-file:/app/secrets/thb-keystore.p12}
     volumes:
       - ${THB_APP_DIR:-/opt/telegram-home-bot}/thb.jar:/app/app.jar:ro
       - ${THB_DATA_DIR:-/var/lib/telegram-home-bot}:/app/data

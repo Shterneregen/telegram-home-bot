@@ -7,10 +7,10 @@ The recommended setup is Raspberry Pi OS 64-bit with a Docker image built for `l
 Set the deployment-specific values once in PowerShell and reuse them in all commands below:
 
 ```powershell
-$piHost = "<raspberry-pi-host-or-ip>"
-$piUser = "<deployment-user>"
-$piGroup = "<deployment-group>"
-$dockerPlatform = "<docker-platform>"
+$piHost = "192.168.1.15"
+$piUser = "main"
+$piGroup = "main"
+$dockerPlatform = "linux/arm64"
 ```
 
 Replace the placeholders with values for your environment before running the commands. For the recommended setup, use `linux/arm64` for `$dockerPlatform`. A hostname such as `raspberrypi.local` can be used instead of a fixed IP if local name resolution is configured. The application default port is `9988`.
@@ -18,9 +18,9 @@ Replace the placeholders with values for your environment before running the com
 Example values for a typical home network:
 
 ```powershell
-$piHost = "raspberrypi.local" # or, for example, "192.168.1.50"
-$piUser = "deploy"
-$piGroup = "deploy"
+$piHost = "192.168.1.15" # or, for example, "raspberrypi.local"
+$piUser = "main"
+$piGroup = "main"
 $dockerPlatform = "linux/arm64"
 ```
 
@@ -33,7 +33,7 @@ Install Raspberry Pi OS 64-bit and enable SSH. After the first login, update the
 ```bash
 sudo apt update
 sudo apt full-upgrade -y
-sudo apt install -y openssh-server curl ca-certificates
+sudo apt install -y openssh-server
 sudo systemctl enable --now ssh
 ```
 
@@ -43,13 +43,7 @@ Find the Raspberry Pi IP address:
 hostname -I
 ```
 
-Install Docker Engine and the Docker Compose plugin using the official Docker instructions. Then add the deployment user to the Docker group:
-
-```bash
-sudo usermod -aG docker <deployment-user>
-```
-
-Log out and back into SSH, then verify the installation:
+Install Docker Engine, Docker Compose v2, and Docker Buildx by following [the Raspberry Pi 3 ARM64 Docker installation guide](raspberry-pi-3-docker-arm64.md). Log out and back into SSH after adding the deployment user to the Docker group, then verify the installation:
 
 ```bash
 docker --version
@@ -61,24 +55,38 @@ The deployment user must have SSH access and permission to run Docker.
 
 ## 2. Configure SSH
 
-On the computer used for deployment, create an SSH key and install it on the Pi:
+On the computer used for deployment, create an Ed25519 SSH key:
 
 ```powershell
 ssh-keygen -t ed25519
+```
+
+Accept the default file location (`$env:USERPROFILE\.ssh\id_ed25519`). Add a passphrase if the key should be protected locally.
+
+Copy the public key to the Raspberry Pi. This step asks for the password of `$piUser` once:
+
+If `ssh-copy-id` is available:
+
+```powershell
 ssh-copy-id "${piUser}@${piHost}"
 ```
 
 If `ssh-copy-id` is not available in PowerShell:
 
 ```powershell
-Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub | ssh "${piUser}@${piHost}" "mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys"
+Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub" |
+  ssh "${piUser}@${piHost}" 'umask 077; mkdir -p ~/.ssh; cat >> ~/.ssh/authorized_keys'
 ```
 
-Verify passwordless login:
+Run the key-copy command and the verification command separately. Do not append the second command to the first one.
+
+Verify key-based login:
 
 ```powershell
-ssh "${piUser}@${piHost}"
+ssh "${piUser}@${piHost}" "whoami"
 ```
+
+The command should print the value of `$piUser` and should not ask for the remote user's password. If the key has a passphrase, the local SSH agent may ask for that passphrase. The password used while copying the key is the SSH password for `$piUser`, not the `sudo` password.
 
 The one-time `deployBootstrapRemote` task uses interactive `sudo` to create deployment directories. Routine deployment tasks do not require `sudo`, and no passwordless sudoers rule is needed. Membership in the Docker group grants root-equivalent access; use a dedicated deployment account and protect its SSH key.
 

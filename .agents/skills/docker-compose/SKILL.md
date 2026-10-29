@@ -6,7 +6,7 @@ description: "Use when adding or changing Docker Compose for telegram-home-bot: 
 # Docker Compose Skill
 
 ## Context
-This project currently has no committed `docker-compose.yml` in the public repository. If one is needed, create it deliberately rather than assuming it already exists. If one is needed, it should define the THB application service and potentially a SonarQube service for code quality.
+This project currently has no committed `../../../docker-compose.yml` in the public repository. If one is needed, create it deliberately rather than assuming it already exists. If one is needed, it should define the THB application service and potentially a SonarQube service for code quality.
 
 ## Typical Docker Compose Structure
 

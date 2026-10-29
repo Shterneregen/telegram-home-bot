@@ -11,7 +11,7 @@ This project uses **Spring Boot 3.5.4** with Kotlin. Key starters: Web, WebFlux,
 ## Configuration
 
 ### Properties & YAML
-- Primary config: `src/main/resources/application.yaml`
+- Primary config: `../../../src/main/resources/application.yaml`
 - Environment variables via `spring-dotenv` (me.paulschwarz:spring-dotenv:4.0.0)
 - Custom `@ConfigurationProperties` classes: `BotProperties`, `OpenWeatherProperties`
 - `@Value` for simple property injection with defaults: `@Value("\${bcrypt.rounds}")`
@@ -52,8 +52,8 @@ class DefaultTelegramMessageConsumer(/* ... */)
 ### Thymeleaf
 - Layout dialect: `thymeleaf-layout-dialect` with `layout.html` decorator
 - Spring Security integration: `thymeleaf-extras-springsecurity6`
-- Templates: `src/main/resources/templates/`
-- Static resources: `src/main/resources/static/` (favicon, CSS, JS)
+- Templates: `../../../src/main/resources/templates`
+- Static resources: `../../../src/main/resources/static` (favicon, CSS, JS)
 - WebJars for Bootstrap 5.1.1, jQuery 3.6.0, Font Awesome 5.15.3
 
 ### Actuator

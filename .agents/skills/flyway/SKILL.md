@@ -10,7 +10,7 @@ Use this skill for database schema changes in Telegram Home Bot.
 ## Project Context
 
 - The project uses Spring Boot with H2 and Flyway.
-- Migrations are stored in `src/main/resources/db/migration`.
+- Migrations are stored in `../../../src/main/resources/db/migration`.
 - Database changes must be made through Flyway SQL migrations.
 - Do not rely on Hibernate auto-DDL for persistent schema changes.
 

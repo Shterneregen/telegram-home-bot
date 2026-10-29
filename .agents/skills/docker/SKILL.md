@@ -6,7 +6,7 @@ description: "Use for Dockerfile and container runtime changes in telegram-home-
 # Docker Skill
 
 ## Context
-This project has a single [`Dockerfile`](Dockerfile) for building a container image. The application is designed to run on Raspberry Pi (ARM) and Linux.
+This project has a single [`../../../Dockerfile`](Dockerfile) for building a container image. The application is designed to run on Raspberry Pi (ARM) and Linux.
 
 ## Dockerfile
 

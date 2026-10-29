@@ -6,7 +6,7 @@ description: "Use for Kotlin code in telegram-home-bot: JVM 17, Spring Boot Kotl
 # Kotlin Skill
 
 ## Language Context
-This project uses **Kotlin 1.9.25** targeting **JVM 17**. All source files are `.kt` located under `src/main/java/` (legacy layout — do not move them).
+This project uses **Kotlin 1.9.25** targeting **JVM 17**. All source files are `.kt` located under `../../../src/main/java` (legacy layout — do not move them).
 
 ## Key Kotlin Conventions for This Project
 
@@ -52,4 +52,4 @@ This project uses **Kotlin 1.9.25** targeting **JVM 17**. All source files are `
 - Do NOT use `data class` for JPA entities
 - Do NOT use `@Autowired` on fields — always constructor injection
 - Do NOT create interfaces with single implementation unless there's a clear strategy pattern
-- Do NOT move Kotlin sources out of `src/main/java/` — it's the established layout
+- Do NOT move Kotlin sources out of `../../../src/main/java` — it's the established layout

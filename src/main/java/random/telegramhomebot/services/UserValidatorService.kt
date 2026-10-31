@@ -3,7 +3,6 @@ package random.telegramhomebot.services
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.objects.Update
 import random.telegramhomebot.auth.services.LoginAttemptService
 import random.telegramhomebot.integrations.telegram.BotProperties
 import random.telegramhomebot.utils.logger
@@ -13,17 +12,15 @@ import random.telegramhomebot.utils.logger
 class UserValidatorService(
     private val botProperties: BotProperties,
     @Qualifier("botAttemptService")
-    private val botAttemptService: LoginAttemptService
+    private val botAttemptService: LoginAttemptService,
 ) {
     val log = logger()
 
-    fun checkAccessForUpdate(update: Update): Boolean {
-        if (!update.hasCallbackQuery() && (!update.hasMessage() || !update.message.hasText())) {
-            return false
-        }
-        val userId = if (update.hasCallbackQuery()) update.callbackQuery.from.id else update.message.from.id
+    @Synchronized
+    fun checkAccess(userId: Long): Boolean {
+        if (userId <= 0) return false
         if (botAttemptService.isBlocked(userId.toString())) {
-            log.debug("User [$userId] is still blocked")
+            log.debug("Telegram user is blocked")
             return false
         }
 

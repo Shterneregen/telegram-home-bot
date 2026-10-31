@@ -10,5 +10,13 @@ import org.springframework.stereotype.Component
 class BotProperties {
     lateinit var chatId: Number
     lateinit var token: String
-    lateinit var homeGroupUserIds: List<Long>
+    var homeGroupUserIds: List<Long> = emptyList()
+    var transport: String = "bot-api"
+
+    @jakarta.annotation.PostConstruct
+    fun validate() {
+        require(transport in setOf("bot-api", "mtproto")) { "TELEGRAM_TRANSPORT must be bot-api or mtproto" }
+        require(token.isNotBlank()) { "TELEGRAM_TOKEN must be set" }
+        require(chatId.toLong() != 0L) { "TELEGRAM_BOT_CHAT_ID must be set" }
+    }
 }

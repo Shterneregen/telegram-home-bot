@@ -109,16 +109,29 @@ wake-on-lan:
   port: ${WAKE_ON_LAN_PORT:9}
   broadcast-ip: ${WAKE_ON_LAN_BROADCAST_IP:}
 
+commands:
+  execution:
+    timeout-seconds: ${COMMAND_TIMEOUT_SECONDS:30}
+    max-output-bytes: ${COMMAND_MAX_OUTPUT_BYTES:65536}
+
 integrations:
   #============================================================
   # Telegram-bot config
   #============================================================
   telegram:
     enabled: ${TELEGRAM_ENABLED:false}
-    token: ${TELEGRAM_TOKEN}
-    chat-id: ${TELEGRAM_BOT_CHAT_ID}
+    transport: ${TELEGRAM_TRANSPORT:bot-api}
+    token: ${TELEGRAM_TOKEN:}
+    chat-id: ${TELEGRAM_BOT_CHAT_ID:0}
     # comma separated list
     home-group-user-ids: ${TELEGRAM_HOME_GROUP_USER_IDS:}
+    mtproto:
+      api-id: ${TELEGRAM_API_ID:0}
+      api-hash: ${TELEGRAM_API_HASH:}
+      proxy-host: ${TELEGRAM_PROXY_HOST:}
+      proxy-port: ${TELEGRAM_PROXY_PORT:443}
+      proxy-secret: ${TELEGRAM_PROXY_SECRET:}
+      data-dir: ${TELEGRAM_TDLIB_DATA_DIR:data/tdlib}
   #============================================================
   # Open Weather config
   #============================================================

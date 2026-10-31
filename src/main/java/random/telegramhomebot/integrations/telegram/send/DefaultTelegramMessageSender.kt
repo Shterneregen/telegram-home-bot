@@ -1,49 +1,103 @@
 package random.telegramhomebot.integrations.telegram.send
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import org.telegram.telegrambots.meta.generics.TelegramClient
+import random.telegramhomebot.integrations.telegram.BotApiTransport
 import random.telegramhomebot.integrations.telegram.BotProperties
+import random.telegramhomebot.integrations.telegram.TelegramResponse
 import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.utils.logger
-import java.io.Serializable
+import java.util.concurrent.CompletableFuture
 
 @Service
-@ConditionalOnProperty(name = ["integrations.telegram.enabled"], havingValue = "true")
+@BotApiTransport
 class DefaultTelegramMessageSender(
-    private val botProperties: BotProperties,
-    private val telegramClient: TelegramClient,
-    private val commandService: CommandService
+    private val properties: BotProperties,
+    private val client: TelegramClient,
+    private val commands: CommandService,
+    @Value("\${buttons.in.row:3}") private val buttonsInRow: Int,
 ) : TelegramMessageSender {
     private val log = logger()
 
-    override fun sendMessage(messageText: String) = sendMessage(messageText, botProperties.chatId.toLong())
+    override fun sendMessage(messageText: String): CompletableFuture<Void> = sendText(messageText, properties.chatId.toLong(), null)
 
-    override fun sendMessage(messageText: String, chatId: Long, replyToMessageId: Int?) {
-        if (messageText.isBlank()) {
-            log.debug("trying to send blank message")
-            return
-        }
-        val message = SendMessage.builder()
-            .chatId(chatId.toString())
-            .text(messageText)
-            .replyToMessageId(replyToMessageId)
-            .replyMarkup(commandService.createReplyMarkupCommandButtons())
-            .build()
-
-        log.debug("Message to send: {}", message)
-        execute(message)
+    override fun sendMessage(
+        messageText: String,
+        chatId: Long,
+        replyToMessageId: Long?,
+    ) {
+        sendText(messageText, chatId, replyToMessageId)
     }
 
-    override fun <T : Serializable, M : BotApiMethod<T>> execute(method: M): T? {
+    private fun sendText(messageText: String, chatId: Long, replyToMessageId: Long?): CompletableFuture<Void> {
+        if (messageText.isBlank()) return CompletableFuture.completedFuture(null)
+        val rows =
+            commands.getAllEnabledCommands().map { KeyboardButton(it.getButtonName()) }
+                .chunked(buttonsInRow.coerceAtLeast(1)).map { KeyboardRow(it) }
+        return try {
+            client.execute(
+                SendMessage.builder().chatId(chatId.toString()).text(messageText)
+                    .replyToMessageId(replyToMessageId?.let { Math.toIntExact(it) })
+                    .replyMarkup(
+                        if (rows.isEmpty()) {
+                            null
+                        } else {
+                            ReplyKeyboardMarkup.builder().keyboard(rows)
+                                .resizeKeyboard(true).selective(true).oneTimeKeyboard(false).build()
+                        },
+                    ).build(),
+            )
+            CompletableFuture.completedFuture(null)
+        } catch (e: Exception) {
+            log.warn("Telegram operation failed ({})", e.javaClass.simpleName)
+            CompletableFuture.failedFuture(e)
+        }
+    }
+
+    override fun send(
+        chatId: Long,
+        response: TelegramResponse,
+        editMessageId: Long?,
+    ) {
+        val keyboard =
+            response.buttons?.let { rows ->
+                InlineKeyboardMarkup.builder().keyboard(
+                    rows.map { row ->
+                        InlineKeyboardRow(row.map { InlineKeyboardButton.builder().text(it.text).callbackData(it.data).build() })
+                    },
+                ).build()
+            }
+        safely {
+            if (editMessageId == null) {
+                client.execute(SendMessage.builder().chatId(chatId.toString()).text(response.text).replyMarkup(keyboard).build())
+            } else {
+                client.execute(
+                    EditMessageText.builder().chatId(
+                        chatId.toString(),
+                    ).messageId(Math.toIntExact(editMessageId)).text(response.text).replyMarkup(keyboard).build(),
+                )
+            }
+        }
+    }
+
+    override fun answerCallback(id: String) {
+        safely { client.execute(AnswerCallbackQuery.builder().callbackQueryId(id).build()) }
+    }
+
+    private fun safely(action: () -> Any?) {
         try {
-            return telegramClient.execute(method)
-        } catch (e: TelegramApiException) {
-            log.error("Error: {}", e.message, e)
-            return null
+            action()
+        } catch (e: Exception) {
+            log.warn("Telegram operation failed ({})", e.javaClass.simpleName)
         }
     }
 }

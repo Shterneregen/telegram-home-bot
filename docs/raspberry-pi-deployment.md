@@ -254,3 +254,10 @@ Stop the application:
 /var/backups/telegram-home-bot/      # backup JAR
 /var/cache/telegram-home-bot/        # temporary Docker image
 ```
+
+## Optional TDLight MTProto transport
+
+See [configuration, security status, verification and rollback](telegram-mtproto.md).
+Bot API remains the default. MTProto requires the guarded Linux Docker entrypoint and
+`docker-compose.mtproto.yml` (`-PmtprotoDeployment=true`). Prepare UID 10001 data permissions
+and verify the scoped nftables policy before production use.

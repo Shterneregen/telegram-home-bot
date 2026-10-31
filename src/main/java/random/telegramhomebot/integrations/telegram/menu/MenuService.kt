@@ -1,41 +1,22 @@
 package random.telegramhomebot.integrations.telegram.menu
 
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow
+import random.telegramhomebot.integrations.telegram.TelegramButton
 import random.telegramhomebot.integrations.telegram.menu.dto.Menu
 
 interface MenuService {
     val menuCommand: String
     val menuText: String
+
     fun getMenuMap(): Map<String, Menu>
-    fun getMenuInlineKeyboardMarkup(): InlineKeyboardMarkup
 
-    fun getDefaultHorizontalMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        return getDefaultMenuInlineKeyboardMarkup()
-    }
+    fun getMenuInlineKeyboardMarkup(): List<List<TelegramButton>>
 
-    fun getDefaultVerticalMenuInlineKeyboardMarkup(): InlineKeyboardMarkup {
-        return getDefaultMenuInlineKeyboardMarkup(MenuOrientation.VERTICAL)
-    }
+    fun getDefaultHorizontalMenuInlineKeyboardMarkup() = getDefaultMenuInlineKeyboardMarkup()
 
-    fun getDefaultMenuInlineKeyboardMarkup(
-        orientation: MenuOrientation = MenuOrientation.HORIZONTAL
-    ): InlineKeyboardMarkup {
-        val buttons = getMenuMap().entries.map { (command, menu) ->
-            InlineKeyboardButton.builder()
-                .text(menu.buttonText)
-                .callbackData(command)
-                .build()
-        }
+    fun getDefaultVerticalMenuInlineKeyboardMarkup() = getDefaultMenuInlineKeyboardMarkup(MenuOrientation.VERTICAL)
 
-        val rows = when (orientation) {
-            MenuOrientation.HORIZONTAL -> listOf(InlineKeyboardRow(buttons)) // все кнопки в один ряд
-            MenuOrientation.VERTICAL -> buttons.map { InlineKeyboardRow(listOf(it)) } // каждая кнопка в отдельный ряд
-        }
-
-        return InlineKeyboardMarkup.builder()
-            .keyboard(rows)
-            .build()
+    fun getDefaultMenuInlineKeyboardMarkup(orientation: MenuOrientation = MenuOrientation.HORIZONTAL): List<List<TelegramButton>> {
+        val buttons = getMenuMap().map { (key, menu) -> TelegramButton(menu.buttonText, key) }
+        return if (orientation == MenuOrientation.HORIZONTAL) listOf(buttons) else buttons.map { listOf(it) }
     }
 }

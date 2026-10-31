@@ -1,10 +1,22 @@
 package random.telegramhomebot.integrations.telegram.send
-
-import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod
-import java.io.Serializable
+import random.telegramhomebot.integrations.telegram.TelegramResponse
+import java.util.concurrent.CompletableFuture
 
 interface TelegramMessageSender {
-    fun sendMessage(messageText: String)
-    fun <T : Serializable, M : BotApiMethod<T>> execute(method: M): T?
-    fun sendMessage(messageText: String, chatId: Long, replyToMessageId: Int? = null)
+    /** Completes on transport response, not final delivery; pre-submit rejection is exceptional. */
+    fun sendMessage(messageText: String): CompletableFuture<Void>
+
+    fun sendMessage(
+        messageText: String,
+        chatId: Long,
+        replyToMessageId: Long? = null,
+    )
+
+    fun send(
+        chatId: Long,
+        response: TelegramResponse,
+        editMessageId: Long? = null,
+    )
+
+    fun answerCallback(id: String)
 }

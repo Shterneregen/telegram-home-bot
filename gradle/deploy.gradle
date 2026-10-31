@@ -14,6 +14,11 @@ def dataDir = deployProperty("dataDir", "/var/lib/telegram-home-bot")
 def backupDir = deployProperty("backupDir", "/var/backups/telegram-home-bot")
 def cacheDir = deployProperty("cacheDir", "/var/cache/telegram-home-bot")
 def dockerComposeCommand = deployProperty("dockerComposeCommand", "docker compose")
+def mtprotoDeployment = deployProperty("mtprotoDeployment", "false").map {
+    if (!(it in ["true", "false"])) throw new GradleException("mtprotoDeployment must be true or false")
+    it == "true"
+}
+def sendEnv = providers.gradleProperty("sendEnv").orElse("false").map { it == "true" }
 def dockerPlatform = deployProperty("dockerPlatform", "")
 def healthWaitSeconds = deployProperty("healthWaitSeconds", "120")
 
@@ -43,13 +48,24 @@ def remoteWorkingDirectory = {
     "cd '${piDir.get().replace("'", "'\\''")}'"
 }
 
-def remoteComposeCommand = {
+def remoteEnvironment = { boolean staged = false ->
+    def envPath = staged && sendEnv.get() ? "${piDir.get()}/thb.env.new" : "${configDir.get()}/thb.env"
     "THB_IMAGE='${imageName.get()}' " +
             "THB_APP_DIR='${piDir.get()}' " +
             "THB_CONFIG_DIR='${configDir.get()}' " +
             "THB_DATA_DIR='${dataDir.get()}' " +
-            "THB_ENV_FILE='${configDir.get()}/thb.env' " +
-            dockerComposeCommand.get()
+            "THB_ENV_FILE='${envPath}' "
+}
+
+def remoteComposeFiles = { boolean staged = false ->
+    def suffix = staged ? ".new" : ""
+    "-f docker-compose.yml${suffix}" +
+            (mtprotoDeployment.get() ? " -f docker-compose.mtproto.yml${suffix}" : "")
+}
+
+def remoteComposeCommand = { boolean staged = false ->
+    def envPath = staged && sendEnv.get() ? "${piDir.get()}/thb.env.new" : "${configDir.get()}/thb.env"
+    remoteEnvironment(staged) + dockerComposeCommand.get() + " --env-file '${envPath}' " + remoteComposeFiles(staged)
 }
 
 def waitForHealthyCommand = {
@@ -61,6 +77,25 @@ def waitForHealthyCommand = {
             "if [ \"\$status\" = unhealthy ]; then exit 1; fi; " +
             "attempts=\$((attempts - 1)); sleep 2; " +
             "done; exit 1"
+}
+
+def validateRemoteTransport = { boolean staged = false ->
+    def expected = mtprotoDeployment.get() ? "mtproto" : "bot-api"
+    def envPath = staged && sendEnv.get() ? "${piDir.get()}/thb.env.new" : "${configDir.get()}/thb.env"
+    def script = file('deploy/validate-telegram-deployment.py').getText('UTF-8').replace("'", "'\\''")
+    remoteEnvironment(staged) + "python3 -c '${script}' '${expected}' '${envPath}' ${dockerComposeCommand.get()} -- ${remoteComposeFiles(staged)}"
+}
+
+def rollbackAfterFailure = {
+    if (mtprotoDeployment.get()) {
+        // A previous Bot API jar cannot run under the current MTProto egress policy.
+        return "echo 'MTProto deployment failed. JAR-only rollback is disabled; restore image, JAR, environment and Compose together (docs/telegram-mtproto.md).' >&2; exit 1"
+    }
+    "${remoteWorkingDirectory()} && (${validateRemoteTransport()}) && " +
+            "if [ -s '${backupDir.get()}/thb.jar.bak' ]; then " +
+            "cp -f '${backupDir.get()}/thb.jar.bak' thb.jar && " +
+            "${remoteComposeCommand()} up -d --force-recreate && " +
+            "(${waitForHealthyCommand()}); fi; exit 1"
 }
 
 gradle.taskGraph.whenReady { graph ->
@@ -89,6 +124,7 @@ tasks.register("deployValidateProperties") {
         }
 
         def user = requireProperty("piUser", piUser)
+        mtprotoDeployment.get() // Reject misspelled flags before SSH/SCP.
         def group = requireProperty("piGroup", piGroup)
         def host = requireProperty("piHost", piHost)
 
@@ -156,6 +192,14 @@ tasks.register("deployValidateEnv") {
         if (values["TELEGRAM_ENABLED"]?.equalsIgnoreCase("true")) {
             requireValue("TELEGRAM_TOKEN")
             requireValue("TELEGRAM_BOT_CHAT_ID")
+            def transport = values["TELEGRAM_TRANSPORT"] ?: "bot-api"
+            if (!(transport in ["bot-api", "mtproto"])) throw new GradleException("Invalid TELEGRAM_TRANSPORT")
+            if ((transport == "mtproto") != mtprotoDeployment.get()) {
+                throw new GradleException("MTProto deployment requires -PmtprotoDeployment=true; Bot API requires false")
+            }
+            if (transport == "mtproto") {
+                ["TELEGRAM_API_ID", "TELEGRAM_API_HASH", "TELEGRAM_PROXY_HOST", "TELEGRAM_PROXY_SECRET"].each { requireValue(it) }
+            }
         }
         if (values["OPENWEATHER_ENABLED"]?.equalsIgnoreCase("true")) {
             requireValue("OPENWEATHER_APPID")
@@ -175,7 +219,11 @@ tasks.register("deployValidateCompose", Exec) {
     group = "deployment"
     description = "Validate docker-compose.yml with the local .env file"
     dependsOn "deployValidateEnv"
-    commandLine "docker", "compose", "config", "--quiet"
+    doFirst {
+        def args = ["docker", "compose"]
+        if (mtprotoDeployment.get()) args += ["-f", "docker-compose.yml", "-f", "docker-compose.mtproto.yml"]
+        commandLine(args + ["config", "--quiet"])
+    }
 }
 
 // Docker image tasks
@@ -257,7 +305,7 @@ tasks.register("deployPrepareRemote", Exec) {
     doFirst {
         commandLine "ssh",
                 remoteHostProvider.get(),
-                "test -w '${piDir.get()}' && test -w '${dataDir.get()}' && " +
+                "test -w '${piDir.get()}' && test -d '${dataDir.get()}' && " +
                         "test -w '${backupDir.get()}' && test -w '${cacheDir.get()}' && " +
                         "test -w '${configDir.get()}' && test -w '${configDir.get()}/secrets'"
     }
@@ -307,16 +355,26 @@ tasks.register("deploySendImage", Exec) {
     }
 }
 
+tasks.register("deploySendMtprotoCompose", Exec) {
+    group = "deployment"
+    description = "Upload guarded MTProto Compose override"
+    dependsOn "deployPrepareRemote"
+    onlyIf { mtprotoDeployment.get() }
+    doFirst {
+        commandLine "scp", "docker-compose.mtproto.yml", remoteDeployTarget("docker-compose.mtproto.yml.new").get()
+    }
+}
+
 tasks.register("deploySendCompose", Exec) {
     group = "deployment"
     description = "SCP docker-compose.yml to Raspberry Pi"
 
-    dependsOn "deployPrepareRemote"
+    dependsOn "deployPrepareRemote", "deploySendMtprotoCompose"
 
     doFirst {
         commandLine "scp",
                 "docker-compose.yml",
-                remoteDeployTarget("docker-compose.yml").get()
+                remoteDeployTarget("docker-compose.yml.new").get()
     }
 }
 
@@ -345,7 +403,7 @@ tasks.register("deployInstallEnv", Exec) {
     group = "deployment"
     description = "Install the uploaded environment file under /etc with mode 0600"
 
-    dependsOn "deploySendEnv"
+    dependsOn "deployValidateCandidate"
 
     onlyIf {
         providers.gradleProperty("sendEnv").orElse("false").get() == "true"
@@ -360,11 +418,33 @@ tasks.register("deployInstallEnv", Exec) {
     }
 }
 
+tasks.register("deployValidateCandidate", Exec) {
+    group = "deployment"
+    description = "Validate staged environment and Compose before changing the active release"
+    dependsOn "deploySendEnv", "deploySendCompose"
+    doFirst {
+        commandLine "ssh", remoteHostProvider.get(),
+                "${remoteWorkingDirectory()} && (${validateRemoteTransport(true)}) && ${remoteComposeCommand(true)} config --quiet"
+    }
+}
+
+tasks.register("deployInstallCompose", Exec) {
+    group = "deployment"
+    description = "Install validated Compose files"
+    dependsOn "deployValidateCandidate", "deployInstallEnv"
+    doFirst {
+        commandLine "ssh", remoteHostProvider.get(),
+                "${remoteWorkingDirectory()} && " +
+                (mtprotoDeployment.get() ? "mv -f docker-compose.mtproto.yml.new docker-compose.mtproto.yml && " : "") +
+                "mv -f docker-compose.yml.new docker-compose.yml"
+    }
+}
+
 tasks.register("deployValidateRemote", Exec) {
     group = "deployment"
     description = "Validate remote .env, persistent database path, TLS keystore, and Compose configuration"
 
-    dependsOn "deployPrepareRemote", "deploySendCompose", "deployInstallEnv"
+    dependsOn "deployPrepareRemote", "deployInstallCompose"
 
     doFirst {
         def readEnvFunction =
@@ -388,7 +468,8 @@ tasks.register("deployValidateRemote", Exec) {
         commandLine "ssh",
                 remoteHostProvider.get(),
                 "${remoteWorkingDirectory()} && test -f '${configDir.get()}/thb.env' && " +
-                        readEnvFunction + validation + " && ${remoteComposeCommand()} config --quiet"
+                        "(${validateRemoteTransport()}) && " +
+                        "{ " + readEnvFunction + validation + " && ${remoteComposeCommand()} config --quiet; }"
     }
 }
 
@@ -415,16 +496,13 @@ tasks.register("deployUp", Exec) {
                         "${remoteComposeCommand()} config --quiet && " +
                         "${remoteComposeCommand()} up -d --force-recreate && " +
                         "(${waitForHealthyCommand()}) || " +
-                        "(if [ -s '${backupDir.get()}/thb.jar.bak' ]; then " +
-                        "cp -f '${backupDir.get()}/thb.jar.bak' thb.jar && " +
-                        "${remoteComposeCommand()} up -d --force-recreate && " +
-                        "(${waitForHealthyCommand()}); fi; exit 1)"
+                        "(${rollbackAfterFailure()})"
     }
 }
 
 tasks.register("deployRestart", Exec) {
     group = "deployment"
-    description = "Recreate container, verify health, and rollback the jar on failure"
+    description = "Recreate container and verify health (JAR-only automatic rollback for Bot API only)"
 
     dependsOn "deployInstallJar", "deployValidateRemote"
 
@@ -435,10 +513,7 @@ tasks.register("deployRestart", Exec) {
                         "test -f '${configDir.get()}/thb.env' && ${remoteComposeCommand()} config --quiet && " +
                         "${remoteComposeCommand()} up -d --force-recreate && " +
                         "(${waitForHealthyCommand()}) || " +
-                        "(test -s '${backupDir.get()}/thb.jar.bak' && " +
-                        "cp -f '${backupDir.get()}/thb.jar.bak' thb.jar && " +
-                        "${remoteComposeCommand()} up -d --force-recreate && " +
-                        "(${waitForHealthyCommand()}); exit 1)"
+                        "(${rollbackAfterFailure()})"
     }
 }
 
@@ -503,14 +578,18 @@ tasks.register("redeploy") {
 
 tasks.register("deployRollback", Exec) {
     group = "deployment"
-    description = "Rollback previous jar on Raspberry Pi"
+    description = "Rollback previous Bot API jar on Raspberry Pi"
 
     dependsOn "deployValidateProperties"
 
     doFirst {
+        if (mtprotoDeployment.get()) {
+            throw new GradleException("MTProto JAR-only rollback is disabled. Restore image, JAR, environment and Compose together; see docs/telegram-mtproto.md.")
+        }
         commandLine "ssh",
                 remoteHostProvider.get(),
                 "${remoteWorkingDirectory()} && " +
+                        "(${validateRemoteTransport()}) && " +
                         "test -s '${backupDir.get()}/thb.jar.bak' && " +
                         "cp -f '${backupDir.get()}/thb.jar.bak' thb.jar && " +
                         "${remoteComposeCommand()} up -d --force-recreate && " +

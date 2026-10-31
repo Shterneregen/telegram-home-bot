@@ -11,3 +11,11 @@ build.Dockerfile
 gradlew.bat
 readme.md
 *.db
+
+.git
+.env
+.env.*
+*.pem
+*.key
+data
+**/__pycache__

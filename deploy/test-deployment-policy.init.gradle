@@ -1,0 +1,59 @@
+// Offline regression check of the real deployment command builders.
+// Invoke with -I deploy/test-deployment-policy.init.gradle testDeploymentPolicy,
+// dummy piUser/piHost and mtprotoDeployment=true, then false. No Exec action runs.
+gradle.projectsEvaluated {
+    def project = gradle.rootProject
+    project.tasks.register('testDeploymentPolicy') {
+        group = 'verification'
+        doLast {
+            def mtproto = project.providers.gradleProperty('mtprotoDeployment').orElse('false').get() == 'true'
+            def command = { String name ->
+                def task = project.tasks.getByName(name)
+                assert task instanceof Exec
+                // Only evaluate the doFirst builder, never the Exec task action or dependencies.
+                task.actions.first().execute(task)
+                assert task.commandLine.first() == 'ssh'
+                task.commandLine.last().toString()
+            }
+            def remoteCheck = command('deployValidateRemote')
+            assert remoteCheck.contains('Remote TELEGRAM_TRANSPORT does not match')
+            assert remoteCheck.contains(mtproto ? "' 'mtproto' '" : "' 'bot-api' '")
+            def scripts = [deployValidateRemote: remoteCheck]
+            ['deployUp', 'deployRestart'].each { name ->
+                def script = command(name)
+                scripts[name] = script
+                if (mtproto) {
+                    assert script.contains('JAR-only rollback is disabled')
+                    assert !script.contains('cp -f '): 'MTProto failure must never restore a JAR under incompatible runtime settings'
+                } else {
+                    assert script.contains('cp -f '): 'Preserve the Bot API rollback'
+                    assert script.contains('Remote TELEGRAM_TRANSPORT does not match'): 'Rollback must verify remote transport'
+                }
+            }
+            if (mtproto) {
+                try {
+                    command('deployRollback')
+                    throw new AssertionError('MTProto manual JAR rollback was not refused')
+                } catch (GradleException expected) {
+                    assert expected.message.contains('JAR-only rollback is disabled')
+                }
+            } else {
+                def rollback = command('deployRollback')
+                scripts.deployRollback = rollback
+                assert rollback.indexOf('Remote TELEGRAM_TRANSPORT does not match') < rollback.indexOf('cp -f ')
+            }
+            scripts.deployValidateCandidate = command('deployValidateCandidate')
+            assert scripts.deployValidateCandidate.contains('docker-compose.yml.new')
+            assert !scripts.deployValidateCandidate.contains('mv -f ')
+            ['deployInstallEnv', 'deployInstallCompose'].each { name ->
+                assert project.tasks.getByName(name).dependsOn.contains('deployValidateCandidate')
+            }
+            assert project.tasks.deployInstallJar.dependsOn.contains('deployValidateRemote')
+            assert project.tasks.deployValidateRemote.dependsOn.contains('deployInstallCompose')
+            def output = project.layout.buildDirectory.file("deployment-policy-${mtproto}.json").get().asFile
+            output.parentFile.mkdirs()
+            output.text = groovy.json.JsonOutput.toJson(scripts)
+            println "PASS: deployment command policy (mtproto=${mtproto}); no SSH/SCP/Docker operations executed"
+        }
+    }
+}

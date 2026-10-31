@@ -1,25 +1,25 @@
 package random.telegramhomebot.integrations.telegram.send
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod
-import random.telegramhomebot.utils.logger
-import java.io.Serializable
+import random.telegramhomebot.integrations.telegram.TelegramResponse
+import java.util.concurrent.CompletableFuture
 
 @Service
-@ConditionalOnMissingBean(DefaultTelegramMessageSender::class)
+@ConditionalOnProperty(name = ["integrations.telegram.enabled"], havingValue = "false", matchIfMissing = true)
 class MockTelegramMessageSender : TelegramMessageSender {
-    val log = logger()
-    override fun sendMessage(messageText: String) {
-        log.info(messageText)
-    }
+    override fun sendMessage(messageText: String): CompletableFuture<Void> = CompletableFuture.completedFuture(null)
 
-    override fun sendMessage(messageText: String, chatId: Long, replyToMessageId: Int?) {
-        log.info(messageText, chatId, replyToMessageId)
-    }
+    override fun sendMessage(
+        messageText: String,
+        chatId: Long,
+        replyToMessageId: Long?,
+    ) = Unit
 
-    override fun <T : Serializable, M : BotApiMethod<T>> execute(method: M): T? {
-        log.info(method.toString())
-        return null
-    }
+    override fun send(
+        chatId: Long,
+        response: TelegramResponse,
+        editMessageId: Long?,
+    ) = Unit
+
+    override fun answerCallback(id: String) = Unit
 }

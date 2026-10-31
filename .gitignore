@@ -4,6 +4,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+/data/
 
 ### STS ###
 .apt_generated
@@ -38,3 +39,11 @@ out/
 *.cer
 *.env
 *.tar
+
+# TDLib sessions and local captures
+/data/tdlib/
+*.pcap
+*.pcapng
+
+/deploy/__pycache__/
+!/amplicode.xml

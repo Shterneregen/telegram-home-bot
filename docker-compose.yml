@@ -4,6 +4,7 @@ services:
     container_name: thb
     restart: unless-stopped
     network_mode: host
+    stop_grace_period: 60s
     working_dir: /app
     env_file:
       - ${THB_ENV_FILE:-.env}

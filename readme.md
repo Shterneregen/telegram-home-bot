@@ -174,3 +174,10 @@ gradlew sonarqube -Dsonar.projectKey=thb -Dsonar.host.url=http://127.0.0.1:9000 
 ---
 
 Kotlin, Spring (Boot/Security/WebFlux), Gradle, H2, Thymeleaf, Google Charts, telegrambots-springboot-longpolling-starter
+
+## Optional TDLight MTProto transport
+
+See [configuration, security status, verification and rollback](docs/telegram-mtproto.md).
+Bot API remains the default. MTProto requires the guarded Linux Docker entrypoint and
+`docker-compose.mtproto.yml` (`-PmtprotoDeployment=true`). Prepare UID 10001 data permissions
+and verify the scoped nftables policy before production use.

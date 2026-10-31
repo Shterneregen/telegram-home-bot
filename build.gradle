@@ -39,9 +39,14 @@ kotlin {
 
 repositories {
     mavenCentral()
+    maven { url "https://mvn.mchv.eu/repository/mchv/"; content { includeGroup "it.tdlight" } }
 }
 
 dependencies {
+    implementation platform("it.tdlight:tdlight-java-bom:3.5.9+td.1.8.68")
+    implementation "it.tdlight:tdlight-java"
+    runtimeOnly group: "it.tdlight", name: "tdlight-natives", classifier: "linux_arm64_gnu_ssl3"
+    runtimeOnly group: "it.tdlight", name: "tdlight-natives", classifier: "windows_amd64"
     implementation(
             "org.springframework.boot:spring-boot-starter-actuator",
             "org.springframework.boot:spring-boot-starter-web",

@@ -6,16 +6,14 @@ import it.tdlight.TelegramClient
 import it.tdlight.client.TelegramError
 import it.tdlight.jni.TdApi
 import org.springframework.beans.factory.DisposableBean
-import org.springframework.beans.factory.ObjectProvider
+import org.slf4j.LoggerFactory
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
 import org.springframework.context.SmartLifecycle
-import random.telegramhomebot.integrations.telegram.BotProperties
+import random.telegramhomebot.integrations.telegram.TelegramEventHandler
 import random.telegramhomebot.integrations.telegram.TelegramEvent
 import random.telegramhomebot.integrations.telegram.TelegramResponse
-import random.telegramhomebot.integrations.telegram.consume.TelegramMessageHandler
 import random.telegramhomebot.integrations.telegram.send.TelegramMessageSender
-import random.telegramhomebot.utils.logger
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLock
 import java.nio.file.Files
@@ -33,9 +31,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class TdlightTransport internal constructor(
     private val settings: MtprotoProperties,
-    private val bot: BotProperties,
-    private val handler: ObjectProvider<TelegramMessageHandler>,
-    private val commands: random.telegramhomebot.services.commands.CommandService,
+    private val bot: TdlightBotCredentials,
+    private val handler: TelegramEventHandler,
+    private val commandButtons: () -> List<String>,
     private val buttonsInRow: Int,
     private val fatalShutdown: () -> Unit,
     private val verifyGuard: (MtprotoProperties) -> String = EgressGuard::verify,
@@ -47,7 +45,17 @@ class TdlightTransport internal constructor(
     private val requestTimeoutMillis: Long = 60_000,
     private val startupRetryMillis: Long = 5_000,
 ) : TelegramMessageSender, SmartLifecycle, HealthIndicator, DisposableBean {
-    private val log = logger()
+    /** Production wiring cannot replace the egress guard or native factory. */
+    constructor(
+        settings: MtprotoProperties,
+        bot: TdlightBotCredentials,
+        handler: TelegramEventHandler,
+        commandButtons: () -> List<String>,
+        buttonsInRow: Int,
+        fatalShutdown: () -> Unit,
+    ) : this(settings, bot, handler, commandButtons, buttonsInRow, fatalShutdown, verifyGuard = EgressGuard::verify)
+
+    private val log = LoggerFactory.getLogger(TdlightTransport::class.java)
     private var factory: ClientFactory? = null
     private var client: TelegramClient? = null
     private var lockChannel: FileChannel? = null
@@ -264,7 +272,7 @@ class TdlightTransport internal constructor(
             work.execute {
                 try {
                     identity.join()
-                    if (!stopping && !failed.get()) handler.getObject().consumeAcknowledged(event)
+                    if (!stopping && !failed.get()) handler.handle(event)
                 } catch (e: Exception) {
                     log.warn("Telegram command processing failed ({})", e.javaClass.simpleName)
                 }
@@ -379,7 +387,7 @@ class TdlightTransport internal constructor(
         chatId: Long,
         replyId: Long?,
     ): TdApi.SendMessage {
-        val buttons = commands.getAllEnabledCommands().map { it.getButtonName() }.chunked(buttonsInRow.coerceAtLeast(1))
+        val buttons = commandButtons().chunked(buttonsInRow.coerceAtLeast(1))
         return TdlightMessageMapper.message(text, chatId, replyId, buttons)
     }
 

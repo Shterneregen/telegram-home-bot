@@ -4,6 +4,10 @@
 The MTProto implementation uses TDLight 3.5.9+td.1.8.68 (API 4.0.565, natives 4.0.597), Java 17,
 and the existing external telemt server. No telemt, SOCKS5, VPN or additional service runs on the Pi.
 
+The implementation and its unit tests live in `telegram-tdlight`; SDK-free contracts live in
+`telegram-api`. The root application owns conditional Spring wiring and produces the single
+`thb.jar`, including both libraries and native dependencies. See [module architecture](telegram-modules.md).
+
 ## Guarded Linux startup
 
 TDLib ConfigRecoverer can open direct connections independently of AddProxy. The Docker entrypoint

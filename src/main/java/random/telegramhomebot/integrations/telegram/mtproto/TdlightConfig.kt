@@ -5,19 +5,27 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import random.telegramhomebot.integrations.telegram.BotProperties
+import random.telegramhomebot.integrations.telegram.TelegramEventHandler
 import random.telegramhomebot.integrations.telegram.consume.TelegramMessageHandler
+import random.telegramhomebot.services.commands.CommandService
 
 @Configuration
 @ConditionalOnExpression("\${integrations.telegram.enabled:false} and '\${integrations.telegram.transport:bot-api}' == 'mtproto'")
 @EnableConfigurationProperties(MtprotoProperties::class)
 class TdlightConfig {
+    @Bean fun tdlightEventHandler(handler: ObjectProvider<TelegramMessageHandler>) =
+        TelegramEventHandler { event -> handler.getObject().consumeAcknowledged(event) }
+
+    @Bean fun tdlightCommandButtons(commands: CommandService): () -> List<String> =
+        { commands.getAllEnabledCommands().map { it.getButtonName() } }
+
     @Bean fun tdlightTransport(
         settings: MtprotoProperties,
         bot: BotProperties,
-        handler: ObjectProvider<TelegramMessageHandler>,
-        commands: random.telegramhomebot.services.commands.CommandService,
+        handler: TelegramEventHandler,
+        @org.springframework.beans.factory.annotation.Qualifier("tdlightCommandButtons") commandButtons: () -> List<String>,
         @org.springframework.beans.factory.annotation.Value("\${buttons.in.row:3}") buttonsInRow: Int,
-    ) = TdlightTransport(settings, bot, handler, commands, buttonsInRow, fatalShutdown = {
+    ) = TdlightTransport(settings, TdlightBotCredentials(bot.token, bot.chatId.toLong()), handler, commandButtons, buttonsInRow, fatalShutdown = {
         // Graceful JVM/Spring shutdown, bounded even if a native shutdown hook hangs.
         Thread({
             Thread({

@@ -1,0 +1,41 @@
+plugins {
+    id 'java-library'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'io.spring.dependency-management'
+}
+
+group = rootProject.group
+version = rootProject.version
+
+repositories {
+    mavenCentral()
+    maven { url 'https://mvn.mchv.eu/repository/mchv/'; content { includeGroup 'it.tdlight' } }
+}
+
+sourceSets { main.kotlin.srcDirs += 'src/main/java' }
+java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
+kotlin { jvmToolchain(17) }
+
+dependencyManagement {
+    imports { mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion" }
+}
+
+dependencies {
+    api project(':telegram-api')
+    // Public lifecycle and health contracts; no component scanning or auto-configuration here.
+    api 'org.springframework:spring-context'
+    api 'org.springframework.boot:spring-boot-actuator'
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    implementation platform('it.tdlight:tdlight-java-bom:3.5.9+td.1.8.68')
+    implementation 'it.tdlight:tdlight-java'
+    runtimeOnly group: 'it.tdlight', name: 'tdlight-natives', classifier: 'linux_arm64_gnu_ssl3'
+    runtimeOnly group: 'it.tdlight', name: 'tdlight-natives', classifier: 'windows_amd64'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test { useJUnitPlatform() }

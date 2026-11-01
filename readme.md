@@ -11,6 +11,11 @@ Can be used for home automation on Raspberry Pi
 
 Application settings are stored in [application.yaml](src/main/resources/application.yaml) file
 
+The root Spring Boot application uses two library modules: `telegram-api` (SDK-free contracts)
+and `telegram-tdlight` (MTProto implementation). Bot API and business services remain in the root.
+See [module architecture and verification](docs/telegram-modules.md). Build the application with
+`./gradlew bootJar`; the deployable artifact remains `build/libs/thb.jar`.
+
 ## How to set up the project
 
 ### Create telegram chatbot

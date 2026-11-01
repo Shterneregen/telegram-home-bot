@@ -8,12 +8,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.mockito.Mockito.*
-import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.actuate.health.Status
-import random.telegramhomebot.integrations.telegram.BotProperties
 import random.telegramhomebot.integrations.telegram.TelegramEvent
-import random.telegramhomebot.integrations.telegram.consume.TelegramMessageHandler
-import random.telegramhomebot.services.commands.CommandService
+import random.telegramhomebot.integrations.telegram.TelegramEventHandler
 import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
@@ -35,7 +32,7 @@ class TdlightTransportTest {
         val me = CompletableFuture<TdApi.User>()
         var chat = CompletableFuture<TdApi.Chat>()
         val failures = AtomicInteger()
-        val handler = mock(TelegramMessageHandler::class.java)
+        val handler = mock(TelegramEventHandler::class.java)
         lateinit var updates: ResultHandler<TdApi.Update>
         private lateinit var proxy: TdApi.AddedProxy
         val client =
@@ -76,11 +73,6 @@ class TdlightTransportTest {
             }
         val factory = mock(ClientFactory::class.java).also { `when`(it.createClient()).thenReturn(client) }
 
-        @Suppress("UNCHECKED_CAST")
-        val provider =
-            (mock(ObjectProvider::class.java) as ObjectProvider<TelegramMessageHandler>).also {
-                `when`(it.getObject()).thenReturn(handler)
-            }
         val transport =
             TdlightTransport(
                 MtprotoProperties().apply {
@@ -90,12 +82,9 @@ class TdlightTransportTest {
                     proxySecret = "ee" + "a".repeat(32) + "6578616d706c652e636f6d"
                     dataDir = directory
                 },
-                BotProperties().apply {
-                    token = "123:test"
-                    chatId = 42
-                },
-                provider,
-                mock(CommandService::class.java),
+                TdlightBotCredentials("123:test", 42),
+                handler,
+                { emptyList() },
                 3,
                 fatalShutdown = { failures.incrementAndGet() },
                 verifyGuard = { "192.0.2.1" },
@@ -162,7 +151,7 @@ class TdlightTransportTest {
             verifyNoInteractions(f.handler)
             assertFalse(f.requests.any { it is TdApi.SendMessage })
             f.identify()
-            verify(f.handler, timeout(3000)).consumeAcknowledged(any())
+            verify(f.handler, timeout(3000)).handle(any())
             assertFalse(f.requests.any { it is TdApi.SendMessage })
             assertEquals(42L, (f.requests.single { it is TdApi.GetChat } as TdApi.GetChat).chatId)
             f.chat.complete(TdApi.Chat().apply { id = 42 })
@@ -182,7 +171,7 @@ class TdlightTransportTest {
                     check(release.await(5, TimeUnit.SECONDS))
                 }
                 null
-            }.`when`(f.handler).consumeAcknowledged(any())
+            }.`when`(f.handler).handle(any())
             try {
                 f.emit(message(1))
                 assertTrue(entered.await(3, TimeUnit.SECONDS))
@@ -194,7 +183,7 @@ class TdlightTransportTest {
             } finally {
                 release.countDown()
             }
-            verify(f.handler, timeout(3000).times(2)).consumeAcknowledged(any())
+            verify(f.handler, timeout(3000).times(2)).handle(any())
             f.emit(TdApi.UpdateConnectionState(TdApi.ConnectionStateReady()))
             await { f.transport.health().status == Status.UP }
             assertEquals(0, f.failures.get())
@@ -212,7 +201,7 @@ class TdlightTransportTest {
                 release.await(5, TimeUnit.SECONDS)
                 null
             }
-                .`when`(f.handler).consumeAcknowledged(any())
+                .`when`(f.handler).handle(any())
             try {
                 f.emit(message(1))
                 assertTrue(entered.await(3, TimeUnit.SECONDS))

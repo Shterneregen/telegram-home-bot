@@ -11,10 +11,13 @@ Can be used for home automation on Raspberry Pi
 
 Application settings are stored in [application.yaml](src/main/resources/application.yaml) file
 
-The root Spring Boot application uses two library modules: `telegram-api` (SDK-free contracts)
-and `telegram-tdlight` (MTProto implementation). Bot API and business services remain in the root.
+The project contains one executable Spring Boot application and one reusable library,
+`telegram-tdlight`, containing public API, TDLight Core and Linux Guard as package boundaries in one JAR.
+The library is Spring-independent; the application explicitly selects Linux Guard.
+Bot API and business services remain in the root.
 See [module architecture and verification](docs/telegram-modules.md). Build the application with
 `./gradlew bootJar`; the deployable artifact remains `build/libs/thb.jar`.
+See [developer verification](docs/verification.md) for JVM, library, deployment-policy and packaging checks.
 
 ## How to set up the project
 
@@ -27,6 +30,11 @@ See [module architecture and verification](docs/telegram-modules.md). Build the 
 - Start conversation with bot
 - Retrieve **chat_id**, call https://api.telegram.org/bot[YOUR_TOKEN]/getUpdates
   (and use it as **TELEGRAM_BOT_CHAT_ID** env variable)
+
+`TELEGRAM_HOME_GROUP_USER_IDS` lists authorized user IDs; it does not check group membership.
+When `TELEGRAM_BOT_CHAT_ID` is a negative group ID, configure authorized users explicitly.
+Authorized users can issue commands in any chat with the bot, and replies are sent to that chat.
+See the [Telegram access model](docs/telegram-mtproto.md#access-model-both-transports) for details.
 
 ### Admin site in browser
 

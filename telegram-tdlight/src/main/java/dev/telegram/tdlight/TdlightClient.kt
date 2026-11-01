@@ -47,6 +47,7 @@ class TdlightClient internal constructor(
     private val onDelivery: (TelegramDeliveryEvent) -> Unit,
     private val openFactory: () -> ClientFactory,
 ) : TelegramMessaging, AutoCloseable {
+    /** Creates a single-use client; native initialization is deferred until [start]. */
     constructor(
         settings: TdlightClientConfig,
         bot: TdlightBotCredentials,
@@ -111,8 +112,10 @@ class TdlightClient internal constructor(
     private var authenticating = false
     private var checkingIdentity = false
 
+    /** True while lifecycle processing is active, including initialization and temporary disconnection. */
     fun isRunning() = running
 
+    /** Reports local readiness, not proof of end-to-end Telegram delivery. */
     fun state(): TdlightConnectionState =
         when {
             failed.get() -> TdlightConnectionState.FAILED
@@ -122,6 +125,12 @@ class TdlightClient internal constructor(
             else -> TdlightConnectionState.READY
         }
 
+    /**
+     * Verifies egress policy and opens the native client; authorization completes asynchronously.
+     * Repeated calls while running are harmless. After stop or failure, create a new instance.
+     *
+     * @throws IllegalStateException if this instance was consumed or startup fails; startup errors are sanitized.
+     */
     @Synchronized
     fun start() {
         if (running) return
@@ -132,6 +141,7 @@ class TdlightClient internal constructor(
             val endpoint = ProxyEndpoint(settings.proxy.host, settings.proxy.port)
             val verified = verifier.verify(endpoint)
             check(verified.requested == endpoint) { "Verified proxy identity mismatch" }
+            // Finish all egress checks before touching persistent state or loading JNI.
             proxyAddress = numericProxyAddress(verified.address)
             Files.createDirectories(settings.dataDir)
             if (Files.getFileStore(settings.dataDir).supportsFileAttributeView("posix")) {
@@ -244,6 +254,7 @@ class TdlightClient internal constructor(
                 } else {
                     authorized = true
                     identity.complete(null)
+                    // Explicit destinations need only the bot identity; default sends have a second gate.
                     outbox.ready()
                     val defaultChat = settings.defaultChatId
                     if (defaultChat == null) {
@@ -294,8 +305,18 @@ class TdlightClient internal constructor(
     }
 
     private fun dispatch(event: TelegramEvent) {
-        // ACK receipt without waiting behind slow business operations; access is checked by the handler.
-        event.callbackId?.let(::answerCallback)
+        event.callbackId?.let { id ->
+            // Require ACK admission before handing off the action, without waiting for a native response.
+            val acknowledgement = outbox.trySubmit(TdlightMessageMapper.acknowledgement(id))
+            if (acknowledgement == null) {
+                log.warn("Telegram callback dropped: acknowledgement queue is full or closed")
+                return
+            }
+            acknowledgement.whenComplete { _, error ->
+                // A submitted ACK may have succeeded despite a timeout; never retry or replay the action.
+                if (error != null) log.warn("Telegram callback acknowledgement failed ({})", error.javaClass.simpleName)
+            }
+        }
         try {
             work.execute {
                 try {
@@ -326,6 +347,11 @@ class TdlightClient internal constructor(
         notifyFailure(stage)
     }
 
+    /**
+     * Permanently stops admission and interrupts workers. Repeated calls are harmless.
+     * Native close and factory cleanup wait up to 20 and 10 seconds respectively, after acquiring
+     * the lifecycle monitor. User continuations are not joined; unfinished cleanup retains the session lock.
+     */
     @Synchronized
     fun stop() {
         if (!stopped.compareAndSet(false, true)) return
@@ -349,6 +375,7 @@ class TdlightClient internal constructor(
         }
     }
 
+    /** Equivalent to [stop]; this instance cannot be restarted. */
     override fun close() = stop()
 
     private fun onControl(action: () -> Unit) {
@@ -423,7 +450,10 @@ class TdlightClient internal constructor(
     override fun send(message: OutgoingTelegramMessage): CompletableFuture<TelegramRequestResult> =
         operation({ TdlightMessageMapper.outgoing(message) })
 
-    /** Optional convenience destination; explicit sends never require a default chat. */
+    /**
+     * Enqueues plain text for the configured default chat, waiting for its startup resolution.
+     * Returns a rejected future when no default chat is configured; explicit sends do not require one.
+     */
     fun sendToDefault(
         text: String,
         keyboard: TelegramKeyboard? = null,

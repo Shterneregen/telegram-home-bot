@@ -1,4 +1,4 @@
-> Stage 1 extraction: see [reusable modules](telegram-modules.md) and [verification](tdlight-stage1-verification.md). Spring adapters now live in the application; the pure core requires an explicit egress verifier.
+> Reusable library: see [architecture and API](telegram-modules.md) and [developer verification](verification.md). Spring adapters live in the application; the pure core requires an explicit egress verifier.
 
 # Telegram transports
 
@@ -6,9 +6,9 @@
 The MTProto implementation uses TDLight 3.5.9+td.1.8.68 (API 4.0.565, natives 4.0.597), Java 17,
 and the existing external telemt server. No telemt, SOCKS5, VPN or additional service runs on the Pi.
 
-The implementation and its unit tests live in `telegram-tdlight`; SDK-free contracts live in
-`telegram-api`. The root application owns conditional Spring wiring and produces the single
-`thb.jar`, including both libraries and native dependencies. See [module architecture](telegram-modules.md).
+The implementation, SDK-free contracts, Linux Guard and all library tests live in the single
+`telegram-tdlight` library. The root application owns conditional Spring wiring and produces the single
+`thb.jar`, including the library and native dependencies. See [module architecture](telegram-modules.md).
 
 ## Guarded Linux startup
 
@@ -90,6 +90,20 @@ DB_URL=jdbc:h2:/app/data/thb
 
 Keep .env permissions 0600. Do not print Compose config without `--quiet`, log native request objects,
 or expose session/capture files. There is no environment flag that bypasses the egress guard.
+
+## Access model (both transports)
+
+Authorization uses the immediate sender's user ID. A user is allowed if that positive ID matches
+`TELEGRAM_BOT_CHAT_ID` or appears in `TELEGRAM_HOME_GROUP_USER_IDS`, subject to login-attempt
+blocking. A negative group chat ID does not identify an owner; list authorized users explicitly
+when notifications target a group.
+
+`TELEGRAM_HOME_GROUP_USER_IDS` is a user allowlist. The application does not query actual group
+membership or grant access to everyone in a group. There is no allowed-chat restriction:
+an authorized user can invoke actions in any chat with the bot. Command replies go to the source
+chat and may be visible to its other participants; notifications go to the configured chat.
+Anonymous/channel senders do not qualify as allowlisted users. These rules apply to both
+text commands and callbacks through the shared application handler.
 
 ## Storage and runtime
 
@@ -174,14 +188,30 @@ docker buildx build --platform linux/arm64 --load -t thb-image:mtproto .
 5. Start MTProto with both Compose files and verify the guard. Send text, /menu, /features, /wol, /weather,
    reply-keyboard commands and a harmless configured echo command. Check inline edit and callback ACK,
    reply-to-message, notifications, unauthorized text/callback and group anonymous senders.
+   On a fresh session, verify the first notification to both a private and a group destination
+   without a preceding incoming message (use separate test configurations). Queue several
+   notifications during startup and confirm FIFO delivery after destination resolution.
 6. Confirm working Telegram round trips while direct egress is denied. All TDLib established connections
    must terminate at telemt. Optionally correlate with counters supplied by the server operator.
 7. Block the proxy endpoint locally (do not modify the external server) for 15 minutes. Delivery must
    stop, no direct DC/bootstrap connection may succeed. Native blocked attempts may appear in counters.
 8. Restore proxy access; check reconnect and absence of duplicate machine operations. Repeat with a
    saved session, Docker recreate and reboot. Test wrong secret, refused port and DNS failure.
+   Separately interrupt proxy access while startup is resolving the notification chat with `GetChat`.
+   A transient outage should retry and recover without an unnecessary terminal restart or lost
+   buffered notifications. Check request results separately from delivery updates; a callback ACK
+   confirms receipt, not successful execution of a command.
 9. Stop the container; verify clean TDLib Close and retained session after restart. Run a 24-hour soak
    with network scanning/weather, recording RSS (including native memory), CPU and disk usage.
+10. On the test deployment, simulate a partial release failure and exercise the coordinated Bot API
+    rollback below. Preserve a consistent JAR checksum, image tag/digest, Compose/environment files
+    and stopped H2/TDLib backups. Confirm an actual Telegram round trip after rollback, retained
+    data and unchanged unrelated firewall tables/routes, including WireGuard if used.
+
+Record the application commit, image digest, Pi OS/kernel/architecture, tested telemt version/digest,
+test configuration without secrets, scenario outcomes and resource measurements. A mutable image
+tag alone does not identify the tested release. These scenarios are acceptance work to perform;
+their presence in this checklist does not mean they have passed.
 
 ## Diagnostics and rollback
 
@@ -244,5 +274,9 @@ Offline deployment-policy regression checks (evaluate command builders only; no 
 python3 -m unittest discover -s deploy -p 'test_*.py'
 ```
 
-Implementation results and the complete changed-file manifest: [Russian report](telegram-mtproto-results.md).
-The earlier report predates these fixes; see [fix verification](../plans/tdlight-mtproto-faketls-fixes-2026-10-31.md).
+For the complete automated workflow, including fixture generation and platform-specific skips,
+see [developer verification](verification.md).
+
+See [verification status and limits](verification.md#recorded-verification-baseline) for the dated
+automated baseline. Automated results do not establish live acceptance for the current checkout;
+complete the manual checklist above on the target Pi before claiming production readiness.

@@ -23,6 +23,7 @@ internal object TdlightMessageMapper {
             is TdApi.UpdateNewCallbackQuery -> {
                 val payload = update.payload as? TdApi.CallbackQueryPayloadData
                 payload?.let {
+                    // Native callback updates have no creation timestamp; the event records receipt time.
                     TelegramEvent(
                         update.senderUserId,
                         update.chatId,
@@ -36,7 +37,6 @@ internal object TdlightMessageMapper {
         }
 
     fun outgoing(message: OutgoingTelegramMessage): TdApi.SendMessage {
-        require(message.text.isNotBlank()) { "Message text is required" }
         val keyboard = message.keyboard
         return if (keyboard is TelegramKeyboard.Inline) {
             (response(message.chatId, TelegramResponse(message.text, keyboard.rows), null) as TdApi.SendMessage).apply {
@@ -86,6 +86,7 @@ internal object TdlightMessageMapper {
                     rows.map { row ->
                         row.map { button ->
                             val data = button.data.toByteArray(Charsets.UTF_8)
+                            // The payload limit applies to encoded bytes, not Kotlin character count.
                             require(data.size in 1..64) { "Callback data must contain 1 to 64 bytes" }
                             TdApi.InlineKeyboardButton().apply {
                                 text = button.text
@@ -114,5 +115,9 @@ internal object TdlightMessageMapper {
 
     fun acknowledgement(id: String) = TdApi.AnswerCallbackQuery(id.toLong(), "", false, "", 0)
 
-    private fun textContent(text: String) = TdApi.InputMessageText().apply { this.text = TdApi.FormattedText(text, emptyArray()) }
+    private fun textContent(text: String): TdApi.InputMessageText {
+        // All send/edit paths validate before outbox admission, including while startup gates are closed.
+        require(text.isNotBlank()) { "Message text is required" }
+        return TdApi.InputMessageText().apply { this.text = TdApi.FormattedText(text, emptyArray()) }
+    }
 }

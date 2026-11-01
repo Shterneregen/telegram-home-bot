@@ -1,50 +1,44 @@
-// Keep the extraction enforceable without compiling or testing the root application.
-def allowedProjects = [
-        ':': [':telegram-api', ':telegram-tdlight', ':telegram-tdlight-linux-guard'] as Set,
-        ':telegram-api': [] as Set,
-        ':telegram-tdlight': [':telegram-api'] as Set,
-        ':telegram-tdlight-linux-guard': [':telegram-tdlight'] as Set
-]
+// Package checks supplement the two-project Gradle dependency boundary.
+def allowedProjects = [':': [':telegram-tdlight'] as Set, ':telegram-tdlight': [] as Set]
 allprojects { module ->
     def verifyBoundaries = module.tasks.register('verifyTelegramModuleBoundaries') {
         group = 'verification'
-        description = 'Verify Telegram project dependencies, SDK isolation and source boundaries'
+        description = 'Verify project graph, SDK isolation and API/core/Linux package boundaries'
         doLast {
+            assert rootProject.allprojects.collect { it.path } as Set == allowedProjects.keySet(): 'Only root and telegram-tdlight are allowed'
             def actual = module.configurations.collectMany { configuration ->
                 configuration.dependencies.withType(ProjectDependency).collect { it.dependencyProject.path }
             } as Set
             assert actual == allowedProjects[module.path]: "Unexpected project dependencies for ${module.path}: ${actual}"
             if (module != rootProject) {
-                ['compileClasspath', 'runtimeClasspath', 'testCompileClasspath'].each { name ->
+                ['compileClasspath', 'runtimeClasspath', 'testCompileClasspath', 'testRuntimeClasspath'].each { name ->
                     def groups = module.configurations.getByName(name).resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion.id.group }
                     assert !groups.any { it.startsWith('org.telegram') }: "Bot API SDK leaked into ${module.path}"
-                    assert !groups.any { it.startsWith('org.springframework') }: 'Libraries must remain Spring free'
-                    if (module.name == 'telegram-tdlight-linux-guard' && name == 'compileClasspath') {
-                        assert !groups.any { it.startsWith('it.tdlight') }: 'Native SDK must remain private to core'
-                    }
-                    if (module.name == 'telegram-api') {
-                        assert !groups.any { it.startsWith('it.tdlight') || it.startsWith('org.springframework') }: 'API must remain SDK/Spring free'
-                    }
+                    assert !groups.any { it.startsWith('org.springframework') }: 'Library must remain Spring free'
                 }
                 module.fileTree('src') { include '**/*.kt', '**/*.java' }.each { source ->
                     def text = source.getText('UTF-8')
                     assert !text.contains('random.telegramhomebot'): "Application reference in ${source}"
                     assert !text.contains('org.springframework'): "Spring reference in ${source}"
-                    if (module.name == 'telegram-tdlight') {
-                        assert !text.contains('dev.telegram.tdlight.linux'): "Linux implementation leaked into core: ${source}"
+                    assert !text.contains('org.telegram.'): "Bot API reference in ${source}"
+                    // Apply implementation separation to production sources; tests may integrate areas.
+                    if (source.toPath().startsWith(module.file('src/main').toPath())) {
+                        if (text =~ /(?m)^package dev\.telegram\.api(?:\s|;)/) {
+                            assert !text.contains('it.tdlight') && !text.contains('dev.telegram.tdlight'): "Implementation leaked into public API: ${source}"
+                        } else if (text =~ /(?m)^package dev\.telegram\.tdlight(?:\s|;)/) {
+                            assert !text.contains('dev.telegram.tdlight.linux') && !text.contains('LinuxEgressVerifier'): "Linux implementation leaked into core: ${source}"
+                        }
                     }
                 }
-            }
-            if (module == rootProject) {
+            } else {
                 def compileGroups = module.configurations.compileClasspath.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion.id.group }
                 assert !compileGroups.any { it.startsWith('it.tdlight') }: 'TDLight SDK must remain off the application compile classpath'
-                module.fileTree('src/main') { include '**/*.kt', '**/*.java' }.each { source ->
+                module.fileTree('src') { include '**/*.kt', '**/*.java' }.each { source ->
                     assert !source.getText('UTF-8').contains('it.tdlight.'): "TDLight SDK leaked into application: ${source}"
                 }
             }
         }
     }
-
     module.plugins.withId('java') {
         module.tasks.named('test') { dependsOn verifyBoundaries }
         module.tasks.named('check') { dependsOn verifyBoundaries }
@@ -52,5 +46,20 @@ allprojects { module ->
 }
 
 tasks.named('verifyTelegramModuleBoundaries') {
-    dependsOn ':telegram-api:verifyTelegramModuleBoundaries', ':telegram-tdlight:verifyTelegramModuleBoundaries', ':telegram-tdlight-linux-guard:verifyTelegramModuleBoundaries'
+    dependsOn ':telegram-tdlight:verifyTelegramModuleBoundaries'
+}
+
+// Resolve only task dependencies: library checks must never require root compilation/tests.
+gradle.taskGraph.whenReady { graph ->
+    def libraryCheck = project(':telegram-tdlight').tasks.named('check').get()
+    def libraryTest = project(':telegram-tdlight').tasks.named('test').get()
+    def visited = [] as Set
+    def visit
+    visit = { task ->
+        if (visited.add(task)) {
+            assert task.project != rootProject: "Library verification depends on root task ${task.path}"
+            task.taskDependencies.getDependencies(task).each { visit(it) }
+        }
+    }
+    [libraryCheck, libraryTest].findAll { graph.hasTask(it) }.each { visit(it) }
 }

@@ -1,5 +1,4 @@
 pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }
 rootProject.name = 'tdlight-consumer'
-include 'telegram-api', 'telegram-tdlight'
-project(':telegram-api').projectDir = file('../../telegram-api')
+include 'telegram-tdlight'
 project(':telegram-tdlight').projectDir = file('../../telegram-tdlight')

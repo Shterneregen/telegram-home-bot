@@ -53,11 +53,21 @@ internal class TdlightOutbox(
     fun submit(
         query: TdApi.Function<*>,
         destination: Boolean = false,
-    ): CompletableFuture<TelegramRequestResult> {
+    ): CompletableFuture<TelegramRequestResult> =
+        trySubmit(query, destination) ?: CompletableFuture.failedFuture(TelegramRequestRejectedException())
+
+    /**
+     * Returns null on admission rejection, independently of asynchronous request completion.
+     * A non-null future means capacity was reserved, not that native submission or delivery succeeded.
+     */
+    fun trySubmit(
+        query: TdApi.Function<*>,
+        destination: Boolean = false,
+    ): CompletableFuture<TelegramRequestResult>? {
         val entry = Entry(query, destination, query is TdApi.AnswerCallbackQuery)
         synchronized(monitor) {
             if (closed || pending.count { it.ack == entry.ack } >= if (entry.ack) ackCapacity else capacity) {
-                return CompletableFuture.failedFuture(TelegramRequestRejectedException())
+                return null
             }
             pending.add(entry)
             (if (entry.ack) acknowledgements else messages).addLast(entry)
@@ -108,6 +118,7 @@ internal class TdlightOutbox(
     }
 
     private fun retire(entry: Entry) {
+        // A published timeout does not finish native work; a native reply does not finish user callbacks.
         if (entry.nativeFinished && entry.notificationFinished) pending.remove(entry)
     }
 
@@ -145,6 +156,7 @@ internal class TdlightOutbox(
                                 pending.remove(entry)
                                 continue
                             }
+                            // Preserve FIFO even for explicit sends queued behind a default-chat send.
                             if (entry.destination && !destinationReady) break
                             queue.removeFirst()
                             entry.submitted = true

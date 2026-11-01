@@ -11,7 +11,6 @@ repositories {
 }
 kotlin { jvmToolchain(17) }
 dependencies {
-    implementation project(':telegram-api')
     implementation project(':telegram-tdlight')
 }
 application { mainClass = 'ConsumerKt' }

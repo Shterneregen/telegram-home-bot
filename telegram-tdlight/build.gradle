@@ -17,7 +17,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 kotlin { jvmToolchain(17) }
 
 dependencies {
-    api project(':telegram-api')
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
     implementation 'org.slf4j:slf4j-api:2.0.17'
 
     implementation platform('it.tdlight:tdlight-java-bom:3.5.9+td.1.8.68')

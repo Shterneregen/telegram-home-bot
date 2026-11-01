@@ -43,9 +43,7 @@ repositories {
 }
 
 dependencies {
-    implementation project(":telegram-api")
     implementation project(":telegram-tdlight")
-    implementation project(":telegram-tdlight-linux-guard")
     implementation(
             "org.springframework.boot:spring-boot-starter-actuator",
             "org.springframework.boot:spring-boot-starter-web",

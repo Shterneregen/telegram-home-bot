@@ -4,6 +4,7 @@ import dev.telegram.api.OutgoingTelegramMessage
 import dev.telegram.api.TelegramDeliveryEvent
 import dev.telegram.api.TelegramEvent
 import dev.telegram.api.TelegramEventHandler
+import dev.telegram.api.TelegramRequestRejectedException
 import it.tdlight.ClientFactory
 import it.tdlight.ResultHandler
 import it.tdlight.TelegramClient
@@ -29,6 +30,7 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -47,6 +49,9 @@ class TdlightTransportTest {
         initialization: () -> Unit = {},
         eventCapacity: Int = 100,
         controlCapacity: Int = 1024,
+        acknowledgementCapacity: Int = 16,
+        outgoingCapacity: Int = 100,
+        acknowledgement: CompletableFuture<TdApi.Ok> = CompletableFuture.completedFuture(TdApi.Ok()),
         failureListener: () -> Unit = {},
         deliveryListener: () -> Unit = {},
         address: String = "192.0.2.1",
@@ -73,6 +78,7 @@ class TdlightTransportTest {
                         when (query) {
                             is TdApi.GetMe -> me
                             is TdApi.GetChat -> chat
+                            is TdApi.AnswerCallbackQuery -> acknowledgement
                             else ->
                                 CompletableFuture.completedFuture(
                                     when (query) {
@@ -111,6 +117,8 @@ class TdlightTransportTest {
                         startupRetryMillis = 10,
                         eventCapacity = eventCapacity,
                         controlCapacity = controlCapacity,
+                        acknowledgementCapacity = acknowledgementCapacity,
+                        outgoingCapacity = outgoingCapacity,
                     ),
                 ),
                 TdlightBotCredentials("123:test"),
@@ -175,6 +183,70 @@ class TdlightTransportTest {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
         while (!condition() && System.nanoTime() < deadline) Thread.sleep(10)
         assertTrue(condition(), "Condition was not reached within 5 seconds")
+    }
+
+    @Test fun `full ACK queue drops callback while admitted ACK and text do not wait for native response`() {
+        val acknowledgement = CompletableFuture<TdApi.Ok>()
+        Fixture(acknowledgementCapacity = 1, acknowledgement = acknowledgement).use { f ->
+            f.ready()
+            val handled = CopyOnWriteArrayList<TelegramEvent>()
+            doAnswer { call ->
+                handled.add(call.getArgument(0))
+                null
+            }.`when`(f.handler).handle(any())
+            for (callbackId in listOf(76L, 77L)) {
+                f.emit(
+                    TdApi.UpdateNewCallbackQuery().apply {
+                        id = callbackId
+                        senderUserId = 42
+                        chatId = 42
+                        messageId = 10
+                        payload = TdApi.CallbackQueryPayloadData("/menu".toByteArray())
+                    },
+                )
+            }
+            // The text event is a barrier through both serial queues, without completing the first ACK.
+            f.emit(message(20))
+            await { handled.any { it.messageId == 20L } }
+            assertEquals(listOf("76", null), handled.map { it.callbackId })
+            assertEquals(listOf(76L), f.requests.filterIsInstance<TdApi.AnswerCallbackQuery>().map { it.callbackQueryId })
+            assertFalse(acknowledgement.isDone)
+            acknowledgement.complete(TdApi.Ok())
+            f.emit(message(21))
+            await { handled.any { it.messageId == 21L } }
+            assertEquals(listOf("76", null, null), handled.map { it.callbackId })
+            assertEquals(0, f.failures.get())
+        }
+    }
+
+    @Test fun `blank send and edit reject before admission both during startup and when ready`() {
+        for (ready in listOf(false, true)) {
+            Fixture(outgoingCapacity = 1).use { f ->
+                if (ready) f.ready()
+                for (text in listOf("", " \t\n")) {
+                    val results =
+                        listOf(
+                            f.transport.send(OutgoingTelegramMessage(42, text)),
+                            f.transport.edit(42, 10, text, null),
+                        )
+                    results.forEach { result ->
+                        assertTrue(result.isCompletedExceptionally)
+                        val error = assertThrows(CompletionException::class.java) { result.join() }
+                        assertTrue(error.cause is TelegramRequestRejectedException)
+                    }
+                }
+                assertFalse(f.requests.any { it is TdApi.SendMessage || it is TdApi.EditMessageText })
+                // All invalid operations must leave the single outgoing slot available.
+                val valid = f.transport.send(OutgoingTelegramMessage(42, "valid"))
+                if (!ready) {
+                    assertFalse(valid.isDone)
+                    f.ready()
+                }
+                valid.get(3, TimeUnit.SECONDS)
+                assertEquals(1, f.requests.count { it is TdApi.SendMessage })
+                assertFalse(f.requests.any { it is TdApi.EditMessageText })
+            }
+        }
     }
 
     @Test fun `startup updates wait for bot identity and notifications wait for configured chat`() {

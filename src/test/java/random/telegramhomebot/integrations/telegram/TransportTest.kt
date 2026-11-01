@@ -1,5 +1,6 @@
 package random.telegramhomebot.integrations.telegram
-
+import dev.telegram.api.TelegramEvent
+import dev.telegram.api.TelegramResponse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows

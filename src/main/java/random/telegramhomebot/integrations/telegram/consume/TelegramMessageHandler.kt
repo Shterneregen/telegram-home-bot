@@ -1,7 +1,7 @@
 package random.telegramhomebot.integrations.telegram.consume
+import dev.telegram.api.TelegramEvent
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import random.telegramhomebot.integrations.telegram.TelegramEvent
 import random.telegramhomebot.integrations.telegram.menu.CallbackMenuService
 import random.telegramhomebot.integrations.telegram.send.TelegramMessageSender
 import random.telegramhomebot.services.UserValidatorService

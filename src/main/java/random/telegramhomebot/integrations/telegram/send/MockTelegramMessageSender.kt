@@ -1,7 +1,7 @@
 package random.telegramhomebot.integrations.telegram.send
+import dev.telegram.api.TelegramResponse
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import random.telegramhomebot.integrations.telegram.TelegramResponse
 import java.util.concurrent.CompletableFuture
 
 @Service

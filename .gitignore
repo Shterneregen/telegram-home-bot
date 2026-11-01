@@ -46,4 +46,4 @@ out/
 *.pcapng
 
 /deploy/__pycache__/
-!/amplicode.xml
+/amplicode.xml

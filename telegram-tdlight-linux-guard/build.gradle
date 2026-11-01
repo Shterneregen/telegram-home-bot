@@ -1,0 +1,24 @@
+plugins {
+    id 'java-library'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'org.jlleitschuh.gradle.ktlint'
+}
+group = rootProject.group
+version = rootProject.version
+repositories {
+    mavenCentral()
+    maven { url 'https://mvn.mchv.eu/repository/mchv/'; content { includeGroup 'it.tdlight' } }
+}
+sourceSets { main.kotlin.srcDirs += 'src/main/java' }
+java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
+kotlin { jvmToolchain(17) }
+dependencies {
+    api project(':telegram-tdlight')
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+test { useJUnitPlatform() }
+
+ktlint { version = "1.0.1" }

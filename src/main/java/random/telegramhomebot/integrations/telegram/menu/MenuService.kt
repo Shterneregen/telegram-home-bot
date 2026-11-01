@@ -1,6 +1,6 @@
 package random.telegramhomebot.integrations.telegram.menu
 
-import random.telegramhomebot.integrations.telegram.TelegramButton
+import dev.telegram.api.TelegramButton
 import random.telegramhomebot.integrations.telegram.menu.dto.Menu
 
 interface MenuService {

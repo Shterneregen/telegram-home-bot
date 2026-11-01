@@ -1,0 +1,29 @@
+plugins {
+    id 'application'
+    id 'org.jlleitschuh.gradle.ktlint' version '12.1.1' apply false
+    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+}
+group = 'sample'
+version = '1.0'
+repositories {
+    mavenCentral()
+    maven { url 'https://mvn.mchv.eu/repository/mchv/'; content { includeGroup 'it.tdlight' } }
+}
+kotlin { jvmToolchain(17) }
+dependencies {
+    implementation project(':telegram-api')
+    implementation project(':telegram-tdlight')
+}
+application { mainClass = 'ConsumerKt' }
+tasks.register('offlineSmoke') { dependsOn 'run' }
+
+// Independent outputs prove the consumer does not reuse the application's compiled classes.
+subprojects { layout.buildDirectory = rootProject.layout.buildDirectory.dir("libraries/${project.name}") }
+tasks.register('verifyIndependence') {
+    doLast {
+        def groups = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion.id.group }
+        assert !groups.any { it.startsWith('org.springframework') || it.startsWith('org.telegram') }
+        assert !fileTree('src').files.any { it.text.contains('random.telegramhomebot') }
+    }
+}
+tasks.named('offlineSmoke') { dependsOn 'verifyIndependence' }

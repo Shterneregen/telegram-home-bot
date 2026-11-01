@@ -1,4 +1,5 @@
 package random.telegramhomebot.integrations.telegram.send
+import dev.telegram.api.TelegramResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
@@ -13,7 +14,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.generics.TelegramClient
 import random.telegramhomebot.integrations.telegram.BotApiTransport
 import random.telegramhomebot.integrations.telegram.BotProperties
-import random.telegramhomebot.integrations.telegram.TelegramResponse
 import random.telegramhomebot.services.commands.CommandService
 import random.telegramhomebot.utils.logger
 import java.util.concurrent.CompletableFuture
@@ -38,7 +38,11 @@ class DefaultTelegramMessageSender(
         sendText(messageText, chatId, replyToMessageId)
     }
 
-    private fun sendText(messageText: String, chatId: Long, replyToMessageId: Long?): CompletableFuture<Void> {
+    private fun sendText(
+        messageText: String,
+        chatId: Long,
+        replyToMessageId: Long?,
+    ): CompletableFuture<Void> {
         if (messageText.isBlank()) return CompletableFuture.completedFuture(null)
         val rows =
             commands.getAllEnabledCommands().map { KeyboardButton(it.getButtonName()) }

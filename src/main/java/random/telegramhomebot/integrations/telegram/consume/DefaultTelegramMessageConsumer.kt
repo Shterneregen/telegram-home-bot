@@ -1,9 +1,9 @@
 package random.telegramhomebot.integrations.telegram.consume
+import dev.telegram.api.TelegramEvent
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
 import org.telegram.telegrambots.meta.api.objects.Update
 import random.telegramhomebot.integrations.telegram.BotApiTransport
-import random.telegramhomebot.integrations.telegram.TelegramEvent
 
 @Service
 @BotApiTransport

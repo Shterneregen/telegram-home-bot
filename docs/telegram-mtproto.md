@@ -1,3 +1,5 @@
+> Stage 1 extraction: see [reusable modules](telegram-modules.md) and [verification](tdlight-stage1-verification.md). Spring adapters now live in the application; the pure core requires an explicit egress verifier.
+
 # Telegram transports
 
 `TELEGRAM_TRANSPORT=bot-api` is the default. `TELEGRAM_ENABLED=false` disables both transports.
@@ -133,7 +135,7 @@ Use JDK 17:
 ```
 
 The Dockerfile/launcher changed, so rebuild the image with firstDeploy; redeploy alone only updates the JAR.
-The new JAR refuses the previous launcher's attestation: libseccomp2 and socket-policy version 2 are mandatory.
+The new JAR refuses the previous launcher's attestation: libseccomp2 and socket-policy version 3 are mandatory.
 The SSH deployment user only needs the data directory to exist; Java needs write access as UID 10001.
 Do not rerun deployBootstrapRemote after changing ownership without restoring the required runtime ownership.
 No deployment is performed by tests. Preserve host networking and the existing H2 data mount.
@@ -206,8 +208,8 @@ Unset API/proxy settings if desired. Never switch transport automatically on out
 
 - The privileged launcher and native library need an ARM64 kernel/image smoke test before production use.
 - ARM64 image build and JNI loading passed in Docker Desktop. Full guarded ARM64 startup is blocked by the emulator: nft cannot initialize a Netlink socket (Protocol not supported). The launcher correctly refuses to start Java. Native Linux AMD64 Docker launcher + Kotlin EgressGuard and socket tests passed. Physical Pi startup and live Telegram/telemt still require verification.
-- Native sender does not return final delivery identifiers to callers; failures are observed through
-  updates/logs. Notification retries and durable command execution journal are not implemented.
+- The reusable client exposes request results and separate TDLib send-success/send-failure updates.
+  These do not prove recipient reading. Notification retries and durable command execution journal are not implemented.
 - Slash commands must match configured aliases; /command@botname normalization is not implemented.
 - Callback ACK is dispatched outside business operations; its delivery still depends on proxy availability.
 - Native shutdown/reconnect and full keyboard/feature parity still need live test-bot verification.

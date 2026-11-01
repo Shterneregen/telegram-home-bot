@@ -1,6 +1,6 @@
 package random.telegramhomebot.integrations.telegram.consume
 
-import random.telegramhomebot.integrations.telegram.TelegramEvent
+import dev.telegram.api.TelegramEvent
 
 interface TelegramMessageConsumer {
     fun consume(event: TelegramEvent)

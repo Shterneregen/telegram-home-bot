@@ -1,13 +1,15 @@
 package random.telegramhomebot.integrations.telegram
-
+import dev.telegram.api.TelegramEvent
+import dev.telegram.api.TelegramEventHandler
+import dev.telegram.api.TelegramResponse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.springframework.boot.actuate.health.HealthIndicator
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
@@ -18,9 +20,9 @@ import random.telegramhomebot.db.model.TelegramCommand
 import random.telegramhomebot.integrations.telegram.consume.DefaultTelegramMessageConsumer
 import random.telegramhomebot.integrations.telegram.consume.TelegramMessageHandler
 import random.telegramhomebot.integrations.telegram.menu.CallbackMenuService
+import random.telegramhomebot.integrations.telegram.mtproto.MtprotoProperties
 import random.telegramhomebot.integrations.telegram.mtproto.TdlightConfig
 import random.telegramhomebot.integrations.telegram.mtproto.TdlightTransport
-import random.telegramhomebot.integrations.telegram.mtproto.MtprotoProperties
 import random.telegramhomebot.integrations.telegram.send.DefaultTelegramMessageSender
 import random.telegramhomebot.integrations.telegram.send.MockTelegramMessageSender
 import random.telegramhomebot.integrations.telegram.send.TelegramMessageSender
@@ -113,7 +115,8 @@ class TransportSelectionTest {
 
     @Test fun `mtproto adapter uses authorized handler and current command button labels`() {
         runner.withPropertyValues(
-            "integrations.telegram.enabled=true", "integrations.telegram.transport=mtproto",
+            "integrations.telegram.enabled=true",
+            "integrations.telegram.transport=mtproto",
             "integrations.telegram.mtproto.api-id=12345",
             "integrations.telegram.mtproto.proxy-port=8443",
         ).run { context ->
@@ -121,6 +124,7 @@ class TransportSelectionTest {
             assertEquals(12345, properties.apiId)
             assertEquals(8443, properties.proxyPort)
             val commands = context.getBean(CommandService::class.java)
+
             @Suppress("UNCHECKED_CAST")
             val buttons = context.getBean("tdlightCommandButtons") as () -> List<String>
             `when`(commands.getAllEnabledCommands()).thenReturn(listOf(TelegramCommand("/wake", "test", true)))

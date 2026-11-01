@@ -1,8 +1,9 @@
 // Keep the extraction enforceable without compiling or testing the root application.
 def allowedProjects = [
-        ':': [':telegram-api', ':telegram-tdlight'] as Set,
+        ':': [':telegram-api', ':telegram-tdlight', ':telegram-tdlight-linux-guard'] as Set,
         ':telegram-api': [] as Set,
-        ':telegram-tdlight': [':telegram-api'] as Set
+        ':telegram-tdlight': [':telegram-api'] as Set,
+        ':telegram-tdlight-linux-guard': [':telegram-tdlight'] as Set
 ]
 allprojects { module ->
     def verifyBoundaries = module.tasks.register('verifyTelegramModuleBoundaries') {
@@ -14,28 +15,23 @@ allprojects { module ->
             } as Set
             assert actual == allowedProjects[module.path]: "Unexpected project dependencies for ${module.path}: ${actual}"
             if (module != rootProject) {
-                ['compileClasspath', 'runtimeClasspath'].each { name ->
+                ['compileClasspath', 'runtimeClasspath', 'testCompileClasspath'].each { name ->
                     def groups = module.configurations.getByName(name).resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion.id.group }
                     assert !groups.any { it.startsWith('org.telegram') }: "Bot API SDK leaked into ${module.path}"
+                    assert !groups.any { it.startsWith('org.springframework') }: 'Libraries must remain Spring free'
+                    if (module.name == 'telegram-tdlight-linux-guard' && name == 'compileClasspath') {
+                        assert !groups.any { it.startsWith('it.tdlight') }: 'Native SDK must remain private to core'
+                    }
                     if (module.name == 'telegram-api') {
                         assert !groups.any { it.startsWith('it.tdlight') || it.startsWith('org.springframework') }: 'API must remain SDK/Spring free'
                     }
                 }
-                def apiTypes = [
-                        'random.telegramhomebot.integrations.telegram.TelegramEvent',
-                        'random.telegramhomebot.integrations.telegram.TelegramEventHandler',
-                        'random.telegramhomebot.integrations.telegram.TelegramResponse',
-                        'random.telegramhomebot.integrations.telegram.TelegramButton',
-                        'random.telegramhomebot.integrations.telegram.send.TelegramMessageSender'
-                ]
                 module.fileTree('src') { include '**/*.kt', '**/*.java' }.each { source ->
-                    def references = source.getText('UTF-8') =~ /random\.telegramhomebot(?:\.[A-Za-z_][A-Za-z_0-9]*)+/
-                    references.each { reference ->
-                        assert reference in apiTypes ||
-                                reference == 'random.telegramhomebot.integrations.telegram' ||
-                                reference == 'random.telegramhomebot.integrations.telegram.send' ||
-                                (module.name == 'telegram-tdlight' && reference.startsWith('random.telegramhomebot.integrations.telegram.mtproto')):
-                                "Application reference in ${source}: ${reference}"
+                    def text = source.getText('UTF-8')
+                    assert !text.contains('random.telegramhomebot'): "Application reference in ${source}"
+                    assert !text.contains('org.springframework'): "Spring reference in ${source}"
+                    if (module.name == 'telegram-tdlight') {
+                        assert !text.contains('dev.telegram.tdlight.linux'): "Linux implementation leaked into core: ${source}"
                     }
                 }
             }
@@ -56,5 +52,5 @@ allprojects { module ->
 }
 
 tasks.named('verifyTelegramModuleBoundaries') {
-    dependsOn ':telegram-api:verifyTelegramModuleBoundaries', ':telegram-tdlight:verifyTelegramModuleBoundaries'
+    dependsOn ':telegram-api:verifyTelegramModuleBoundaries', ':telegram-tdlight:verifyTelegramModuleBoundaries', ':telegram-tdlight-linux-guard:verifyTelegramModuleBoundaries'
 }

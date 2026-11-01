@@ -1,2 +1,2 @@
 rootProject.name = 'telegram-home-bot'
-include 'telegram-api', 'telegram-tdlight'
+include 'telegram-api', 'telegram-tdlight', 'telegram-tdlight-linux-guard'

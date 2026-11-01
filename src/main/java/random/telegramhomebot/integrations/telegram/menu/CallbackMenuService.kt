@@ -1,7 +1,7 @@
 package random.telegramhomebot.integrations.telegram.menu
+import dev.telegram.api.TelegramResponse
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import random.telegramhomebot.integrations.telegram.TelegramResponse
 
 @Service
 @ConditionalOnProperty(name = ["integrations.telegram.enabled"], havingValue = "true")

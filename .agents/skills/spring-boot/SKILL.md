@@ -1,113 +1,26 @@
 ---
 name: spring-boot
-description: "Use for Spring Boot work in telegram-home-bot: configuration, scheduling, security, Thymeleaf, Telegram bot, OpenWeather, actuator, events, testing."
+description: "Change THB application bean wiring, configuration, scheduling, MVC/Thymeleaf, security or Actuator. Telegram protocol logic and JPA mappings have separate skills."
 ---
 
-# Spring Boot Skill
+# Spring Boot application
 
-## Context
-This project uses **Spring Boot 3.5.4** with Kotlin. Key starters: Web, WebFlux, Data JPA, Security, Validation, Actuator, Thymeleaf, DevTools.
+## Configuration and wiring
 
-## Configuration
+- Read [application.yaml](../../../src/main/resources/application.yaml), [.env.example](../../../.env.example) and the affected properties class together. Keep property names, environment placeholders and defaults aligned.
+- Preserve optional-integration behavior: check both enabled and disabled bean graphs when changing wiring. For Telegram sender selection, use the [adapter configuration table](../../../docs/telegram-modules.md#telegram-home-bot-adapter).
+- Spring wiring belongs to the root application. The reusable `telegram-tdlight` library stays independent of Spring.
+- Existing WebFlux dependencies support the OpenWeather `WebClient`; their presence is not a reason to convert MVC controllers to a reactive stack.
 
-### Properties & YAML
-- Primary config: `../../../src/main/resources/application.yaml`
-- Environment variables via `spring-dotenv` (me.paulschwarz:spring-dotenv:4.0.0)
-- Custom `@ConfigurationProperties` classes: `BotProperties`, `OpenWeatherProperties`
-- `@Value` for simple property injection with defaults: `@Value("\${bcrypt.rounds}")`
-- Relaxed binding: `WAKE_ON_LAN_BROADCAST_IP` → `wakeOnLan.broadcast.ip`
+## Web and security
 
-### Scheduling
-```kotlin
-@Configuration
-@EnableScheduling
-class TaskConfig
+- Use the existing [templates](../../../src/main/resources/templates), [static resources](../../../src/main/resources/static) and application route constants.
+- Inspect [SecurityConfiguration](../../../src/main/java/random/telegramhomebot/auth/SecurityConfiguration.kt) when adding or changing routes; preserve the distinction between public health checks, admin operations and authenticated application pages.
+- Actuator exposure is currently `health,info`. Health endpoints are publicly accessible for container probes, while other Actuator paths require admin authority. Coordinate any change with the Compose health check; do not restore wildcard exposure from old examples.
+- Use existing `MessageService` / `MessageFormatService` and English/Russian message bundles for user-facing text.
 
-@Component
-class BroadcastPingScheduler {
-    @Scheduled(fixedRateString = "\${network-monitor.broadcast.ping.scheduled-time}")
-    fun runBroadcastPing() { /* ... */ }
-}
-```
-- Always use property placeholders for `@Scheduled` rates
-- `fixedRateString` and `initialDelayString` with property references
+## Verification
 
-### Conditional Beans
-```kotlin
-@Service
-@ConditionalOnProperty(name = ["integrations.telegram.enabled"], havingValue = "true")
-class DefaultTelegramMessageConsumer(/* ... */)
-```
-- Telegram integration components are gated behind `integrations.telegram.enabled`
-- Weather components behind `integrations.openweather.enabled`
-
-## Web Layer
-
-### Controllers
-- `@Controller` + Thymeleaf for HTML views
-- `@RequestMapping` with constants from `AppConstants`
-- `@PathVariable`, `@RequestParam` for parameter binding
-- Redirect pattern: `"redirect:$MAPPING"` using `AppConstants`
-
-### Thymeleaf
-- Layout dialect: `thymeleaf-layout-dialect` with `layout.html` decorator
-- Spring Security integration: `thymeleaf-extras-springsecurity6`
-- Templates: `../../../src/main/resources/templates`
-- Static resources: `../../../src/main/resources/static` (favicon, CSS, JS)
-- WebJars for Bootstrap 5.1.1, jQuery 3.6.0, Font Awesome 5.15.3
-
-### Actuator
-```yaml
-management:
-  endpoints.web.exposure.include: '*'
-  endpoint.health.show-details: when_authorized
-```
-- Custom health indicator: `CommandService` implements `HealthIndicator`
-- Custom endpoint: `DbActuatorEndpoint` for DB info
-- Actuator endpoints require `ROLE_ADMIN`
-
-## Security
-
-### Spring Security
-- `@EnableWebSecurity` + `@EnableMethodSecurity`
-- BCrypt with configurable rounds (default: 11)
-- `DaoAuthenticationProvider` with custom `AppUserDetailsService`
-- `SimpleAuthorityMapper` with uppercase conversion and default `ROLE_USER`
-- Form login, CSRF disabled, frame options disabled (H2 console)
-- Admin-only paths: `/commands/edit/**`, `/hosts/edit/**`, `/actuator/**`
-
-### Auth Entities
-- `User` → `Role` → `Privilege` (many-to-many chain)
-- `LoginAttemptService` for brute-force protection (block after 5 failures, 600 min)
-- `AuthenticationFailureListener` / `AuthenticationSuccessEventListener`
-- Password validation via Passay + custom `@ValidPassword`
-
-## Integration Patterns
-
-### Telegram Bot
-- `telegrambots-springboot-longpolling-starter:9.0.0`
-- `LongPollingSingleThreadUpdateConsumer` interface
-- `BotStarter` handles registration with conditional enablement
-- Mock sender (`MockTelegramMessageSender`) for testing
-
-### OpenWeather API
-- Spring WebFlux `WebClient` with configurable base URL
-- `WeatherClientConfig` creates `WebClient` bean with timeout
-- `WeatherService` calls API and maps to `WeatherResponse`
-
-### Event-Driven
-- Spring Application Events: `ScanHostsEvent`
-- `ScanHostsEventPublisher` + `ScanHostsEventListener` (async with `@EventListener`)
-
-## I18n
-- `messages.properties` (English) / `messages_ru.properties` (Russian)
-- `CookieLocaleResolver` with `localeChangeInterceptor` (param `?lang=`)
-- `MessageService` / `MessageFormatService` wrap `MessageSource`
-- `LocalValidatorFactoryBean` with message source for validation i18n
-
-## Do NOT
-- Do NOT use `@Autowired` — always constructor injection
-- Do NOT hardcode property values — use `@Value` or `@ConfigurationProperties`
-- Do NOT use XML-based Spring config — annotations only
-- Do NOT add new endpoints without updating `SecurityConfiguration` if they need admin protection
-- Do NOT disable Flyway — schema changes always via migrations
+Choose affected application tests from [JVM verification](../../../docs/verification.md#jvm-checks-and-packaging).
+For security changes, exercise relevant anonymous, authenticated and admin access; for integration wiring, check disabled mode as well as the changed enabled mode.
+Library checks alone do not cover root application behavior.

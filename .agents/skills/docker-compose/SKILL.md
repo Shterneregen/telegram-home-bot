@@ -1,78 +1,27 @@
 ---
 name: docker-compose
-description: "Use when adding or changing Docker Compose for telegram-home-bot: app service, .env, persistent H2 data, SonarQube profile, bridge/host networking."
+description: "Change THB Compose services, environment wiring, persistent mounts, health checks or MTProto overrides. Image and launcher implementation belong to docker."
 ---
 
-# Docker Compose Skill
+# Docker Compose
 
-## Context
-Deployment Compose files are in `deploy/docker-compose.yml` and `deploy/docker-compose.mtproto.yml`. Run local Compose commands from the repository root with `--project-directory . --env-file .env -f deploy/docker-compose.yml` (and the MTProto override when required). Remote filenames remain directly under piDir. Use the current files as the source of truth; the example below is illustrative.
+## Sources to read for the change
 
-## Typical Docker Compose Structure
+- Start with the [base Compose file](../../../deploy/docker-compose.yml) and, for MTProto, its [override](../../../deploy/docker-compose.mtproto.yml).
+- For invocation, local versus remote paths and deployment tasks, use the [deployment guide](../../../deploy/docs/raspberry-pi-deployment.md).
+- For MTProto privileges, session storage or shutdown changes, read [guarded startup](../../../docs/telegram-mtproto.md#guarded-linux-startup) and [storage and runtime](../../../docs/telegram-mtproto.md#storage-and-runtime).
 
-```yaml
-version: '3.8'
-services:
-  thb:
-    build: .
-    image: thb-image
-    container_name: thb
-    ports:
-      - "80:8080"
-    network_mode: bridge
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - thb-data:/application/data
+## Service contracts
 
-  sonarqube:
-    image: sonarqube:latest
-    container_name: sonarqube
-    ports:
-      - "9000:9000"
-      - "9092:9092"
-    restart: unless-stopped
-    volumes:
-      - sonarqube-data:/opt/sonarqube/data
-    profiles:
-      - tools
+- The service uses a runtime image with a read-only JAR mount at `/app/app.jar`, persistent data at `/app/data`, and read-only secrets at `/app/secrets`. Keep H2's `DB_URL` and TDLib storage inside the persistent data mount.
+- Preserve the current host networking unless the task calls for a network redesign. Bridge networking is not an equivalent view of the host LAN or neighbor table; assess scanning, WoL and egress rules together.
+- Read environment defaults from [.env.example](../../../.env.example) and [application.yaml](../../../src/main/resources/application.yaml). `env_file` injects variables; it does not mount a configuration file.
+- Keep the health check aligned with server port, optional TLS and public `/actuator/health`.
+- The MTProto override grants launcher privileges. Keep its shutdown grace period aligned with native cleanup and the application's terminal-failure watchdog.
+- Do not add optional services such as SonarQube as part of unrelated deployment changes.
 
-volumes:
-  thb-data:
-  sonarqube-data:
-```
+## Verification
 
-## Key Considerations
-
-### Network
-- Use `network_mode: bridge` for LAN access (network scanning)
-- For production on Raspberry Pi, consider `network_mode: host`
-
-### Environment
-- Pass all variables via `env_file: .env`
-- Required variables: `TELEGRAM_TOKEN`, `TELEGRAM_BOT_CHAT_ID`
-- Feature gates: `TELEGRAM_ENABLED`, `NETWORK_MONITOR_ENABLED`, `OPENWEATHER_ENABLED`
-
-### Volumes
-- Mount data directory for H2 database persistence
-- Mount `.env` for configuration
-
-### Profiles
-- Use `profiles: [tools]` for optional services like SonarQube
-- Main app service should be in default profile (no profile needed)
-
-### SonarQube (Optional)
-```yaml
-sonarqube:
-  image: sonarqube:latest
-  ports:
-    - "9000:9000"
-  profiles:
-    - tools
-```
-
-## Do NOT
-- Do NOT hardcode secrets in docker-compose.yml — use `.env` file
-- Do NOT use `network_mode: host` unless on Raspberry Pi
-- Do NOT forget to volume-mount the H2 database directory for persistence
+Use [Compose validation](../../../docs/verification.md#compose-and-arm64-packaging) for both base and overridden configurations.
+Use its `.env.example` placeholders and `config --quiet` to avoid printing resolved secrets.
+For changes affecting generated deployment commands, run the relevant [deployment policy tests](../../../docs/verification.md#deployment-policy-and-launcher-tests).

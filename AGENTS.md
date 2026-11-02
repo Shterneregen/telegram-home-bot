@@ -86,11 +86,10 @@ Build:
 docker build -f deploy/Dockerfile -t thb-image .
 ```
 
-Run:
-
-```bash
-docker run -d -p 8080:8080 thb-image
-```
+The image contains the runtime and launcher; Compose mounts the separately built
+`build/libs/thb.jar` at `/app/app.jar`. For deployment commands, environment and
+persistent mounts, use the [Raspberry Pi deployment guide](deploy/docs/raspberry-pi-deployment.md).
+For local validation, use [developer verification](docs/verification.md).
 
 ## Important Environment Variables
 

@@ -20,7 +20,7 @@ AF_PACKET, AF_XDP, legacy SOCK_PACKET, non-ICMP IP raw sockets and io_uring_setu
 This closes the packet-socket bypass of inet OUTPUT while retaining raw ICMP for fping. The JVM and
 all its children inherit the filter across exec and cannot remove it. Bot API uses the original JVM launch.
 
-Use `docker-compose.mtproto.yml` together with the base Compose file. It grants NET_ADMIN only to the
+Use `deploy/docker-compose.mtproto.yml` together with the base Compose file. It grants NET_ADMIN only to the
 initial root launcher. Without this privilege, a valid proxy address, or a successful firewall transaction,
 the launcher exits without starting Java. Kotlin checks a root-owned non-writable launch record tied to
 its PID, boot ID, proxy configuration, socket-policy version, seccomp mode and UID/capabilities before initializing JNI. There is
@@ -166,14 +166,14 @@ Offline Compose validation without loading a real .env:
 
 ```powershell
 $env:THB_ENV_FILE='.env.example'
-docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.mtproto.yml config --quiet
+docker compose --env-file .env.example --project-directory . -f deploy/docker-compose.yml -f deploy/docker-compose.mtproto.yml config --quiet
 Remove-Item Env:THB_ENV_FILE
 ```
 
 ARM64 image compatibility check (requires Docker Engine/Buildx):
 
 ```shell
-docker buildx build --platform linux/arm64 --load -t thb-image:mtproto .
+docker buildx build --platform linux/arm64 -f deploy/Dockerfile --load -t thb-image:mtproto .
 ```
 
 ## Manual verification (test bot first)
@@ -251,13 +251,13 @@ Do not describe the release as satisfying all production acceptance criteria unt
 Policy tests (no privileges or network traffic); Linux additionally tests seccomp in a child process across exec:
 
 ```shell
-python -m unittest discover -s deploy -p 'test_*.py'
+python -m unittest discover -s deploy/python -p 'test_*.py'
 ```
 
 Linux kernel test uses only loopback sockets in a disposable network namespace and refuses the host namespace:
 
 ```shell
-sudo unshare --net python3 deploy/test-egress-linux.py
+sudo unshare --net python3 deploy/python/test-egress-linux.py
 ```
 
 It checks allowed proxy TCP, rejected alternative IPv4/IPv6 TCP, replacement of the nft table, endpoint outage,
@@ -271,7 +271,7 @@ Offline deployment-policy regression checks (evaluate command builders only; no 
 ./gradlew -I deploy/test-deployment-policy.init.gradle testDeploymentPolicy -PpiUser=tester -PpiHost=example.invalid -PmtprotoDeployment=true
 ./gradlew -I deploy/test-deployment-policy.init.gradle testDeploymentPolicy -PpiUser=tester -PpiHost=example.invalid -PmtprotoDeployment=false
 # On Linux, execute generated shell commands against temporary files and a fake Docker:
-python3 -m unittest discover -s deploy -p 'test_*.py'
+python3 -m unittest discover -s deploy/python -p 'test_*.py'
 ```
 
 For the complete automated workflow, including fixture generation and platform-specific skips,
@@ -280,3 +280,5 @@ see [developer verification](verification.md).
 See [verification status and limits](verification.md#recorded-verification-baseline) for the dated
 automated baseline. Automated results do not establish live acceptance for the current checkout;
 complete the manual checklist above on the target Pi before claiming production readiness.
+
+Deployment setup: [Raspberry Pi guide](../deploy/docs/raspberry-pi-deployment.md) and [ARM64 Docker installation](../deploy/docs/raspberry-pi-3-docker-arm64.md).

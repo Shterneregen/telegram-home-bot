@@ -6,7 +6,7 @@ description: "Use for Dockerfile and container runtime changes in telegram-home-
 # Docker Skill
 
 ## Context
-This project has a single [`../../../Dockerfile`](Dockerfile) for building a container image. The application is designed to run on Raspberry Pi (ARM) and Linux.
+This project has a single [`deploy/Dockerfile`](../../../deploy/Dockerfile) for building a container image. The application is designed to run on Raspberry Pi (ARM) and Linux.
 
 ## Dockerfile
 
@@ -30,7 +30,7 @@ ENTRYPOINT ["java", "-jar","./app.jar"]
 ./gradlew clean bootJar
 
 # Build Docker image
-docker build -t thb-image .
+docker build -f deploy/Dockerfile -t thb-image .
 
 # Run container (bridge network — host network scanning works)
 docker run -d -p 80:8080 --network=bridge --name=thb thb-image

@@ -15,6 +15,36 @@ gradle.projectsEvaluated {
                 assert task.commandLine.first() == 'ssh'
                 task.commandLine.last().toString()
             }
+            // Inspect local builders without running Docker/SCP or their dependencies.
+            def localCommand = { String name ->
+                def task = project.tasks.getByName(name)
+                task.actions.first().execute(task)
+                task.commandLine.collect { it.toString() }
+            }
+            def compose = localCommand('deployValidateCompose')
+            assert compose.take(2) == ['docker', 'compose']
+            assert compose[compose.indexOf('--project-directory') + 1] == project.projectDir.absolutePath
+            assert compose[compose.indexOf('--env-file') + 1] == project.file('.env').absolutePath
+            assert compose.contains('deploy/docker-compose.yml')
+            assert compose.contains('deploy/docker-compose.mtproto.yml') == mtproto
+            assert compose.takeRight(2) == ['config', '--quiet']
+            def image = localCommand('deployDockerBuildImage')
+            assert image[image.indexOf('-f') + 1] == 'deploy/Dockerfile'
+            assert image.last() == '.'
+            def platform = project.providers.gradleProperty('dockerPlatform').orElse('').get()
+            if (platform) {
+                assert image.take(3) == ['docker', 'buildx', 'build']
+                assert image[image.indexOf('--platform') + 1] == platform
+                assert image.contains('--load')
+            } else {
+                assert image.take(2) == ['docker', 'build']
+            }
+            assert project.tasks.deployDockerBuildImage.workingDir == project.projectDir
+            def target = project.providers.gradleProperty('piUser').get() + '@' + project.providers.gradleProperty('piHost').get() + ':' + project.providers.gradleProperty('piDir').orElse('/opt/telegram-home-bot').get()
+            def baseUpload = localCommand('deploySendCompose')
+            assert baseUpload == ['scp', 'deploy/docker-compose.yml', target + '/docker-compose.yml.new']
+            def overrideUpload = localCommand('deploySendMtprotoCompose')
+            assert overrideUpload == ['scp', 'deploy/docker-compose.mtproto.yml', target + '/docker-compose.mtproto.yml.new']
             def remoteCheck = command('deployValidateRemote')
             assert remoteCheck.contains('Remote TELEGRAM_TRANSPORT does not match')
             assert remoteCheck.contains(mtproto ? "' 'mtproto' '" : "' 'bot-api' '")

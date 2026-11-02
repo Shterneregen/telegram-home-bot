@@ -83,7 +83,7 @@ Build:
 
 ```bash
 ./gradlew clean bootJar
-docker build -t thb-image .
+docker build -f deploy/Dockerfile -t thb-image .
 ```
 
 Run:

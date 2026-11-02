@@ -90,7 +90,7 @@ dependencies {
     kapt "org.springframework.boot:spring-boot-configuration-processor"
 }
 
-apply from: "gradle/deploy.gradle"
+apply from: "deploy/deploy.gradle"
 apply from: "gradle/telegram-boundaries.gradle"
 
 test {

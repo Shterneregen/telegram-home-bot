@@ -149,7 +149,7 @@ A verifier must attest effective policy for the current process, without reusing
 across processes or policy changes. Numeric validation does not prove firewall enforcement.
 
 **The Kotlin verifier does not install a firewall.** It trusts the protected root-owned attestation
-from `deploy/telegram-entrypoint.py`, which installs/verifies nftables rules, applies seccomp policy
+from `deploy/python/telegram-entrypoint.py`, which installs/verifies nftables rules, applies seccomp policy
 v3, drops privileges and executes Java. Process-wide policy includes DNS/LAN/weather exceptions;
 it does not sandbox a malicious root administrator or arbitrary host application code.
 A host providing its own verifier is responsible for effective OS enforcement.

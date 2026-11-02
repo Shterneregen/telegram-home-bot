@@ -11,7 +11,7 @@ import sys
 import tempfile
 import unittest
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 
 
 @unittest.skipUnless(sys.platform == "linux", "requires Linux shell and coreutils")

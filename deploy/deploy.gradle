@@ -82,7 +82,7 @@ def waitForHealthyCommand = {
 def validateRemoteTransport = { boolean staged = false ->
     def expected = mtprotoDeployment.get() ? "mtproto" : "bot-api"
     def envPath = staged && sendEnv.get() ? "${piDir.get()}/thb.env.new" : "${configDir.get()}/thb.env"
-    def script = file('deploy/validate-telegram-deployment.py').getText('UTF-8').replace("'", "'\\''")
+    def script = file('deploy/python/validate-telegram-deployment.py').getText('UTF-8').replace("'", "'\\''")
     remoteEnvironment(staged) + "python3 -c '${script}' '${expected}' '${envPath}' ${dockerComposeCommand.get()} -- ${remoteComposeFiles(staged)}"
 }
 
@@ -220,8 +220,10 @@ tasks.register("deployValidateCompose", Exec) {
     description = "Validate docker-compose.yml with the local .env file"
     dependsOn "deployValidateEnv"
     doFirst {
-        def args = ["docker", "compose"]
-        if (mtprotoDeployment.get()) args += ["-f", "docker-compose.yml", "-f", "docker-compose.mtproto.yml"]
+        workingDir project.projectDir
+        def args = ["docker", "compose", "--project-directory", project.projectDir.absolutePath,
+                    "--env-file", file(".env").absolutePath, "-f", "deploy/docker-compose.yml"]
+        if (mtprotoDeployment.get()) args += ["-f", "deploy/docker-compose.mtproto.yml"]
         commandLine(args + ["config", "--quiet"])
     }
 }
@@ -233,6 +235,7 @@ tasks.register("deployDockerBuildImage", Exec) {
     description = "Build Docker image. Use -PdockerPlatform=linux/arm64 for Raspberry Pi ARM64."
 
     doFirst {
+        workingDir project.projectDir
         def platform = dockerPlatform.get()
 
         if (!(imageName.get() ==~ /[A-Za-z0-9][A-Za-z0-9._\/:@-]*/)) {
@@ -244,11 +247,13 @@ tasks.register("deployDockerBuildImage", Exec) {
 
         if (platform.isEmpty()) {
             commandLine "docker", "build",
+                    "-f", "deploy/Dockerfile",
                     "-t", imageName.get(),
                     "."
         } else {
             commandLine "docker", "buildx", "build",
                     "--platform", platform,
+                    "-f", "deploy/Dockerfile",
                     "-t", imageName.get(),
                     "--load",
                     "."
@@ -361,7 +366,7 @@ tasks.register("deploySendMtprotoCompose", Exec) {
     dependsOn "deployPrepareRemote"
     onlyIf { mtprotoDeployment.get() }
     doFirst {
-        commandLine "scp", "docker-compose.mtproto.yml", remoteDeployTarget("docker-compose.mtproto.yml.new").get()
+        commandLine "scp", "deploy/docker-compose.mtproto.yml", remoteDeployTarget("docker-compose.mtproto.yml.new").get()
     }
 }
 
@@ -373,7 +378,7 @@ tasks.register("deploySendCompose", Exec) {
 
     doFirst {
         commandLine "scp",
-                "docker-compose.yml",
+                "deploy/docker-compose.yml",
                 remoteDeployTarget("docker-compose.yml.new").get()
     }
 }

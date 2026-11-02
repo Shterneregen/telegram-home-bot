@@ -6,7 +6,7 @@ gradle
 screenshots
 src/test
 .gitignore
-docker-compose.yml
+deploy/docker-compose*.yml
 build.Dockerfile
 gradlew.bat
 readme.md

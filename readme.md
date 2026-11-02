@@ -51,7 +51,7 @@ See the [Telegram access model](docs/telegram-mtproto.md#access-model-both-trans
 - You can observe/add/edit hosts on http://127.0.0.1:9988/hosts page
 - Hosts availability changes is on http://127.0.0.1:9988/hosts/time-log page
 - Unfortunately, current implementation is based on `ip -j n show` and some other native calls, so you have to
-  install `iproute2` and `fping`on Linux machine where chatbot is running. See [Dockerfile](Dockerfile)
+  install `iproute2` and `fping`on Linux machine where chatbot is running. See [Dockerfile](deploy/Dockerfile)
 - This feature does not work on Windows
 - To enable/disable host notifications, run the `/features` command in the Telegram client and choose what you want
 
@@ -144,7 +144,7 @@ keytool -genkeypair -alias thb -keyalg RSA -keysize 2048 -storetype PKCS12 -keys
 
 The Docker deployment workflow for Raspberry Pi is documented separately:
 
-[Read the Raspberry Pi deployment guide](docs/raspberry-pi-deployment.md)
+[Read the Raspberry Pi deployment guide](deploy/docs/raspberry-pi-deployment.md)
 
 The guide covers Docker Compose setup, SSH access, environment configuration, ARM image builds, first deployment, health checks, updates, rollback, and configurable deployment parameters.
 
@@ -192,5 +192,5 @@ Kotlin, Spring (Boot/Security/WebFlux), Gradle, H2, Thymeleaf, Google Charts, te
 
 See [configuration, security status, verification and rollback](docs/telegram-mtproto.md).
 Bot API remains the default. MTProto requires the guarded Linux Docker entrypoint and
-`docker-compose.mtproto.yml` (`-PmtprotoDeployment=true`). Prepare UID 10001 data permissions
+`deploy/docker-compose.mtproto.yml` (`-PmtprotoDeployment=true`). Prepare UID 10001 data permissions
 and verify the scoped nftables policy before production use.

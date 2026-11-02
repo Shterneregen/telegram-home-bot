@@ -57,7 +57,7 @@ Generate both deployment command fixtures before Python discovery:
 ```shell
 ./gradlew -I deploy/test-deployment-policy.init.gradle testDeploymentPolicy -PpiUser=tester -PpiHost=example.invalid -PmtprotoDeployment=true
 ./gradlew -I deploy/test-deployment-policy.init.gradle testDeploymentPolicy -PpiUser=tester -PpiHost=example.invalid -PmtprotoDeployment=false
-python -m unittest discover -s deploy -p 'test_*.py'
+python -m unittest discover -s deploy/python -p 'test_*.py'
 ```
 
 The Gradle tasks evaluate command builders and write `build/deployment-policy-{true,false}.json`;
@@ -78,8 +78,8 @@ Validate Compose using placeholders instead of the local credential file (PowerS
 ```powershell
 $env:THB_ENV_FILE = '.env.example'
 try {
-    docker compose --env-file .env.example -f docker-compose.yml config --quiet
-    docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.mtproto.yml config --quiet
+    docker compose --env-file .env.example --project-directory . -f deploy/docker-compose.yml config --quiet
+    docker compose --env-file .env.example --project-directory . -f deploy/docker-compose.yml -f deploy/docker-compose.mtproto.yml config --quiet
 } finally {
     Remove-Item Env:THB_ENV_FILE
 }
@@ -91,7 +91,7 @@ resolved configuration. The commands parse configuration without starting contai
 With Docker Engine and Buildx available:
 
 ```shell
-docker buildx build --platform linux/arm64 --load -t thb-image:verification .
+docker buildx build --platform linux/arm64 -f deploy/Dockerfile --load -t thb-image:verification .
 docker image inspect thb-image:verification --format '{{.Os}}/{{.Architecture}}'
 ```
 

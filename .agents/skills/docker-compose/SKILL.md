@@ -6,7 +6,7 @@ description: "Use when adding or changing Docker Compose for telegram-home-bot: 
 # Docker Compose Skill
 
 ## Context
-This project currently has no committed `../../../docker-compose.yml` in the public repository. If one is needed, create it deliberately rather than assuming it already exists. If one is needed, it should define the THB application service and potentially a SonarQube service for code quality.
+Deployment Compose files are in `deploy/docker-compose.yml` and `deploy/docker-compose.mtproto.yml`. Run local Compose commands from the repository root with `--project-directory . --env-file .env -f deploy/docker-compose.yml` (and the MTProto override when required). Remote filenames remain directly under piDir. Use the current files as the source of truth; the example below is illustrative.
 
 ## Typical Docker Compose Structure
 

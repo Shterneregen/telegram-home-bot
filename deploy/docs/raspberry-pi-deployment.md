@@ -1,6 +1,6 @@
 # Deploying Telegram Home Bot to Raspberry Pi
 
-This project includes a Docker deployment workflow for Raspberry Pi using Docker Compose and the Gradle tasks from `gradle/deploy.gradle`.
+This project includes a Docker deployment workflow for Raspberry Pi using Docker Compose and the Gradle tasks from `deploy/deploy.gradle`.
 
 The recommended setup is Raspberry Pi OS 64-bit with a Docker image built for `linux/arm64`.
 
@@ -228,7 +228,7 @@ After changing the code, run:
   "-PpiUser=$piUser"
 ```
 
-This task uploads the current Compose file, installs the new JAR, restarts the container, checks the health endpoint, and uses the previous JAR as a rollback if deployment fails. It does not rebuild the Docker image. After changing `Dockerfile` or system packages, run `firstDeploy` again with `dockerPlatform`.
+This task uploads the current Compose file, installs the new JAR, restarts the container, checks the health endpoint, and uses the previous JAR as a rollback if deployment fails. It does not rebuild the Docker image. After changing `deploy/Dockerfile` or system packages, run `firstDeploy` again with `dockerPlatform`.
 
 Stop the application:
 
@@ -257,7 +257,38 @@ Stop the application:
 
 ## Optional TDLight MTProto transport
 
-See [configuration, security status, verification and rollback](telegram-mtproto.md).
+See [configuration, security status, verification and rollback](../../docs/telegram-mtproto.md).
 Bot API remains the default. MTProto requires the guarded Linux Docker entrypoint and
-`docker-compose.mtproto.yml` (`-PmtprotoDeployment=true`). Prepare UID 10001 data permissions
+`deploy/docker-compose.mtproto.yml` (`-PmtprotoDeployment=true`). Prepare UID 10001 data permissions
 and verify the scoped nftables policy before production use.
+
+## Local deployment files
+
+Run all examples from the repository root. Deployment infrastructure is in `deploy/`:
+`deploy/deploy.gradle`, `deploy/Dockerfile`, and both Compose files. The Docker build
+context remains the repository root; for a manual build use
+`docker build -f deploy/Dockerfile -t thb-image:latest .`.
+
+Gradle deployment commands and properties are unchanged. Make commands now use
+`make -C deploy redeploy` instead of `make redeploy`; `GRADLE_ARGS` is still forwarded.
+For example, `make -C deploy redeploy GRADLE_ARGS="-PpiUser=main -PpiHost=raspberrypi.local"`.
+The Makefile selects the root wrapper and passes the root project directory to Gradle.
+
+Local Compose commands must select the root project directory so that the root `.env`
+and relative `THB_ENV_FILE` values keep working:
+
+```shell
+docker compose --project-directory . --env-file .env -f deploy/docker-compose.yml config --quiet
+docker compose --project-directory . --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.mtproto.yml config --quiet
+```
+
+Gradle sets these paths automatically. Keep `.env` at the repository root; no copy is needed.
+Absolute bind mounts and `THB_*` overrides retain their existing meaning. Remote uploads
+still install `docker-compose.yml` and `docker-compose.mtproto.yml` directly in `piDir`
+(default `/opt/telegram-home-bot`), using the same `.new` staging names. There is no remote
+`deploy/` directory. Remote commands continue to select `/etc/telegram-home-bot/thb.env`.
+
+Python launchers, validators and tests live together in `deploy/python/`. Run tests
+from the repository root with `python -m unittest discover -s deploy/python -p "test_*.py"`
+after generating both Gradle deployment-policy fixtures (see [verification](../../docs/verification.md)).
+The in-container launcher path remains `/usr/local/lib/thb/entrypoint.py`.
